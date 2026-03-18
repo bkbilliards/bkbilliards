@@ -3,68 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SENSEI CRM</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <title>SENSEI BILLIARD CRM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="auth-screen" class="auth-overlay">
         <div class="auth-card">
-            <h1 class="gold-text">SENSEI BILLIARD</h1>
-            <p style="font-size: 12px; color: #666;">Вход в систему</p>
-            
+            <div class="auth-header">
+                <h1 class="gold-gradient-text">SENSEI</h1>
+                <p>BILLIARD CLUB MANAGEMENT</p>
+            </div>
             <div class="field">
                 <label>АДМИНИСТРАТОР</label>
-                <select id="staff-select"></select>
+                <select id="staff-select" class="custom-select"></select>
             </div>
-            
             <div class="field">
                 <label>ПАРОЛЬ</label>
-                <input type="password" id="pass-input" placeholder="****">
+                <input type="password" id="pass-input" class="custom-input" placeholder="••••">
             </div>
-            
-            <button onclick="login()" class="btn-primary">ВОЙТИ</button>
-            <p id="auth-error" class="error-msg">❌ Ошибка: неверный пароль</p>
+            <button onclick="login()" class="btn-gold-fill">ВОЙТИ В СИСТЕМУ</button>
+            <p id="auth-error" class="error-msg">❌ Неверный пароль</p>
         </div>
     </div>
 
     <div id="app" style="display:none;">
-        <header class="top-bar">
-            <div class="user-tag">
-                <span id="role-label" class="badge"></span>
-                <span id="user-name"></span>
+        <header class="app-header">
+            <div class="brand">
+                <span class="gold-dot"></span>
+                <h2 class="gold-gradient-text">SENSEI</h2>
             </div>
-            <div class="stats-row">
-                <span>Выручка: <b id="total-rev">0</b> ₸</span>
-                <span>ЗП: <b id="my-salary">0</b> ₸</span>
+            <div class="session-info">
+                <div class="user-pill">
+                    <span id="role-badge" class="role-badge"></span>
+                    <span id="user-name"></span>
+                </div>
+                <button class="btn-close-shift" onclick="logout()">ЗАКРЫТЬ СМЕНУ</button>
             </div>
-            <button class="btn-danger" onclick="logout()">ЗАКРЫТЬ СМЕНУ</button>
         </header>
 
-        <nav class="tabs">
-            <button class="tab-link active" onclick="openTab('hall')">ЗАЛ</button>
-            <button class="tab-link" onclick="openTab('stock')">СКЛАД</button>
-            <button class="tab-link" onclick="openTab('debts')">ДОЛГИ</button>
+        <nav class="main-nav">
+            <button class="nav-link active" onclick="openTab('hall')">ЗАЛ</button>
+            <button class="nav-link" onclick="openTab('stock')">СКЛАД</button>
+            <button class="nav-link" onclick="openTab('stats')">СТАТИСТИКА</button>
         </nav>
 
-        <main class="main-view">
-            <div id="tab-hall" class="tab-content">
-                <div class="grid-tables" id="tables-container"></div>
+        <div class="top-stats">
+            <div class="stat-card">
+                <span class="label">ВЫРУЧКА ЗА СМЕНУ</span>
+                <span class="value"><span id="total-rev">0</span> ₸</span>
+            </div>
+            <div class="stat-card">
+                <span class="label">ВАША ЗАРПЛАТА</span>
+                <span class="value green-text"><span id="my-salary">0</span> ₸</span>
+            </div>
+        </div>
+
+        <main class="content-body">
+            <div id="tab-hall" class="tab-pane active">
+                <div class="grid-layout" id="tables-container"></div>
             </div>
 
-            <div id="tab-stock" class="tab-content" style="display:none;">
-                <div class="card">
-                    <h2 class="gold-text">СКЛАД</h2>
-                    <button onclick="addItem()" class="btn-outline">+ ДОБАВИТЬ ТОВАР</button>
-                    <table class="list-table">
-                        <thead><tr><th>Название</th><th>Цена</th></tr></thead>
-                        <tbody id="stock-list"></tbody>
-                    </table>
+            <div id="tab-stock" class="tab-pane">
+                <div class="glass-panel">
+                    <div class="panel-header">
+                        <h3>📦 ТОВАРЫ НА СКЛАДЕ</h3>
+                        <button onclick="addItem()" class="btn-add">+ ДОБАВИТЬ</button>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="modern-table">
+                            <thead>
+                                <tr><th>НАИМЕНОВАНИЕ</th><th>ЦЕНА ПРОДАЖИ</th></tr>
+                            </thead>
+                            <tbody id="stock-list"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </main>
     </div>
-
     <script src="app.js"></script>
 </body>
 </html>
