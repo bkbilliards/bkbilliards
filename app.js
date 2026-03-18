@@ -4,10 +4,11 @@ const NIGHT_RATE = 3000;
 const BASE_SALARY = 6000;
 const PERCENT = 0.08;
 
-const STAFF = [
+// Список фиксированных ролей
+const STAFF_LIST = [
     { name: "Султан", password: "1111", role: "admin" },
     { name: "Дидар", password: "1111", role: "admin" },
-    { name: "Запасной", password: "1111", role: "admin" },
+    { name: "Другой админ...", password: "1111", role: "extra" }, // Пункт для ввода имени
     { name: "Хозяин", password: "0000", role: "owner" }
 ];
 
@@ -29,12 +30,10 @@ function save() {
 function showMain() {
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('main-content').style.display = 'block';
-    const currentStaff = STAFF.find(s => s.name === state.activeStaffName);
-    if (currentStaff && currentStaff.role === 'owner') {
-        document.getElementById('owner-section').style.display = 'block';
-    } else {
-        document.getElementById('owner-section').style.display = 'none';
-    }
+    
+    // Проверка прав для раздела склада
+    const isOwner = state.activeStaffName === "Хозяин";
+    document.getElementById('owner-section').style.display = isOwner ? 'block' : 'none';
 }
 
 function showAuth() {
@@ -45,10 +44,18 @@ function showAuth() {
 function login() {
     const staffIdx = document.getElementById('staff-select').value;
     const passInput = document.getElementById('pass-input').value;
-    const selectedStaff = STAFF[staffIdx];
+    const selectedStaff = STAFF_LIST[staffIdx];
     
     if (passInput === selectedStaff.password) {
-        state.activeStaffName = selectedStaff.name;
+        let finalName = selectedStaff.name;
+        
+        // Если выбран "Другой админ", запрашиваем имя
+        if (selectedStaff.role === "extra") {
+            const extraName = prompt("Введите имя запасного админа:");
+            finalName = extraName ? extraName : "Запасной";
+        }
+
+        state.activeStaffName = finalName;
         state.shiftActive = true;
         save();
         showMain();
@@ -61,7 +68,14 @@ function login() {
 
 function logout() {
     let salary = state.activeStaffName === "Хозяин" ? 0 : Math.round(state.totalRevenue * PERCENT + BASE_SALARY);
-    if (confirm(`Выручка: ${state.totalRevenue} ₸\nЗарплата: ${salary} ₸\nЗакрыть смену?`)) {
+    const report = `
+=== ОТЧЕТ ===
+👤 Админ: ${state.activeStaffName}
+💰 Выручка: ${state.totalRevenue} ₸
+💵 ЗП: ${salary} ₸
+✅ В КАССУ: ${state.totalRevenue - salary} ₸
+    `;
+    if (confirm(report + "\nЗакрыть смену?")) {
         state.shiftActive = false;
         state.activeStaffName = null;
         state.totalRevenue = 0;
@@ -85,18 +99,14 @@ function calculateAmount(startTime, endTime, discountPercent = 0) {
 
 function render() {
     if (!state.shiftActive) return;
-
     const container = document.querySelector('.hall-map');
     if (!container) return;
     
     container.innerHTML = state.tables.map(table => {
         let money = table.active ? calculateAmount(table.startTime, Date.now(), table.discount) : 0;
         let barSum = table.bar.reduce((s, i) => s + i.sellPrice, 0);
-        let timeStr = "00:00:00";
-        if (table.active) {
-            let diff = Date.now() - table.startTime;
-            timeStr = new Date(diff).toISOString().substr(11, 8);
-        }
+        let timeStr = table.active ? new Date(Date.now() - table.startTime).toISOString().substr(11, 8) : "00:00:00";
+        
         return `
             <div class="table-card ${table.active ? 'active' : ''}" data-id="${table.id}">
                 <div class="table-num">Стол ${table.id}</div>
@@ -121,7 +131,7 @@ function render() {
 
 function startTable(id) {
     const table = state.tables.find(t => t.id === id);
-    table.clientName = prompt("Имя?") || "Гость";
+    table.clientName = prompt("Имя гостя?") || "Гость";
     table.discount = parseInt(prompt("Скидка %?")) || 0;
     table.active = true;
     table.startTime = Date.now();
@@ -153,8 +163,11 @@ function addToBar(tableId) {
 }
 
 window.onload = () => {
-    document.getElementById('staff-select').innerHTML = STAFF.map((s, i) => `<option value="${i}">${s.name}</option>`).join('');
+    const select = document.getElementById('staff-select');
+    select.innerHTML = STAFF_LIST.map((s, i) => `<option value="${i}">${s.name}</option>`).join('');
+    
     if (state.shiftActive) showMain(); else showAuth();
+    
     render();
-    setInterval(render, 1000); // Это запускает живое время
+    setInterval(render, 1000);
 };
