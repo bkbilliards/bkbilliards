@@ -3,64 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SENSEI CRM</title>
+    <title>SENSEI BILLIARD CRM</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="auth-screen" class="modal-overlay" style="display: flex;">
-        <div class="auth-box">
-            <h1 class="gold-text">SENSEI</h1>
-            <p class="subtitle">BILLIARD CLUB</p>
-            <div class="input-group">
-                <label>Администратор</label>
-                <select id="staff-select"></select>
+    <div id="auth-screen" class="overlay">
+        <div class="glass-card auth-box">
+            <div class="logo-area">
+                <h1 class="gold-text">SENSEI</h1>
+                <p class="subtitle">BILLIARD CLUB</p>
             </div>
             <div class="input-group">
-                <label>Пароль</label>
+                <label>СОТРУДНИК</label>
+                <select id="staff-select" onchange="checkExtra(this)"></select>
+                <input type="text" id="extra-name" placeholder="Введите имя" style="display:none; margin-top:10px;">
+            </div>
+            <div class="input-group">
+                <label>ПАРОЛЬ</label>
                 <input type="password" id="pass-input" placeholder="****">
             </div>
-            <button onclick="login()" class="btn-primary">ВОЙТИ</button>
-            <p id="auth-error" class="error-text" style="display:none; color: red; margin-top: 10px;">Неверный пароль!</p>
+            <button onclick="login()" class="btn-gold">ОТКРЫТЬ СМЕНУ</button>
+            <p id="auth-error" class="error">❌ Неверный пароль</p>
         </div>
     </div>
 
-    <div id="main-app" style="display:none;">
-        <header class="header">
-            <div class="header-left">
-                <span class="gold-text">SENSEI</span> | <span id="display-user"></span>
+    <div id="app" style="display:none;">
+        <header class="main-header">
+            <div class="brand">
+                <span class="gold-text">SENSEI</span>
+                <span class="divider">|</span>
+                <span id="user-display">Админ</span>
             </div>
-            <button onclick="logout()" class="btn-logout">ВЫЙТИ</button>
+            <div class="nav-tabs">
+                <button class="tab-link active" onclick="showTab('hall')">ЗАЛ</button>
+                <button class="tab-link" onclick="showTab('stock')">СКЛАД</button>
+                <button class="tab-link" onclick="showTab('debts')">ДОЛГИ</button>
+                <button id="owner-tab" class="tab-link" onclick="showTab('admin')" style="display:none;">УПРАВЛЕНИЕ</button>
+            </div>
+            <button onclick="logout()" class="btn-exit">ВЫЙТИ</button>
         </header>
 
-        <div class="stats-panel">
+        <section class="quick-stats">
             <div class="stat-item">
-                <span class="stat-label">ВЫРУЧКА</span>
-                <span class="stat-value gold-text"><span id="rev-val">0</span> ₸</span>
+                <label>ВЫРУЧКА</label>
+                <div class="val"><span id="rev-val">0</span> ₸</div>
             </div>
             <div class="stat-item">
-                <span class="stat-label">ВАША ЗП</span>
-                <span class="stat-value" style="color: #2ecc71;"><span id="salary-val">0</span> ₸</span>
+                <label>ВАША ЗП (8% + 6к)</label>
+                <div class="val gold-text"><span id="salary-val">0</span> ₸</div>
             </div>
-        </div>
+        </section>
 
-        <nav class="tabs">
-            <button class="tab-btn active" onclick="switchTab('hall', event)">ЗАЛ</button>
-            <button class="tab-btn" onclick="switchTab('stock', event)">СКЛАД</button>
-        </nav>
-
-        <main class="container">
+        <main class="content">
             <div id="tab-hall" class="tab-content active">
-                <div class="tables-grid" id="tables-list"></div>
+                <div id="tables-grid" class="grid"></div>
+                
+                <div class="section-title">📊 АКТИВНЫЕ ЧЕКИ (ОЖИДАЮТ ОПЛАТЫ)</div>
+                <div id="active-checks" class="checks-list"></div>
             </div>
-            <div id="tab-stock" class="tab-content" style="display:none;">
-                <div class="card">
-                    <button onclick="addStockItem()" class="btn-primary" style="margin-bottom: 10px;">+ Добавить товар</button>
-                    <div id="stock-list"></div>
+
+            <div id="tab-stock" class="tab-content">
+                <div class="glass-panel">
+                    <div class="panel-header">
+                        <input type="text" id="stock-search" placeholder="Поиск товара..." oninput="renderStock()">
+                        <button id="add-item-btn" onclick="addItem()" class="btn-small" style="display:none;">+ ТОВАР</button>
+                    </div>
+                    <table class="modern-table">
+                        <thead><tr><th>ТОВАР</th><th>ЦЕНА</th><th>ДЕЙСТВИЕ</th></tr></thead>
+                        <tbody id="stock-list"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="tab-debts" class="tab-content">
+                <div class="glass-panel">
+                    <div id="debts-list"></div>
+                </div>
+            </div>
+
+            <div id="tab-admin" class="tab-content">
+                <div class="glass-panel">
+                    <h3>ИСТОРИЯ ВСЕХ СМЕН</h3>
+                    <div id="history-list"></div>
                 </div>
             </div>
         </main>
     </div>
+
     <script src="app.js"></script>
 </body>
 </html>
