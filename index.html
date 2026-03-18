@@ -3,32 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SENSEI BILLIARD CRM</title>
+    <title>SENSEI BILLIARD SYSTEM</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="header">
-        <h1>SENSEI BILLIARD</h1>
-        <div class="admin-panel">
-            <span id="display-admin-name">Смена закрыта</span>
-            <button id="shift-btn" onclick="toggleShift()">ОТКРЫТЬ СМЕНУ</button>
-        </div>
-        <div id="shift-stats">
-            Выручка: <span id="stat-revenue">0</span> ₸ | ЗП (8%+6к): <span id="stat-salary">0</span> ₸
+    <div id="auth-screen" class="modal-overlay">
+        <div class="auth-box">
+            <h2 style="color:#d4af37">SENSEI BILLIARD</h2>
+            <input type="password" id="pass-input" placeholder="Введите пароль">
+            <button onclick="login()" class="btn-start">ВОЙТИ</button>
+            <p id="auth-error" style="color:red; display:none;">Неверный пароль!</p>
         </div>
     </div>
 
-    <div class="hall-map"></div>
+    <div id="main-content" style="display:none;">
+        <div class="header">
+            <h1 onclick="logout()" style="cursor:pointer">SENSEI BILLIARD</h1>
+            <div class="admin-panel">
+                <span id="role-badge" class="badge"></span>
+                <span id="display-admin-name"></span>
+                <button id="shift-btn" onclick="toggleShift()">ОТКРЫТЬ СМЕНУ</button>
+            </div>
+            <div id="shift-stats">
+                Выручка: <span id="stat-revenue">0</span> ₸ | ЗП: <span id="stat-salary">0</span> ₸
+            </div>
+        </div>
 
-    <div class="inventory-section">
-        <h2 style="color: #d4af37;">📦 СКЛАД / ТОВАРЫ</h2>
-        <div id="inventory-list"></div>
-        <button onclick="addInventoryItem()" style="background: #444; width: auto; padding: 10px;">+ Добавить товар на склад</button>
-    </div>
+        <div class="hall-map"></div>
 
-    <div class="debt-section">
-        <h2 style="color: #d4af37;">⚠️ ДОЛГИ</h2>
-        <div id="debt-list"></div>
+        <div id="owner-section" style="display:none;">
+            <div class="inventory-section">
+                <h2 style="color: #d4af37;">📦 УПРАВЛЕНИЕ СКЛАДОМ</h2>
+                <div id="inventory-list"></div>
+                <button onclick="addInventoryItem()" class="btn-start" style="width:auto">+ Добавить товар (Закуп/Продажа)</button>
+            </div>
+        </div>
+
+        <div class="debt-section">
+            <h2 style="color: #d4af37;">⚠️ ДОЛГИ</h2>
+            <div id="debt-list"></div>
+        </div>
     </div>
 
     <script src="app.js"></script>
