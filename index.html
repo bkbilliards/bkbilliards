@@ -10,10 +10,10 @@
 <body>
     <div id="auth-screen" class="modal-overlay">
         <div class="auth-box">
-            <img src="logo.png" alt="SENSEI" style="width: 100px; height: auto; margin-bottom: 10px;">
+            <img src="logo.png.jpeg" alt="SENSEI" class="auth-logo-img">
             <h1 class="auth-logo">SENSEI</h1>
             <div class="input-group">
-                <label>Сотрудник:</label>
+                <label>Администратор:</label>
                 <select id="staff-select"></select>
             </div>
             <div class="input-group">
@@ -29,7 +29,7 @@
         <div class="header">
             <div class="header-top">
                 <div class="header-logo-block">
-                    <img src="logo.png.jpeg" alt="SENSEI" style="width: 40px; height: auto;">
+                    <img src="logo.png.jpeg" alt="SENSEI" class="header-logo-small">
                     <h1>SENSEI</h1>
                 </div>
                 <div class="user-info">
@@ -50,7 +50,7 @@
                 <div class="stat-card">Выручка: <span id="stat-revenue">0</span> ₸</div>
                 <div class="stat-card">ЗП: <span id="stat-salary">0</span> ₸</div>
             </div>
-            <button class="btn-logout" onclick="logout()">ЗАКРЫТЬ СМЕНУ</button>
+            <button class="btn-logout" onclick="logout()">ЗАКРЫТЬ СМЕНУ И ВЫЙТИ</button>
         </div>
 
         <div id="page-hall" class="page">
@@ -65,8 +65,15 @@
             <div class="inventory-section">
                 <h2 class="gold-title">📦 СКЛАД</h2>
                 <input type="text" id="inventory-search" placeholder="Поиск товара..." oninput="renderInventory()">
-                <div id="inventory-list"></div>
-                <button id="btn-add-inventory" onclick="addInventoryItem()" class="btn-start" style="margin-top:15px; display:none;">+ ТОВАР</button>
+                <button onclick="addInventoryItem()" class="btn-add-item">+ ДОБАВИТЬ ТОВАР</button>
+                <div id="inventory-list-container">
+                    <table class="report-table">
+                        <thead>
+                            <tr><th>Название</th><th>Цена продажи</th></tr>
+                        </thead>
+                        <tbody id="inventory-list"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -81,11 +88,11 @@
             <div class="inventory-section">
                 <h2 class="gold-title">👤 МОЯ СТАТИСТИКА</h2>
                 <div class="stat-summary-box">
-                    <p>Накоплено к выплате: <span id="accumulated-salary" style="color:#27ae60; font-size:20px;">0</span> ₸</p>
+                    <p>Накоплено к выплате: <span id="accumulated-salary" style="color:#27ae60; font-size:20px; font-weight:bold;">0</span> ₸</p>
                 </div>
                 <table class="report-table">
                     <thead>
-                        <tr><th>Дата</th><th>Выручка</th><th>ЗП</th><th>Аванс</th><th>Итог</th></tr>
+                        <tr><th>Дата</th><th>Выручка</th><th>ЗП</th><th>Итог</th></tr>
                     </thead>
                     <tbody id="admin-personal-history"></tbody>
                 </table>
@@ -94,7 +101,7 @@
 
         <div id="page-accounting" class="page" style="display:none;">
             <div class="owner-section">
-                <h2 class="gold-title">📈 БУХГАЛТЕРИЯ</h2>
+                <h2 class="gold-title">📈 БУХГАЛТЕРИЯ (ТОЛЬКО ХОЗЯИН)</h2>
                 <div id="shift-history-list"></div>
             </div>
         </div>
