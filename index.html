@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SENSEI CRM PREMIUM</title>
+    <title>SENSEI BILLIARD PREMIUM</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="auth-screen" class="overlay">
         <div class="auth-card">
-            <div class="logo-circle">S</div>
+            <div class="auth-logo">S</div>
             <h1 class="gold-text">SENSEI</h1>
             <p class="tagline">BILLIARD CLUB</p>
             
             <div class="input-group">
                 <label>АДМИНИСТРАТОР</label>
-                <select id="staff-select" onchange="toggleExtraName()"></select>
+                <select id="staff-select" onchange="checkExtra(this)"></select>
                 <input type="text" id="extra-name" placeholder="Введите имя" style="display:none; margin-top:10px;">
             </div>
             
@@ -26,39 +26,38 @@
             </div>
             
             <button onclick="login()" class="btn-gold">ОТКРЫТЬ СМЕНУ</button>
-            <p id="auth-error" class="error-msg">❌ Неверный пароль!</p>
+            <p id="auth-error" class="error-msg" style="display:none;">❌ Неверный пароль!</p>
         </div>
     </div>
 
     <div id="app" style="display:none;">
         <header class="header">
             <div class="header-left">
-                <span class="gold-text">SENSEI</span> | <span id="user-display">---</span>
+                <span class="gold-text">SENSEI</span> <span class="divider">|</span> <span id="user-display">---</span>
             </div>
             <nav class="nav">
-                <button class="nav-link active" onclick="showPage('hall')">ЗАЛ</button>
-                <button class="nav-link" onclick="showPage('stock')">СКЛАД</button>
-                <button class="nav-link" onclick="showPage('debts')">ДОЛГИ</button>
-                <button id="owner-tab" class="nav-link" onclick="showPage('owner')" style="display:none;">УПРАВЛЕНИЕ</button>
+                <button class="nav-link active" onclick="showPage('hall', this)">ЗАЛ</button>
+                <button class="nav-link" onclick="showPage('stock', this)">СКЛАД</button>
+                <button class="nav-link" onclick="showPage('debts', this)">ДОЛГИ</button>
+                <button id="owner-tab" class="nav-link" onclick="showPage('owner', this)" style="display:none;">УПРАВЛЕНИЕ</button>
             </nav>
             <button onclick="logout()" class="btn-exit">ВЫЙТИ</button>
         </header>
 
-        <div class="top-bar">
+        <div class="top-stats">
             <div class="stat-item">
-                <span class="label">ОБЩАЯ ВЫРУЧКА</span>
+                <span class="label">ВЫРУЧКА СМЕНЫ</span>
                 <span class="value"><span id="rev-val">0</span> ₸</span>
             </div>
             <div class="stat-item">
-                <span class="label">ВАША ЗАРПЛАТА (8% + 6к)</span>
+                <span class="label">ВАША ЗП (8% + 6к)</span>
                 <span class="value gold-text"><span id="salary-val">0</span> ₸</span>
             </div>
         </div>
 
-        <main class="main-content">
+        <main class="content">
             <div id="page-hall" class="page-content active">
                 <div id="tables-grid" class="grid"></div>
-                
                 <h3 class="section-title gold-text">📊 ОЖИДАЮТ ОПЛАТЫ (ЧЕКИ)</h3>
                 <div id="active-checks" class="checks-container"></div>
             </div>
@@ -69,19 +68,16 @@
                         <input type="text" id="stock-search" placeholder="Поиск товара..." oninput="renderStock()">
                         <button id="add-item-btn" onclick="addItem()" class="btn-small" style="display:none;">+ ТОВАР</button>
                     </div>
-                    <div id="stock-list" class="list"></div>
+                    <div id="stock-list"></div>
                 </div>
             </div>
 
             <div id="page-debts" class="page-content" style="display:none;">
-                <div class="card" id="debts-list"></div>
+                <div id="debts-list" class="card"></div>
             </div>
 
             <div id="page-owner" class="page-content" style="display:none;">
-                <div class="card">
-                    <h3 class="gold-text">ИСТОРИЯ СМЕН</h3>
-                    <div id="history-list"></div>
-                </div>
+                <div id="history-list" class="card"></div>
             </div>
         </main>
     </div>
