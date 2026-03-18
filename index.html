@@ -21,11 +21,11 @@
             <h1 onclick="logout()" style="cursor:pointer">SENSEI BILLIARD</h1>
             <div class="admin-panel">
                 <span id="role-badge" class="badge"></span>
-                <span id="display-admin-name"></span>
-                <button id="shift-btn" onclick="toggleShift()">ОТКРЫТЬ СМЕНУ</button>
+                <span id="display-admin-name" style="color:#d4af37; font-weight:bold;"></span>
+                <button id="shift-btn" onclick="toggleShift()" style="width:auto; padding: 5px 15px;">ОТКРЫТЬ СМЕНУ</button>
             </div>
             <div id="shift-stats">
-                Выручка: <span id="stat-revenue">0</span> ₸ | ЗП: <span id="stat-salary">0</span> ₸
+                Выручка: <span id="stat-revenue">0</span> ₸ | К выплате: <span id="stat-salary">0</span> ₸
             </div>
         </div>
 
@@ -33,9 +33,9 @@
 
         <div id="owner-section" style="display:none;">
             <div class="inventory-section">
-                <h2 style="color: #d4af37;">📦 УПРАВЛЕНИЕ СКЛАДОМ</h2>
+                <h2 style="color: #d4af37;">📦 СКЛАД И ПРИБЫЛЬ</h2>
                 <div id="inventory-list"></div>
-                <button onclick="addInventoryItem()" class="btn-start" style="width:auto">+ Добавить товар (Закуп/Продажа)</button>
+                <button onclick="addInventoryItem()" class="btn-start" style="width:auto">+ Добавить товар</button>
             </div>
         </div>
 
