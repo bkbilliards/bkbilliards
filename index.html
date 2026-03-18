@@ -3,38 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SENSEI BILLIARD SYSTEM</title>
+    <title>SENSEI BILLIARD CLUB</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="auth-screen" class="modal-overlay">
         <div class="auth-box">
-            <h2 style="color:#d4af37; margin-bottom: 20px;">SENSEI BILLIARD</h2>
-            <p style="font-size: 12px; color: #888; margin-bottom: 10px;">Введите ваш пароль:</p>
-            <input type="password" id="pass-input" placeholder="****" style="font-size: 20px;">
-            <button onclick="login()" class="btn-start" style="margin-top: 10px;">ВОЙТИ</button>
-            <p id="auth-error" style="color: #ff4d4d; display: none; margin-top: 10px; font-size: 14px;">❌ Неверный пароль!</p>
+            <h1 class="auth-logo">SENSEI</h1>
+            <p class="auth-subtitle">BILLIARD CLUB</p>
+            
+            <div class="input-group">
+                <label>Кто заступает на смену?</label>
+                <select id="staff-select"></select>
+            </div>
+
+            <div class="input-group">
+                <label>Ваш пароль:</label>
+                <input type="password" id="pass-input" placeholder="****">
+            </div>
+
+            <button onclick="login()" class="btn-login">ОТКРЫТЬ СМЕНУ</button>
+            <p id="auth-error" class="error-msg">❌ Неверный пароль!</p>
         </div>
     </div>
 
     <div id="main-content" style="display:none;">
         <div class="header">
-            <h1 onclick="logout()" style="cursor:pointer" title="Нажмите, чтобы выйти">SENSEI BILLIARD</h1>
-            <div class="admin-panel">
-                <span id="role-badge" class="badge"></span>
-                <span id="display-admin-name" style="color:#d4af37; font-weight:bold; margin-left: 10px;"></span>
-                <button id="shift-btn" onclick="toggleShift()" style="width:auto; padding: 5px 15px; margin-left: 15px;">УПРАВЛЕНИЕ СМЕНОЙ</button>
+            <div class="header-top">
+                <h1>SENSEI</h1>
+                <div class="user-info">
+                    <span id="role-badge" class="badge"></span>
+                    <span id="display-admin-name"></span>
+                </div>
             </div>
             <div id="shift-stats">
-                Выручка: <span id="stat-revenue">0</span> ₸ | К выплате: <span id="stat-salary">0</span> ₸
+                <div class="stat-card">Выручка: <span id="stat-revenue">0</span> ₸</div>
+                <div class="stat-card">ЗП (8%+6к): <span id="stat-salary">0</span> ₸</div>
             </div>
+            <button class="btn-logout" onclick="logout()">Завершить смену и Выйти</button>
         </div>
 
         <div class="hall-map"></div>
 
         <div id="owner-section" style="display:none;">
             <div class="inventory-section">
-                <h2 style="color: #d4af37;">📦 СКЛАД И ПРИБЫЛЬ (Только Хозяин)</h2>
+                <h2 style="color: #d4af37; margin-top: 0;">📦 СКЛАД И ПРИБЫЛЬ</h2>
                 <div id="inventory-list"></div>
                 <button onclick="addInventoryItem()" class="btn-start" style="width:auto">+ Добавить товар</button>
             </div>
