@@ -12,18 +12,15 @@
         <div class="auth-box">
             <h1 class="auth-logo">SENSEI</h1>
             <p class="auth-subtitle">BILLIARD CLUB</p>
-            
             <div class="input-group">
-                <label>Кто заступает на смену?</label>
+                <label>Кто на смене?</label>
                 <select id="staff-select"></select>
             </div>
-
             <div class="input-group">
-                <label>Ваш пароль:</label>
+                <label>Пароль:</label>
                 <input type="password" id="pass-input" placeholder="****">
             </div>
-
-            <button onclick="login()" class="btn-login">ОТКРЫТЬ СМЕНУ</button>
+            <button onclick="login()" class="btn-login">ВОЙТИ</button>
             <p id="auth-error" class="error-msg">❌ Неверный пароль!</p>
         </div>
     </div>
@@ -39,20 +36,20 @@
             </div>
             <div id="shift-stats">
                 <div class="stat-card">Выручка: <span id="stat-revenue">0</span> ₸</div>
-                <div class="stat-card">ЗП (8%+6к): <span id="stat-salary">0</span> ₸</div>
+                <div class="stat-card">ЗП: <span id="stat-salary">0</span> ₸</div>
             </div>
-            <button class="btn-logout" onclick="logout()">Завершить смену и Выйти</button>
+            <button class="btn-logout" onclick="logout()">Закрыть смену и Выйти</button>
         </div>
         <div class="hall-map"></div>
         <div id="owner-section" style="display:none;">
             <div class="inventory-section">
-                <h2 style="color: #d4af37; margin-top: 0;">📦 СКЛАД И ПРИБЫЛЬ</h2>
+                <h2 style="color:#d4af37; margin:0 0 10px 0;">📦 СКЛАД</h2>
                 <div id="inventory-list"></div>
-                <button onclick="addInventoryItem()" class="btn-start" style="width:auto">+ Добавить товар</button>
+                <button onclick="addInventoryItem()" class="btn-start" style="width:auto">+ Товар</button>
             </div>
         </div>
         <div class="debt-section">
-            <h2 style="color: #d4af37;">⚠️ ДОЛГИ</h2>
+            <h2 style="color:#d4af37; margin:0 0 10px 0;">⚠️ ДОЛГИ</h2>
             <div id="debt-list"></div>
         </div>
     </div>
