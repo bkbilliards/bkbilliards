@@ -3,23 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SENSEI BILLIARD PRO</title>
+    <title>SENSEI CRM PRO</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="header">
         <h1>SENSEI BILLIARD</h1>
         <div class="admin-panel">
-            <span id="display-admin-name">Смена не открыта</span>
-            <button id="shift-btn" onclick="toggleShift()" style="width: auto; display: inline-block; margin-left: 10px; background: #d4af37;">ОТКРЫТЬ СМЕНУ</button>
+            <span id="display-admin-name">Смена закрыта</span>
+            <button id="shift-btn" onclick="toggleShift()">ОТКРЫТЬ СМЕНУ</button>
         </div>
-        <div id="shift-stats" style="display:none; font-size: 14px; margin-top: 10px; color: #aaa;">
-            Выручка: <span id="stat-revenue">0</span> ₸ | ЗП (8%+6к): <span id="stat-salary">0</span> ₸
+        <div id="shift-stats">
+            Выручка: <span id="stat-revenue">0</span> ₸ | ЗП: <span id="stat-salary">0</span> ₸
         </div>
     </div>
 
-    <div class="hall-map">
-        </div>
+    <div class="hall-map"></div>
+
+    <div class="debt-section">
+        <h2 style="color: #d4af37; border-bottom: 1px solid #444; padding-bottom: 5px;">⚠️ СПИСОК ДОЛГОВ</h2>
+        <div id="debt-list"></div>
+        <button onclick="addManualDebt()" style="background: #444; margin-top: 10px;">+ Добавить долг вручную</button>
+    </div>
 
     <script src="app.js"></script>
 </body>
