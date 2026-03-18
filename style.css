@@ -2,86 +2,39 @@
     --bg: #0a0a0b;
     --dark: #121214;
     --gold: #d4af37;
-    --gold-dim: #aa8a2e;
     --text: #ffffff;
     --gray: #6b6b6b;
 }
 
-body {
-    background: var(--bg); color: var(--text);
-    font-family: 'Montserrat', sans-serif; margin: 0;
-}
-
+body { background: var(--bg); color: var(--text); font-family: 'Montserrat', sans-serif; margin: 0; }
 .gold-text { color: var(--gold) !important; }
 
-/* ОКНО ВХОДА */
-.overlay {
-    position: fixed; inset: 0; background: #000;
-    display: flex; align-items: center; justify-content: center; z-index: 9999;
-}
-.auth-card {
-    background: var(--dark); padding: 50px; border-radius: 20px;
-    border: 1px solid #222; text-align: center; width: 320px;
-}
-.logo-circle {
-    width: 60px; height: 60px; border: 2px solid var(--gold);
-    border-radius: 50%; margin: 0 auto 15px; display: flex;
-    align-items: center; justify-content: center; font-size: 30px;
-    color: var(--gold); font-weight: bold;
-}
-.tagline { font-size: 10px; letter-spacing: 4px; color: var(--gray); margin-top: -10px; margin-bottom: 30px; }
+/* АВТОРИЗАЦИЯ */
+.overlay { position: fixed; inset: 0; background: #000; display: flex; align-items: center; justify-content: center; z-index: 9999; }
+.auth-card { background: var(--dark); padding: 40px; border-radius: 20px; border: 1px solid #222; text-align: center; width: 320px; }
+.auth-logo { width: 60px; height: 60px; border: 2px solid var(--gold); border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--gold); font-weight: bold; }
+.tagline { font-size: 10px; letter-spacing: 4px; color: var(--gray); margin-bottom: 30px; }
 
 /* ШАПКА */
-.header {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 15px 30px; background: #000; border-bottom: 1px solid #222;
-}
-.nav { display: flex; gap: 20px; }
-.nav-link {
-    background: none; border: none; color: var(--gray);
-    font-weight: bold; cursor: pointer; padding: 10px; font-family: inherit;
-}
+.header { display: flex; justify-content: space-between; align-items: center; padding: 15px 30px; background: #000; border-bottom: 1px solid #222; }
+.nav { display: flex; gap: 15px; }
+.nav-link { background: none; border: none; color: var(--gray); font-weight: bold; cursor: pointer; padding: 10px; font-family: inherit; }
 .nav-link.active { color: var(--gold); border-bottom: 2px solid var(--gold); }
+.btn-exit { background: #c0392b; color: #fff; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; }
 
 /* СТАТИСТИКА */
-.top-bar { display: flex; gap: 15px; padding: 20px 30px; }
-.stat-item {
-    flex: 1; background: var(--dark); padding: 15px;
-    border-radius: 12px; border: 1px solid #222;
-}
+.top-stats { display: flex; gap: 15px; padding: 20px 30px; }
+.stat-item { flex: 1; background: var(--dark); padding: 15px; border-radius: 12px; border: 1px solid #222; }
 .stat-item .label { font-size: 10px; color: var(--gray); display: block; }
 .stat-item .value { font-size: 24px; font-weight: bold; margin-top: 5px; }
 
 /* СТОЛЫ */
-.grid {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 15px; padding: 20px 30px;
-}
-.table-card {
-    background: var(--dark); border: 1px solid #222;
-    padding: 25px; border-radius: 15px; text-align: center;
-}
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; padding: 20px 30px; }
+.table-card { background: var(--dark); border: 1px solid #222; padding: 25px; border-radius: 15px; text-align: center; }
 .table-card.active { border-color: var(--gold); box-shadow: 0 0 20px rgba(212,175,55,0.1); }
 
-/* КНОПКИ */
-.btn-gold {
-    background: var(--gold); color: #000; border: none;
-    padding: 15px; width: 100%; border-radius: 10px;
-    font-weight: bold; cursor: pointer; transition: 0.3s;
-}
-.btn-exit { background: #c0392b; color: #fff; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; }
-
-/* КАРТОЧКИ СКЛАДА И ЧЕКОВ */
-.card { background: var(--dark); border: 1px solid #222; border-radius: 15px; padding: 20px; margin: 0 30px; }
-.check-row {
-    background: #1a1a1c; padding: 15px; border-radius: 10px;
-    margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
-    border: 1px solid #333;
-}
+/* ФОРМЫ */
 .input-group { text-align: left; margin-bottom: 15px; }
 .input-group label { font-size: 10px; color: var(--gray); margin-bottom: 5px; display: block; }
-input, select {
-    width: 100%; background: #000; border: 1px solid #333;
-    color: #fff; padding: 12px; border-radius: 8px; box-sizing: border-box;
-}
-.error-msg { color: #e74c3c; font-size: 12px; display: none; margin-top: 10px; }
+input, select { width: 100%; background: #000; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 8px; box-sizing: border-box; }
+.btn-gold { background: var(--gold); color: #000; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; }
