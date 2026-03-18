@@ -1,74 +1,27 @@
 :root {
-    --bg: #0a0a0a;
-    --dark: #141414;
-    --gold: #c5a059;
+    --bg: #050505;
+    --dark: #121212;
+    --gold: #d4af37;
     --text: #ffffff;
-    --green: #2ecc71;
-    --red: #e74c3c;
 }
-
-body {
-    background: var(--bg); color: var(--text);
-    font-family: 'Montserrat', sans-serif; margin: 0;
-}
-
-/* ЭКРАН ВХОДА */
-.modal-overlay {
-    position: fixed; inset: 0; background: #000;
-    display: flex; align-items: center; justify-content: center; z-index: 1000;
-}
-.auth-box {
-    background: var(--dark); padding: 40px; border-radius: 20px;
-    border: 1px solid #333; text-align: center; width: 300px;
-}
-.gold-text { color: var(--gold); }
-.subtitle { font-size: 10px; letter-spacing: 4px; color: #666; margin-top: -10px; margin-bottom: 30px; }
-
-/* ШАПКА И СТАТИСТИКА */
-.header {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 15px 20px; background: #000; border-bottom: 1px solid #222;
-}
-.stats-panel {
-    display: flex; gap: 15px; padding: 15px 20px; background: var(--dark);
-}
-.stat-item {
-    flex: 1; background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px;
-}
+body { background: var(--bg); color: var(--text); font-family: 'Montserrat', sans-serif; margin: 0; }
+.modal-overlay { position: fixed; inset: 0; background: #000; display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.auth-box { background: var(--dark); padding: 40px; border-radius: 20px; border: 1px solid #222; text-align: center; width: 300px; }
+.gold-text { color: var(--gold); font-weight: bold; }
+.subtitle { font-size: 10px; letter-spacing: 4px; color: #555; margin-bottom: 30px; }
+.header { display: flex; justify-content: space-between; padding: 15px 20px; background: #000; border-bottom: 1px solid #222; }
+.stats-panel { display: flex; gap: 10px; padding: 15px; }
+.stat-item { flex: 1; background: var(--dark); padding: 15px; border-radius: 12px; border: 1px solid #222; }
 .stat-label { font-size: 10px; color: #666; display: block; }
 .stat-value { font-size: 20px; font-weight: bold; }
-
-/* СЕТКА СТОЛОВ */
-.tables-grid {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 15px; padding: 20px;
-}
-.table-card {
-    background: var(--dark); border: 1px solid #222; border-radius: 15px;
-    padding: 20px; text-align: center; transition: 0.3s;
-}
-.table-card.active { border-color: var(--gold); background: #1a160e; }
-
-/* КНОПКИ И ВВОД */
-.btn-primary {
-    width: 100%; padding: 12px; background: var(--gold); border: none;
-    border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px;
-}
-.btn-logout { background: var(--red); color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
-.btn-small { background: var(--gold); border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
-input, select {
-    width: 100%; padding: 10px; background: #000; border: 1px solid #333;
-    color: #fff; border-radius: 6px; box-sizing: border-box;
-}
-.input-group { text-align: left; margin-bottom: 15px; }
-.input-group label { font-size: 11px; color: #666; margin-bottom: 5px; display: block; }
-
-/* ТАБЛИЦЫ */
-.tab-content { display: none; }
-.tab-content.active { display: block; }
-.tabs { display: flex; justify-content: center; gap: 10px; margin-top: 15px; }
-.tab-btn { background: none; border: none; color: #555; padding: 10px 20px; cursor: pointer; font-weight: bold; }
+.tables-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; padding: 15px; }
+.table-card { background: var(--dark); border: 1px solid #222; border-radius: 15px; padding: 20px; text-align: center; }
+.table-card.active { border-color: var(--gold); }
+.btn-primary { width: 100%; padding: 12px; background: var(--gold); border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+.btn-logout { background: #e74c3c; color: #fff; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer; }
+.tabs { display: flex; justify-content: center; gap: 20px; border-bottom: 1px solid #222; }
+.tab-btn { background: none; border: none; color: #444; padding: 10px; cursor: pointer; font-weight: bold; }
 .tab-btn.active { color: var(--gold); border-bottom: 2px solid var(--gold); }
-.data-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-.data-table th { text-align: left; color: #444; font-size: 12px; padding: 10px; }
-.data-table td { padding: 10px; border-bottom: 1px solid #222; }
+input, select { width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: #fff; border-radius: 8px; margin-top: 5px; box-sizing: border-box; }
+.input-group { text-align: left; margin-bottom: 15px; }
+.input-group label { font-size: 11px; color: #666; }
