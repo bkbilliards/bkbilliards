@@ -3,81 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SENSEI BILLIARD CRM</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <title>SENSEI CRM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="auth-screen" class="auth-overlay">
-        <div class="auth-card">
-            <div class="auth-header">
-                <h1 class="gold-gradient-text">SENSEI</h1>
-                <p>BILLIARD CLUB MANAGEMENT</p>
+    <div id="auth-screen" class="modal-overlay">
+        <div class="auth-box">
+            <h1 class="gold-text">SENSEI</h1>
+            <p class="subtitle">BILLIARD CLUB</p>
+            <div class="input-group">
+                <label>Выберите администратора</label>
+                <select id="staff-select"></select>
             </div>
-            <div class="field">
-                <label>АДМИНИСТРАТОР</label>
-                <select id="staff-select" class="custom-select"></select>
+            <div class="input-group">
+                <label>Введите пароль</label>
+                <input type="password" id="pass-input" placeholder="****">
             </div>
-            <div class="field">
-                <label>ПАРОЛЬ</label>
-                <input type="password" id="pass-input" class="custom-input" placeholder="••••">
-            </div>
-            <button onclick="login()" class="btn-gold-fill">ВОЙТИ В СИСТЕМУ</button>
-            <p id="auth-error" class="error-msg">❌ Неверный пароль</p>
+            <button onclick="login()" class="btn-primary">ВОЙТИ</button>
+            <p id="auth-error" class="error-text">Неверный пароль!</p>
         </div>
     </div>
 
-    <div id="app" style="display:none;">
-        <header class="app-header">
-            <div class="brand">
-                <span class="gold-dot"></span>
-                <h2 class="gold-gradient-text">SENSEI</h2>
+    <div id="main-app" style="display:none;">
+        <header class="header">
+            <div class="header-left">
+                <span class="status-dot"></span>
+                <span id="display-user"></span>
             </div>
-            <div class="session-info">
-                <div class="user-pill">
-                    <span id="role-badge" class="role-badge"></span>
-                    <span id="user-name"></span>
-                </div>
-                <button class="btn-close-shift" onclick="logout()">ЗАКРЫТЬ СМЕНУ</button>
+            <div class="header-right">
+                <button onclick="logout()" class="btn-logout">ЗАКРЫТЬ СМЕНУ</button>
             </div>
         </header>
 
-        <nav class="main-nav">
-            <button class="nav-link active" onclick="openTab('hall')">ЗАЛ</button>
-            <button class="nav-link" onclick="openTab('stock')">СКЛАД</button>
-            <button class="nav-link" onclick="openTab('stats')">СТАТИСТИКА</button>
-        </nav>
-
-        <div class="top-stats">
-            <div class="stat-card">
-                <span class="label">ВЫРУЧКА ЗА СМЕНУ</span>
-                <span class="value"><span id="total-rev">0</span> ₸</span>
+        <div class="stats-panel">
+            <div class="stat-item">
+                <span class="stat-label">ВЫРУЧКА</span>
+                <span class="stat-value gold-text"><span id="rev-val">0</span> ₸</span>
             </div>
-            <div class="stat-card">
-                <span class="label">ВАША ЗАРПЛАТА</span>
-                <span class="value green-text"><span id="my-salary">0</span> ₸</span>
+            <div class="stat-item">
+                <span class="stat-label">ВАША ЗП</span>
+                <span class="stat-value green-text"><span id="salary-val">0</span> ₸</span>
             </div>
         </div>
 
-        <main class="content-body">
-            <div id="tab-hall" class="tab-pane active">
-                <div class="grid-layout" id="tables-container"></div>
+        <nav class="tabs">
+            <button class="tab-btn active" onclick="switchTab('hall')">ЗАЛ</button>
+            <button class="tab-btn" onclick="switchTab('stock')">СКЛАД</button>
+            <button class="tab-btn" onclick="switchTab('history')">ИСТОРИЯ</button>
+        </nav>
+
+        <main class="container">
+            <div id="tab-hall" class="tab-content active">
+                <div class="tables-grid" id="tables-list"></div>
             </div>
 
-            <div id="tab-stock" class="tab-pane">
-                <div class="glass-panel">
-                    <div class="panel-header">
-                        <h3>📦 ТОВАРЫ НА СКЛАДЕ</h3>
-                        <button onclick="addItem()" class="btn-add">+ ДОБАВИТЬ</button>
+            <div id="tab-stock" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Товары на складе</h3>
+                        <button onclick="addStockItem()" class="btn-small">+ Добавить</button>
                     </div>
-                    <div class="table-wrapper">
-                        <table class="modern-table">
-                            <thead>
-                                <tr><th>НАИМЕНОВАНИЕ</th><th>ЦЕНА ПРОДАЖИ</th></tr>
-                            </thead>
-                            <tbody id="stock-list"></tbody>
-                        </table>
-                    </div>
+                    <table class="data-table">
+                        <thead><tr><th>Товар</th><th>Цена</th></tr></thead>
+                        <tbody id="stock-list"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="tab-history" class="tab-content">
+                <div class="card">
+                    <h3>История смен</h3>
+                    <table class="data-table">
+                        <thead><tr><th>Дата</th><th>Админ</th><th>Выручка</th></tr></thead>
+                        <tbody id="history-list"></tbody>
+                    </table>
                 </div>
             </div>
         </main>
