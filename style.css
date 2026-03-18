@@ -1,73 +1,57 @@
 body { 
     background: #0f1012; 
     color: white; 
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    font-family: sans-serif; 
     margin: 0; 
-    padding: 15px; 
+    padding: 20px; 
 }
 
 .header { 
     text-align: center; 
     border-bottom: 2px solid #d4af37; 
-    margin-bottom: 20px; 
-    padding-bottom: 10px;
+    margin-bottom: 30px; 
+    padding-bottom: 15px;
 }
 
-h1 { color: #d4af37; margin: 10px 0; letter-spacing: 2px; }
+h1 { color: #d4af37; text-transform: uppercase; letter-spacing: 3px; }
 
-.admin-panel { margin-bottom: 10px; }
-
-#shift-btn { 
-    background: #d4af37; 
-    color: black; 
-    border: none; 
-    padding: 8px 15px; 
-    border-radius: 5px; 
-    font-weight: bold; 
-    cursor: pointer;
-}
-
-#shift-stats { font-size: 14px; color: #aaa; margin-top: 5px; }
-
+/* Сетка столов по твоей схеме */
 .hall-map { 
     display: grid; 
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); 
+    grid-template-columns: repeat(5, 1fr); /* 5 столов в ряд */
     gap: 15px; 
+}
+
+/* Делаем 6-й стол над остальными, как на рисунке */
+.table-card[data-id="6"] {
+    grid-column: 1; 
+    grid-row: 1;
+    margin-bottom: 20px;
 }
 
 .table-card { 
     background: #1e1e1e; 
     border: 1px solid #333; 
-    border-radius: 12px; 
+    border-radius: 10px; 
     padding: 15px; 
-    text-align: center; 
-    transition: 0.3s;
+    text-align: center;
+    grid-row: 2; /* Все остальные столы (1-5) во втором ряду */
 }
 
-.table-card.active { 
-    border-color: #d4af37; 
-    box-shadow: 0 0 15px rgba(212, 175, 55, 0.2); 
-}
+.table-card.active { border-color: #d4af37; box-shadow: 0 0 15px rgba(212,175,55,0.3); }
 
-.table-num { font-size: 20px; color: #d4af37; font-weight: bold; }
-
-.timer { 
-    font-size: 28px; 
-    margin: 10px 0; 
-    font-family: 'Courier New', Courier, monospace; 
-    color: #fff;
-}
-
-.cost { font-size: 22px; font-weight: bold; color: #28a745; margin-bottom: 10px; }
+.table-num { color: #d4af37; font-weight: bold; font-size: 18px; }
+.timer { font-size: 24px; margin: 10px 0; font-family: monospace; }
+.cost { font-size: 20px; color: #28a745; font-weight: bold; margin-bottom: 10px; }
 
 button { 
     width: 100%; 
     padding: 10px; 
-    border-radius: 6px; 
+    border-radius: 5px; 
     border: none; 
     font-weight: bold; 
     cursor: pointer; 
-    margin-top: 5px; 
+    margin-bottom: 5px;
 }
 
 .btn-start { background: #28a745; color: white; }
@@ -75,34 +59,9 @@ button {
 .btn-bar { background: #444; color: white; }
 
 .debt-section { 
-    margin-top: 30px; 
-    background: #1a1b1e; 
-    padding: 15px; 
-    border-radius: 12px; 
-    border: 1px dashed #555; 
-}
-
-.debt-item { 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    padding: 10px; 
-    border-bottom: 1px solid #333; 
-}
-
-.btn-pay-debt { 
-    width: auto; 
-    padding: 5px 10px; 
-    background: #28a745; 
-    font-size: 12px; 
-    color: white;
-}
-
-.discount-badge { 
-    background: #d4af37; 
-    color: black; 
-    padding: 2px 5px; 
-    border-radius: 4px; 
-    font-size: 10px; 
-    vertical-align: middle;
+    margin-top: 40px; 
+    background: #161719; 
+    padding: 20px; 
+    border-radius: 15px; 
+    border: 1px solid #444; 
 }
