@@ -1,88 +1,74 @@
 :root {
-    --bg: #050505;
-    --card-bg: rgba(25, 25, 25, 0.8);
-    --gold: #d4af37;
-    --gold-dark: #aa8a2e;
-    --text: #e0e0e0;
-    --red: #ff4b2b;
-    --green: #00ff87;
-    --glass: rgba(255, 255, 255, 0.03);
+    --bg: #0a0a0a;
+    --dark: #141414;
+    --gold: #c5a059;
+    --text: #ffffff;
+    --green: #2ecc71;
+    --red: #e74c3c;
 }
 
 body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Montserrat', sans-serif;
-    margin: 0;
-    -webkit-font-smoothing: antialiased;
-}
-
-.gold-gradient-text {
-    background: linear-gradient(45deg, #d4af37, #f7e1ad);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    font-weight: 800;
+    background: var(--bg); color: var(--text);
+    font-family: 'Montserrat', sans-serif; margin: 0;
 }
 
 /* ЭКРАН ВХОДА */
-.auth-overlay {
-    position: fixed; inset: 0; background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
+.modal-overlay {
+    position: fixed; inset: 0; background: #000;
     display: flex; align-items: center; justify-content: center; z-index: 1000;
 }
-.auth-card {
-    background: var(--card-bg); padding: 50px; border-radius: 24px;
-    border: 1px solid rgba(212, 175, 55, 0.2); width: 340px; text-align: center;
-    backdrop-filter: blur(10px); box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+.auth-box {
+    background: var(--dark); padding: 40px; border-radius: 20px;
+    border: 1px solid #333; text-align: center; width: 300px;
 }
-.auth-header p { font-size: 10px; letter-spacing: 3px; color: #666; margin-bottom: 30px; }
+.gold-text { color: var(--gold); }
+.subtitle { font-size: 10px; letter-spacing: 4px; color: #666; margin-top: -10px; margin-bottom: 30px; }
 
-/* ШАПКА ПРИЛОЖЕНИЯ */
-.app-header {
+/* ШАПКА И СТАТИСТИКА */
+.header {
     display: flex; justify-content: space-between; align-items: center;
-    padding: 20px 40px; background: rgba(0,0,0,0.5); border-bottom: 1px solid var(--glass);
+    padding: 15px 20px; background: #000; border-bottom: 1px solid #222;
 }
-.user-pill {
-    background: var(--glass); padding: 8px 16px; border-radius: 50px;
-    display: flex; align-items: center; gap: 10px; border: 1px solid rgba(255,255,255,0.05);
+.stats-panel {
+    display: flex; gap: 15px; padding: 15px 20px; background: var(--dark);
 }
-.role-badge { font-size: 9px; background: var(--gold); color: #000; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
+.stat-item {
+    flex: 1; background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px;
+}
+.stat-label { font-size: 10px; color: #666; display: block; }
+.stat-value { font-size: 20px; font-weight: bold; }
 
-/* КАРТОЧКИ И ПАНЕЛИ */
-.top-stats { display: flex; gap: 20px; padding: 20px 40px; }
-.stat-card {
-    background: var(--glass); flex: 1; padding: 20px; border-radius: 16px;
-    border: 1px solid rgba(255,255,255,0.05);
-}
-.stat-card .label { font-size: 10px; color: #666; display: block; margin-bottom: 5px; }
-.stat-card .value { font-size: 24px; font-weight: 700; }
-
-.grid-layout {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px; padding: 0 40px 40px;
+/* СЕТКА СТОЛОВ */
+.tables-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 15px; padding: 20px;
 }
 .table-card {
-    background: var(--card-bg); border-radius: 20px; padding: 25px;
-    border: 1px solid var(--glass); transition: 0.3s;
+    background: var(--dark); border: 1px solid #222; border-radius: 15px;
+    padding: 20px; text-align: center; transition: 0.3s;
 }
-.table-card.active { border-color: var(--gold); background: rgba(212, 175, 55, 0.05); }
+.table-card.active { border-color: var(--gold); background: #1a160e; }
 
-/* КНОПКИ */
-.btn-gold-fill {
-    width: 100%; padding: 16px; background: var(--gold); border: none;
-    border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s;
+/* КНОПКИ И ВВОД */
+.btn-primary {
+    width: 100%; padding: 12px; background: var(--gold); border: none;
+    border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px;
 }
-.btn-gold-fill:hover { background: var(--gold-dark); transform: translateY(-2px); }
-
-.btn-start { background: var(--green); color: #000; border: none; padding: 12px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; }
-.btn-stop { background: var(--red); color: #fff; border: none; padding: 12px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; }
+.btn-logout { background: var(--red); color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+.btn-small { background: var(--gold); border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+input, select {
+    width: 100%; padding: 10px; background: #000; border: 1px solid #333;
+    color: #fff; border-radius: 6px; box-sizing: border-box;
+}
+.input-group { text-align: left; margin-bottom: 15px; }
+.input-group label { font-size: 11px; color: #666; margin-bottom: 5px; display: block; }
 
 /* ТАБЛИЦЫ */
-.modern-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-.modern-table th { text-align: left; padding: 15px; font-size: 11px; color: #666; border-bottom: 1px solid var(--glass); }
-.modern-table td { padding: 15px; border-bottom: 1px solid var(--glass); }
-
-.nav-link {
-    background: none; border: none; color: #555; padding: 15px 30px;
-    font-weight: 600; cursor: pointer; font-size: 14px;
-}
-.nav-link.active { color: var(--gold); border-bottom: 2px solid var(--gold); }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.tabs { display: flex; justify-content: center; gap: 10px; margin-top: 15px; }
+.tab-btn { background: none; border: none; color: #555; padding: 10px 20px; cursor: pointer; font-weight: bold; }
+.tab-btn.active { color: var(--gold); border-bottom: 2px solid var(--gold); }
+.data-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+.data-table th { text-align: left; color: #444; font-size: 12px; padding: 10px; }
+.data-table td { padding: 10px; border-bottom: 1px solid #222; }
