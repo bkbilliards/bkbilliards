@@ -3,30 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SENSEI BILLIARD PREMIUM</title>
+    <title>SENSEI BILLIARD CRM</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="auth-screen" class="overlay">
         <div class="auth-card">
-            <div class="auth-logo">S</div>
+            <div class="auth-logo-circle">S</div>
             <h1 class="gold-text">SENSEI</h1>
             <p class="tagline">BILLIARD CLUB</p>
-            
             <div class="input-group">
                 <label>АДМИНИСТРАТОР</label>
-                <select id="staff-select" onchange="checkExtra(this)"></select>
+                <select id="staff-select" onchange="toggleExtraName()"></select>
                 <input type="text" id="extra-name" placeholder="Введите имя" style="display:none; margin-top:10px;">
             </div>
-            
             <div class="input-group">
                 <label>ПАРОЛЬ</label>
                 <input type="password" id="pass-input" placeholder="••••">
             </div>
-            
             <button onclick="login()" class="btn-gold">ОТКРЫТЬ СМЕНУ</button>
-            <p id="auth-error" class="error-msg" style="display:none;">❌ Неверный пароль!</p>
+            <p id="auth-error" class="error-msg">❌ Неверный пароль!</p>
         </div>
     </div>
 
@@ -61,27 +58,17 @@
                 <h3 class="section-title gold-text">📊 ОЖИДАЮТ ОПЛАТЫ (ЧЕКИ)</h3>
                 <div id="active-checks" class="checks-container"></div>
             </div>
-
             <div id="page-stock" class="page-content" style="display:none;">
-                <div class="card">
-                    <div class="card-header">
-                        <input type="text" id="stock-search" placeholder="Поиск товара..." oninput="renderStock()">
-                        <button id="add-item-btn" onclick="addItem()" class="btn-small" style="display:none;">+ ТОВАР</button>
-                    </div>
-                    <div id="stock-list"></div>
-                </div>
+                <div class="card"><div id="stock-list"></div></div>
             </div>
-
             <div id="page-debts" class="page-content" style="display:none;">
                 <div id="debts-list" class="card"></div>
             </div>
-
             <div id="page-owner" class="page-content" style="display:none;">
                 <div id="history-list" class="card"></div>
             </div>
         </main>
     </div>
-
     <script src="app.js"></script>
 </body>
 </html>
