@@ -1,45 +1,68 @@
 :root {
-    --bg-main: #0c0d0f;
-    --bg-card: #141518;
-    --gold: #d4af37;
-    --green: #27ae60;
-    --red: #c0392b;
+    --bg: #0a0a0a;
+    --card: #151515;
+    --gold: #c5a059;
+    --green: #2ecc71;
+    --red: #e74c3c;
     --text: #ffffff;
 }
 
-body { background: var(--bg-main); color: var(--text); font-family: 'Montserrat', sans-serif; margin: 0; padding: 10px; }
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Montserrat', sans-serif;
+    margin: 0;
+    overflow-x: hidden;
+}
 
-/* ОКНО ВХОДА */
-.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; align-items: center; justify-content: center; z-index: 1000; }
-.auth-box { background: var(--bg-card); padding: 30px; border-radius: 15px; border: 1px solid #333; text-align: center; width: 300px; display: flex; flex-direction: column; align-items: center; }
-.auth-logo-img { width: 100px; height: auto; margin-bottom: 10px; border-radius: 10px; }
-.auth-logo { color: var(--gold); font-size: 24px; margin: 0 0 20px; letter-spacing: 3px; }
-
-.input-group { text-align: left; width: 100%; margin-bottom: 15px; }
-.input-group label { color: var(--gold); font-size: 10px; font-weight: bold; }
-.auth-box input, .auth-box select { width: 100%; background: #1a1b1e; border: 1px solid #333; color: #fff; padding: 12px; margin-top: 5px; border-radius: 8px; box-sizing: border-box; }
-.btn-login { background: var(--green); color: #fff; border: none; width: 100%; padding: 15px; margin-top: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+/* ФИКС ЛОГОТИПА И ОКНА ВХОДА */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.95); display: flex; align-items: center; justify-content: center; z-index: 9999;
+}
+.auth-box {
+    background: var(--card); padding: 40px; border-radius: 20px;
+    border: 1px solid #333; text-align: center; width: 320px;
+}
+.auth-logo-img { width: 120px; height: 120px; object-fit: contain; margin-bottom: 20px; }
 
 /* ШАПКА */
-.header-logo-small { width: 40px; height: auto; margin-right: 10px; }
-.header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-.navigation-menu { display: flex; justify-content: center; gap: 5px; margin-bottom: 20px; flex-wrap: wrap; }
-.nav-btn { background: #222; color: #888; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: bold; }
-.nav-btn.active { background: var(--gold); color: #000; }
+.main-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 15px 25px; background: #000; border-bottom: 1px solid #222;
+}
+.small-logo { width: 40px; height: 40px; object-fit: contain; }
 
-/* СТОЛЫ */
-.hall-map { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
-.table-card { background: var(--bg-card); border: 1px solid #222; border-radius: 10px; padding: 15px; text-align: center; }
-.table-card.active { border-color: var(--gold); }
-.timer { font-size: 20px; font-weight: bold; margin: 10px 0; }
-.btn-start { background: var(--green); color: #fff; border: none; width: 100%; padding: 10px; border-radius: 5px; font-weight: bold; cursor: pointer; }
-.btn-stop { background: var(--red); color: #fff; border: none; width: 100%; padding: 10px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+/* КНОПКИ НАВИГАЦИИ */
+.navigation { display: flex; justify-content: center; gap: 10px; padding: 20px; }
+.nav-btn {
+    background: #222; color: #888; border: none; padding: 10px 20px;
+    border-radius: 8px; cursor: pointer; transition: 0.3s;
+}
+.nav-btn.active { background: var(--gold); color: #000; font-weight: bold; }
 
-/* СКЛАД */
-.btn-add-item { background: var(--gold); color: #000; border: none; padding: 10px; border-radius: 5px; font-weight: bold; cursor: pointer; margin-bottom: 15px; }
-.report-table { width: 100%; border-collapse: collapse; }
-.report-table th { text-align: left; color: var(--gold); border-bottom: 1px solid #333; padding: 10px; }
-.report-table td { padding: 10px; border-bottom: 1px solid #222; }
+/* СЕТКА СТОЛОВ */
+.tables-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 20px; padding: 20px;
+}
+.table-card {
+    background: var(--card); border: 1px solid #222; padding: 20px;
+    border-radius: 15px; text-align: center; transition: 0.3s;
+}
+.table-card.active { border-color: var(--gold); box-shadow: 0 0 15px rgba(197, 160, 89, 0.2); }
 
-.btn-logout { background: var(--red); color: #fff; border: none; width: 100%; padding: 12px; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-.error-msg { color: var(--red); font-size: 12px; display: none; }
+/* ОБЩИЕ ЭЛЕМЕНТЫ */
+.gold-text { color: var(--gold); }
+.green-text { color: var(--green); }
+.input-group { text-align: left; margin-top: 15px; }
+.input-group label { display: block; font-size: 11px; margin-bottom: 5px; color: #666; }
+input, select {
+    width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #333;
+    background: #000; color: #fff; box-sizing: border-box;
+}
+.btn-login {
+    width: 100%; margin-top: 25px; padding: 15px; background: var(--green);
+    border: none; border-radius: 8px; color: #fff; font-weight: bold; cursor: pointer;
+}
+.btn-exit { background: var(--red); color: #fff; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; }
