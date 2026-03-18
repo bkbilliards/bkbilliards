@@ -8,32 +8,29 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="auth-screen" class="modal-overlay">
+    <div id="auth-screen" class="modal-overlay" style="display: flex;">
         <div class="auth-box">
             <h1 class="gold-text">SENSEI</h1>
             <p class="subtitle">BILLIARD CLUB</p>
             <div class="input-group">
-                <label>Выберите администратора</label>
+                <label>Администратор</label>
                 <select id="staff-select"></select>
             </div>
             <div class="input-group">
-                <label>Введите пароль</label>
+                <label>Пароль</label>
                 <input type="password" id="pass-input" placeholder="****">
             </div>
             <button onclick="login()" class="btn-primary">ВОЙТИ</button>
-            <p id="auth-error" class="error-text">Неверный пароль!</p>
+            <p id="auth-error" class="error-text" style="display:none; color: red; margin-top: 10px;">Неверный пароль!</p>
         </div>
     </div>
 
     <div id="main-app" style="display:none;">
         <header class="header">
             <div class="header-left">
-                <span class="status-dot"></span>
-                <span id="display-user"></span>
+                <span class="gold-text">SENSEI</span> | <span id="display-user"></span>
             </div>
-            <div class="header-right">
-                <button onclick="logout()" class="btn-logout">ЗАКРЫТЬ СМЕНУ</button>
-            </div>
+            <button onclick="logout()" class="btn-logout">ВЫЙТИ</button>
         </header>
 
         <div class="stats-panel">
@@ -43,41 +40,23 @@
             </div>
             <div class="stat-item">
                 <span class="stat-label">ВАША ЗП</span>
-                <span class="stat-value green-text"><span id="salary-val">0</span> ₸</span>
+                <span class="stat-value" style="color: #2ecc71;"><span id="salary-val">0</span> ₸</span>
             </div>
         </div>
 
         <nav class="tabs">
-            <button class="tab-btn active" onclick="switchTab('hall')">ЗАЛ</button>
-            <button class="tab-btn" onclick="switchTab('stock')">СКЛАД</button>
-            <button class="tab-btn" onclick="switchTab('history')">ИСТОРИЯ</button>
+            <button class="tab-btn active" onclick="switchTab('hall', event)">ЗАЛ</button>
+            <button class="tab-btn" onclick="switchTab('stock', event)">СКЛАД</button>
         </nav>
 
         <main class="container">
             <div id="tab-hall" class="tab-content active">
                 <div class="tables-grid" id="tables-list"></div>
             </div>
-
-            <div id="tab-stock" class="tab-content">
+            <div id="tab-stock" class="tab-content" style="display:none;">
                 <div class="card">
-                    <div class="card-header">
-                        <h3>Товары на складе</h3>
-                        <button onclick="addStockItem()" class="btn-small">+ Добавить</button>
-                    </div>
-                    <table class="data-table">
-                        <thead><tr><th>Товар</th><th>Цена</th></tr></thead>
-                        <tbody id="stock-list"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div id="tab-history" class="tab-content">
-                <div class="card">
-                    <h3>История смен</h3>
-                    <table class="data-table">
-                        <thead><tr><th>Дата</th><th>Админ</th><th>Выручка</th></tr></thead>
-                        <tbody id="history-list"></tbody>
-                    </table>
+                    <button onclick="addStockItem()" class="btn-primary" style="margin-bottom: 10px;">+ Добавить товар</button>
+                    <div id="stock-list"></div>
                 </div>
             </div>
         </main>
