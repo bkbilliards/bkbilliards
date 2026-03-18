@@ -1,184 +1,58 @@
-const TABLES_COUNT = 6;
-const DAY_RATE = 2000;
-const NIGHT_RATE = 3000;
-const BASE_SALARY = 6000;
-const PERCENT = 0.08;
-
-// Список сотрудников
-const STAFF = ["Султан", "Дидар", "Запасной админ", "Хозяин"];
-
-// ПАРОЛИ (Проверьте эти цифры!)
-const PASS_ADMIN = "1111";
-const PASS_OWNER = "0000";
-
-let currentUserRole = null; 
-
-let state = JSON.parse(localStorage.getItem('sensei_state')) || {
-    activeStaff: null,
-    shiftActive: false,
-    totalRevenue: 0,
-    debts: [],
-    inventory: [], 
-    tables: Array.from({ length: TABLES_COUNT }, (_, i) => ({
-        id: i + 1, active: false, startTime: null, bar: [], clientName: "Гость", discount: 0
-    }))
-};
-
-function save() {
-    localStorage.setItem('sensei_state', JSON.stringify(state));
-    render();
-}
-
-// ФУНКЦИЯ ВХОДА
-function login() {
-    const input = document.getElementById('pass-input').value;
-    const errorMsg = document.getElementById('auth-error');
-    
-    if (input === PASS_OWNER) {
-        currentUserRole = 'owner';
-        document.getElementById('auth-screen').style.display = 'none';
-        document.getElementById('main-content').style.display = 'block';
-        document.getElementById('owner-section').style.display = 'block';
-        render();
-    } else if (input === PASS_ADMIN) {
-        currentUserRole = 'admin';
-        document.getElementById('auth-screen').style.display = 'none';
-        document.getElementById('main-content').style.display = 'block';
-        document.getElementById('owner-section').style.display = 'none';
-        render();
-    } else {
-        errorMsg.style.display = 'block';
-        setTimeout(() => { errorMsg.style.display = 'none'; }, 2000);
-    }
-}
+// ... (весь предыдущий код остается таким же до функции logout)
 
 function logout() {
-    location.reload(); // Перезагрузка страницы для выхода
-}
-
-function calculateAmount(startTime, endTime, discountPercent = 0) {
-    let total = 0;
-    const diffMin = Math.ceil((endTime - startTime) / (1000 * 60));
-    const roundedMin = Math.ceil(diffMin / 5) * 5; 
-    let tempTime = new Date(startTime);
-    for (let i = 0; i < roundedMin; i++) {
-        let hour = tempTime.getHours();
-        total += ((hour >= 11 && hour < 18) ? DAY_RATE : NIGHT_RATE) / 60;
-        tempTime.setMinutes(tempTime.getMinutes() + 1);
-    }
-    return Math.round(total - (total * discountPercent / 100));
-}
-
-function toggleShift() {
     if (!state.shiftActive) {
-        let list = STAFF.map((name, i) => `${i}. ${name}`).join('\n');
-        let choice = prompt("Выберите КТО выходит на смену (введите цифру):\n" + list);
-        if (STAFF[choice]) {
-            state.activeStaff = STAFF[choice];
-            state.shiftActive = true;
-            state.totalRevenue = 0;
-            save();
-        }
-    } else {
-        let isOwner = state.activeStaff === "Хозяин";
-        let salary = isOwner ? 0 : Math.round(state.totalRevenue * PERCENT + BASE_SALARY);
-        if(confirm(`ЗАКРЫТЬ СМЕНУ?\nСотрудник: ${state.activeStaff}\nВыручка: ${state.totalRevenue} ₸\nЗП: ${salary} ₸`)) {
-            state.shiftActive = false;
-            state.activeStaff = null;
-            save();
-        }
+        location.reload();
+        return;
+    }
+
+    // Расчеты для отчета
+    let totalTableRevenue = 0;
+    let totalBarRevenue = 0;
+    let totalBarProfit = 0;
+
+    // Считаем показатели (проходим по истории или текущим данным, если нужно)
+    // В данной версии мы берем итоговую выручку. 
+    // Для детального разделения добавим переменные в state при оплате столов.
+
+    let isOwner = state.activeStaffName === "Хозяин";
+    let salary = isOwner ? 0 : Math.round(state.totalRevenue * PERCENT + BASE_SALARY);
+    let finalNet = state.totalRevenue - salary;
+
+    const report = `
+=== ОТЧЕТ ЗА СМЕНУ ===
+👤 Сотрудник: ${state.activeStaffName}
+--------------------------
+💰 ОБЩАЯ ВЫРУЧКА: ${state.totalRevenue} ₸
+
+📊 ДЕТАЛИЗАЦИЯ:
+- Столы + Бар (всего): ${state.totalRevenue} ₸
+(Система фиксирует общую сумму при оплате)
+
+💵 ЗАРПЛАТА:
+- К выплате админу: ${salary} ₸
+--------------------------
+ИНКАССАЦИЯ (Остаток в кассе):
+✅ ИТОГО К СДАЧЕ: ${finalNet} ₸
+======================
+    `;
+
+    if (confirm(report + "\n\nЗавершить смену и очистить данные?")) {
+        state.shiftActive = false;
+        state.activeStaffName = null;
+        state.totalRevenue = 0;
+        // Очищаем временные данные, но сохраняем склад и долги
+        localStorage.setItem('sensei_state', JSON.stringify({
+            ...state,
+            shiftActive: false,
+            activeStaffName: null,
+            totalRevenue: 0,
+            tables: Array.from({ length: TABLES_COUNT }, (_, i) => ({
+                id: i + 1, active: false, startTime: null, bar: [], clientName: "Гость", discount: 0
+            }))
+        }));
+        location.reload();
     }
 }
 
-function startTable(id) {
-    if (!state.shiftActive) return alert("Сначала откройте смену!");
-    const table = state.tables.find(t => t.id === id);
-    table.clientName = prompt("Имя гостя?") || "Гость";
-    table.discount = parseInt(prompt("Скидка %?")) || 0;
-    table.active = true;
-    table.startTime = Date.now();
-    table.bar = [];
-    save();
-}
-
-function stopTable(id) {
-    const table = state.tables.find(t => t.id === id);
-    const timeCost = calculateAmount(table.startTime, Date.now(), table.discount);
-    const barTotal = table.bar.reduce((sum, item) => sum + item.sellPrice, 0);
-    const total = timeCost + barTotal;
-
-    if (confirm(`ИТОГО К ОПЛАТЕ: ${total} ₸\n(Время: ${timeCost}, Бар: ${barTotal})\n\nОплачено?`)) {
-        state.totalRevenue += total;
-    } else {
-        state.debts.push({ name: table.clientName, amount: total, date: new Date().toLocaleDateString() });
-    }
-    table.active = false;
-    save();
-}
-
-function addInventoryItem() {
-    let name = prompt("Название товара:");
-    let buy = parseInt(prompt("Цена ЗАКУПА (за сколько купили):"));
-    let sell = parseInt(prompt("Цена ПРОДАЖИ (для клиента):"));
-    if (name && buy && sell) { 
-        state.inventory.push({ name, buyPrice: buy, sellPrice: sell }); 
-        save(); 
-    }
-}
-
-function addToBar(tableId) {
-    if (state.inventory.length === 0) return alert("Склад пуст! Добавьте товары под паролем Хозяина.");
-    let list = state.inventory.map((item, idx) => `${idx}. ${item.name} (${item.sellPrice} ₸)`).join('\n');
-    let choice = prompt("Что купил гость? (введите номер):\n" + list);
-    if (state.inventory[choice]) {
-        state.tables.find(t => t.id === tableId).bar.push(state.inventory[choice]);
-        save();
-    }
-}
-
-function render() {
-    const container = document.querySelector('.hall-map');
-    if(!container) return;
-    container.innerHTML = '';
-    
-    state.tables.forEach(table => {
-        const card = document.createElement('div');
-        card.className = `table-card ${table.active ? 'active' : ''}`;
-        card.setAttribute('data-id', table.id);
-        
-        let money = table.active ? calculateAmount(table.startTime, Date.now(), table.discount) : 0;
-        let barSum = table.bar.reduce((s, i) => s + i.sellPrice, 0);
-
-        card.innerHTML = `
-            <div class="table-num">Стол ${table.id}</div>
-            <div style="font-size:10px; color:#888;">${table.active ? `👤 ${table.clientName}` : 'Свободен'}</div>
-            <div class="timer">${table.active ? new Date(Date.now() - table.startTime).toISOString().substr(11, 8) : '00:00:00'}</div>
-            <div class="cost">${money + barSum} ₸</div>
-            <button class="${table.active ? 'btn-stop' : 'btn-start'}" onclick="${table.active ? `stopTable(${table.id})` : `startTable(${table.id})`}">
-                ${table.active ? 'ОПЛАТА' : 'ПУСК'}
-            </button>
-            <button class="btn-bar" onclick="addToBar(${table.id})" ${!table.active ? 'disabled' : ''}>+ БАР</button>
-        `;
-        container.appendChild(card);
-    });
-
-    document.getElementById('role-badge').innerText = currentUserRole === 'owner' ? 'ХОЗЯИН' : 'АДМИН';
-    document.getElementById('display-admin-name').innerText = state.shiftActive ? `| ${state.activeStaff}` : "| Смена закрыта";
-    document.getElementById('stat-revenue').innerText = state.totalRevenue;
-    
-    let currentSalary = (state.activeStaff === "Хозяин") ? 0 : Math.round(state.totalRevenue * PERCENT + BASE_SALARY);
-    document.getElementById('stat-salary').innerText = state.shiftActive ? currentSalary : 0;
-
-    document.getElementById('debt-list').innerHTML = state.debts.map(d => `<div class="item-row"><span>${d.name}</span><span>${d.amount} ₸</span></div>`).join('');
-    
-    if(currentUserRole === 'owner') {
-        document.getElementById('inventory-list').innerHTML = state.inventory.map(i => `
-            <div class="item-row">
-                <span>${i.name}</span>
-                <span>Закуп: ${i.buyPrice} | Прод: ${i.sellPrice} | Прибыль: <b>${i.sellPrice - i.buyPrice}</b></span>
-            </div>
-        `).join('');
-    }
-}
-
-setInterval(render, 1000);
+// ... (остальной код render и интервалы без изменений)
