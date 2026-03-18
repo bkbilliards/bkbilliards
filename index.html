@@ -3,25 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SENSEI BILLIARD</title>
+    <title>SENSEI BILLIARD PRO</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="header">
-        <h1>SENSEI BILLIARD CLUB</h1>
-        <div id="admin-info">Админ: <span id="current-admin">Не вошел</span></div>
+        <h1>SENSEI BILLIARD</h1>
+        <div class="admin-panel">
+            <span id="display-admin-name">Смена не открыта</span>
+            <button id="shift-btn" onclick="toggleShift()" style="width: auto; display: inline-block; margin-left: 10px; background: #d4af37;">ОТКРЫТЬ СМЕНУ</button>
+        </div>
+        <div id="shift-stats" style="display:none; font-size: 14px; margin-top: 10px; color: #aaa;">
+            Выручка: <span id="stat-revenue">0</span> ₸ | ЗП (8%+6к): <span id="stat-salary">0</span> ₸
+        </div>
     </div>
 
     <div class="hall-map">
         </div>
-
-    <div id="modal-bar" class="modal">
-        <div class="modal-content">
-            <h2>Бар стола №<span id="modal-table-id"></span></h2>
-            <div id="bar-items"></div>
-            <button onclick="closeModal()">Закрыть</button>
-        </div>
-    </div>
 
     <script src="app.js"></script>
 </body>
