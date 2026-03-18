@@ -11,100 +11,82 @@
     <div id="auth-screen" class="modal-overlay">
         <div class="auth-box">
             <img src="logo.png.jpeg" alt="SENSEI" class="auth-logo-img">
-            <h1 class="auth-logo">SENSEI</h1>
+            <h2 class="gold-text">ВХОД В СИСТЕМУ</h2>
             <div class="input-group">
-                <label>Администратор:</label>
+                <label>Выберите сотрудника:</label>
                 <select id="staff-select"></select>
             </div>
             <div class="input-group">
-                <label>Пароль:</label>
+                <label>Введите пароль:</label>
                 <input type="password" id="pass-input" placeholder="****">
             </div>
-            <button onclick="login()" class="btn-login">ВОЙТИ</button>
-            <p id="auth-error" class="error-msg">❌ Неверный пароль!</p>
+            <button onclick="login()" class="btn-login">ПОДТВЕРДИТЬ</button>
+            <p id="auth-error" class="error-msg">Неверный пароль!</p>
         </div>
     </div>
 
     <div id="main-content" style="display:none;">
-        <div class="header">
-            <div class="header-top">
-                <div class="header-logo-block">
-                    <img src="logo.png.jpeg" alt="SENSEI" class="header-logo-small">
-                    <h1>SENSEI</h1>
-                </div>
-                <div class="user-info">
+        <header class="main-header">
+            <div class="header-left">
+                <img src="logo.png.jpeg" alt="SENSEI" class="small-logo">
+                <h1 class="gold-text">SENSEI</h1>
+            </div>
+            <div class="header-right">
+                <div class="admin-info">
                     <span id="role-badge" class="badge"></span>
                     <span id="display-admin-name"></span>
                 </div>
             </div>
-            
-            <div class="navigation-menu">
-                <button class="nav-btn active" onclick="switchPage('hall')">ЗАЛ</button>
-                <button class="nav-btn" onclick="switchPage('inventory')">СКЛАД</button>
-                <button class="nav-btn" onclick="switchPage('debts')">ДОЛГИ</button>
-                <button class="nav-btn" onclick="switchPage('my-stats')">МОЯ СМЕНА</button>
-                <button id="owner-nav-btn" class="nav-btn" onclick="switchPage('accounting')" style="display:none;">БУХГАЛТЕРИЯ</button>
-            </div>
+        </header>
 
-            <div id="shift-stats">
-                <div class="stat-card">Выручка: <span id="stat-revenue">0</span> ₸</div>
-                <div class="stat-card">ЗП: <span id="stat-salary">0</span> ₸</div>
-            </div>
-            <button class="btn-logout" onclick="logout()">ЗАКРЫТЬ СМЕНУ И ВЫЙТИ</button>
+        <nav class="navigation">
+            <button class="nav-btn active" onclick="switchPage('hall')">ЗАЛ</button>
+            <button class="nav-btn" onclick="switchPage('inventory')">СКЛАД</button>
+            <button class="nav-btn" onclick="switchPage('debts')">ДОЛГИ</button>
+            <button class="nav-btn" onclick="switchPage('my-stats')">МОЯ СМЕНА</button>
+            <button id="owner-nav-btn" class="nav-btn" onclick="switchPage('accounting')" style="display:none;">БУХГАЛТЕРИЯ</button>
+        </nav>
+
+        <div class="shift-info">
+            <div class="info-item">Выручка: <span id="stat-revenue" class="gold-text">0</span> ₸</div>
+            <div class="info-item">ЗП за смену: <span id="stat-salary" class="green-text">0</span> ₸</div>
+            <button class="btn-exit" onclick="logout()">ЗАКРЫТЬ СМЕНУ</button>
         </div>
 
-        <div id="page-hall" class="page">
-            <div class="hall-map"></div>
-            <div class="open-checks-section">
-                <h2 class="gold-title">📊 ТЕКУЩИЕ ЧЕКИ</h2>
-                <div id="open-checks-list"></div>
+        <main class="content-area">
+            <div id="page-hall" class="page">
+                <div class="tables-grid"></div>
             </div>
-        </div>
 
-        <div id="page-inventory" class="page" style="display:none;">
-            <div class="inventory-section">
-                <h2 class="gold-title">📦 СКЛАД</h2>
-                <input type="text" id="inventory-search" placeholder="Поиск товара..." oninput="renderInventory()">
-                <button onclick="addInventoryItem()" class="btn-add-item">+ ДОБАВИТЬ ТОВАР</button>
-                <div id="inventory-list-container">
-                    <table class="report-table">
-                        <thead>
-                            <tr><th>Название</th><th>Цена продажи</th></tr>
-                        </thead>
+            <div id="page-inventory" class="page" style="display:none;">
+                <div class="section-card">
+                    <h3 class="gold-text">📦 Управление складом</h3>
+                    <button onclick="addInventoryItem()" class="btn-gold-outline">+ Добавить товар</button>
+                    <table class="data-table">
+                        <thead><tr><th>Товар</th><th>Цена</th></tr></thead>
                         <tbody id="inventory-list"></tbody>
                     </table>
                 </div>
             </div>
-        </div>
 
-        <div id="page-debts" class="page" style="display:none;">
-            <div class="debt-section">
-                <h2 class="gold-title">⚠️ ДОЛГИ</h2>
-                <div id="debt-list"></div>
-            </div>
-        </div>
-
-        <div id="page-my-stats" class="page" style="display:none;">
-            <div class="inventory-section">
-                <h2 class="gold-title">👤 МОЯ СТАТИСТИКА</h2>
-                <div class="stat-summary-box">
-                    <p>Накоплено к выплате: <span id="accumulated-salary" style="color:#27ae60; font-size:20px; font-weight:bold;">0</span> ₸</p>
+            <div id="page-my-stats" class="page" style="display:none;">
+                <div class="section-card">
+                    <h3 class="gold-text">👤 Мои накопления</h3>
+                    <div class="acc-box">К выплате: <span id="accumulated-salary" class="green-text">0</span> ₸</div>
+                    <table class="data-table">
+                        <thead><tr><th>Дата</th><th>Выручка</th><th>Ваша ЗП</th></tr></thead>
+                        <tbody id="admin-personal-history"></tbody>
+                    </table>
                 </div>
-                <table class="report-table">
-                    <thead>
-                        <tr><th>Дата</th><th>Выручка</th><th>ЗП</th><th>Итог</th></tr>
-                    </thead>
-                    <tbody id="admin-personal-history"></tbody>
-                </table>
             </div>
-        </div>
 
-        <div id="page-accounting" class="page" style="display:none;">
-            <div class="owner-section">
-                <h2 class="gold-title">📈 БУХГАЛТЕРИЯ (ТОЛЬКО ХОЗЯИН)</h2>
-                <div id="shift-history-list"></div>
+            <div id="page-accounting" class="page" style="display:none;">
+                <div class="section-card">
+                    <h3 class="gold-text">📈 История смен (Хозяин)</h3>
+                    <div id="shift-history-list"></div>
+                </div>
             </div>
-        </div>
+        </main>
     </div>
     <script src="app.js"></script>
 </body>
