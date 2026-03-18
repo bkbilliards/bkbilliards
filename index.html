@@ -1,74 +1,51 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SENSEI BILLIARD CRM</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div id="auth-screen" class="overlay">
-        <div class="auth-card">
-            <div class="auth-logo-circle">S</div>
-            <h1 class="gold-text">SENSEI</h1>
-            <p class="tagline">BILLIARD CLUB</p>
-            <div class="input-group">
-                <label>АДМИНИСТРАТОР</label>
-                <select id="staff-select" onchange="toggleExtraName()"></select>
-                <input type="text" id="extra-name" placeholder="Введите имя" style="display:none; margin-top:10px;">
-            </div>
-            <div class="input-group">
-                <label>ПАРОЛЬ</label>
-                <input type="password" id="pass-input" placeholder="••••">
-            </div>
-            <button onclick="login()" class="btn-gold">ОТКРЫТЬ СМЕНУ</button>
-            <p id="auth-error" class="error-msg">❌ Неверный пароль!</p>
-        </div>
-    </div>
+:root {
+    --bg: #050a05; /* Темно-зеленый сукно */
+    --dark: #000000;
+    --gold: #d4af37;
+    --gold-dim: #aa8a2e;
+    --text: #ffffff;
+    --gray: #6b6b6b;
+    --table-bg: #0e1a0e;
+}
 
-    <div id="app" style="display:none;">
-        <header class="header">
-            <div class="header-left">
-                <span class="gold-text">SENSEI</span> <span class="divider">|</span> <span id="user-display">---</span>
-            </div>
-            <nav class="nav">
-                <button class="nav-link active" onclick="showPage('hall', this)">ЗАЛ</button>
-                <button class="nav-link" onclick="showPage('stock', this)">СКЛАД</button>
-                <button class="nav-link" onclick="showPage('debts', this)">ДОЛГИ</button>
-                <button id="owner-tab" class="nav-link" onclick="showPage('owner', this)" style="display:none;">УПРАВЛЕНИЕ</button>
-            </nav>
-            <button onclick="logout()" class="btn-exit">ВЫЙТИ</button>
-        </header>
+body { background: var(--bg); color: var(--text); font-family: 'Montserrat', sans-serif; margin: 0; }
+.gold-text { color: var(--gold) !important; }
 
-        <div class="top-stats">
-            <div class="stat-item">
-                <span class="label">ВЫРУЧКА СМЕНЫ</span>
-                <span class="value"><span id="rev-val">0</span> ₸</span>
-            </div>
-            <div class="stat-item">
-                <span class="label">ВАША ЗП (8% + 6к)</span>
-                <span class="value gold-text"><span id="salary-val">0</span> ₸</span>
-            </div>
-        </div>
+/* АВТОРИЗАЦИЯ */
+.overlay { position: fixed; inset: 0; background: radial-gradient(circle, #102010 0%, #000 100%); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+.auth-card { background: var(--dark); padding: 40px; border-radius: 20px; border: 2px solid var(--gold); text-align: center; width: 320px; box-shadow: 0 0 30px rgba(212, 175, 55, 0.2); }
+.auth-logo-circle { width: 70px; height: 70px; border: 3px solid var(--gold); border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 35px; color: var(--gold); font-weight: bold; }
+.tagline { font-size: 10px; letter-spacing: 4px; color: var(--gold); margin-bottom: 30px; }
 
-        <main class="content">
-            <div id="page-hall" class="page-content active">
-                <div id="tables-grid" class="grid"></div>
-                <h3 class="section-title gold-text">📊 ОЖИДАЮТ ОПЛАТЫ (ЧЕКИ)</h3>
-                <div id="active-checks" class="checks-container"></div>
-            </div>
-            <div id="page-stock" class="page-content" style="display:none;">
-                <div class="card"><div id="stock-list"></div></div>
-            </div>
-            <div id="page-debts" class="page-content" style="display:none;">
-                <div id="debts-list" class="card"></div>
-            </div>
-            <div id="page-owner" class="page-content" style="display:none;">
-                <div id="history-list" class="card"></div>
-            </div>
-        </main>
-    </div>
-    <script src="app.js"></script>
-</body>
-</html>
+/* ШАПКА */
+.header { display: flex; justify-content: space-between; align-items: center; padding: 15px 30px; background: #000; border-bottom: 2px solid var(--gold); }
+.nav { display: flex; gap: 15px; }
+.nav-link { background: none; border: none; color: var(--gray); font-weight: bold; cursor: pointer; padding: 10px; font-family: inherit; }
+.nav-link.active { color: var(--gold); border-bottom: 2px solid var(--gold); }
+.btn-exit { background: #8b0000; color: #fff; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+
+/* СТАТИСТИКА */
+.top-stats { display: flex; gap: 15px; padding: 20px 30px; }
+.stat-item { flex: 1; background: var(--table-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--gold-dim); }
+.stat-item .label { font-size: 10px; color: var(--gold); display: block; letter-spacing: 1px; }
+.stat-item .value { font-size: 26px; font-weight: bold; margin-top: 5px; }
+
+/* СТОЛЫ */
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; padding: 20px 30px; }
+.table-card { background: var(--dark); border: 2px solid #222; padding: 25px; border-radius: 15px; text-align: center; transition: 0.3s; }
+.table-card.active { border-color: var(--gold); box-shadow: 0 0 20px rgba(212, 175, 55, 0.3); background: #071207; }
+
+.timer { font-size: 32px; font-weight: bold; margin: 15px 0; font-family: 'Courier New', monospace; color: #fff; }
+.table-num { color: var(--gold); font-size: 18px; font-weight: bold; margin-bottom: 5px; }
+
+/* КНОПКИ */
+.btn-gold { background: var(--gold); color: #000; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; }
+.btn-action-group { display: flex; gap: 5px; margin-top: 10px; }
+.btn-small-gold { background: none; border: 1px solid var(--gold); color: var(--gold); padding: 5px; border-radius: 4px; font-size: 10px; flex: 1; cursor: pointer; }
+
+/* ЧЕКИ */
+.check-row { background: #000; padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--gold-dim); }
+
+.input-group { text-align: left; margin-bottom: 15px; }
+.input-group label { font-size: 10px; color: var(--gold); margin-bottom: 5px; display: block; }
+input, select { width: 100%; background: #000; border: 1px solid var(--gold-dim); color: #fff; padding: 12px; border-radius: 8px; box-sizing: border-box; }
