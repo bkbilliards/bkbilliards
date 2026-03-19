@@ -14,8 +14,8 @@ const dbRef = db.ref('sensei_erp_pro');
 
 const STAFF_HARDCODED = [
     { id: "0", name: "Султан", pin: "1111", role: "admin" }, 
-    { id: "1", name: "Дидар", pin: "2222", role: "admin" }, 
-    { id: "owner", name: "Хозяин", pin: "1201", role: "owner" }
+    { id: "1", name: "Дидар", pin: "1111", role: "admin" }, 
+    { id: "owner", name: "Хозяин", pin: "0000", role: "owner" }
 ];
 
 let localAuth = JSON.parse(localStorage.getItem('sensei_auth_pro')) || { isAuth: false, user: null, shiftStart: null, tableRev: 0, barRev: 0, shiftCash: 0 };
@@ -122,13 +122,47 @@ function delRes(tId, rIdx) { cloudState.tables.find(x => x.id === tId).res.splic
 let barContext = null; 
 function openBarModal(context) { barContext = context; if(!cloudState.inventory || cloudState.inventory.length === 0) return alert("Склад пуст! Добавьте товар."); document.getElementById('bar-modal').style.display = 'flex'; document.getElementById('bar-search').value = ''; renderBarSearch(); }
 function renderBarSearch() { const q = document.getElementById('bar-search').value.toLowerCase(); document.getElementById('bar-items-list').innerHTML = cloudState.inventory.filter(i => i.name.toLowerCase().includes(q)).map(i => `<div class="bar-item-row" onclick="selectBarItem('${i.name}')"><span>${i.name}</span><span style="color:#f1c40f; font-weight:bold;">${i.price} ₸ (Ост: ${i.qty})</span></div>`).join(''); }
+
+// ИЗМЕНЕННАЯ ФУНКЦИЯ ПРОДАЖИ БАРА (С ВЫБОРОМ КОЛИЧЕСТВА)
 function selectBarItem(itemName) {
     let item = cloudState.inventory.find(x => x.name === itemName);
-    if(item.qty <= 0) return alert("Товар закончился!"); item.qty -= 1;
-    if(barContext === 'standalone') { const name = prompt("Имя гостя для бара:"); if(name) createOrMergeCheck(name, "Бар", 0, [{name: item.name, price: item.price}]); } 
-    else { const t = cloudState.tables.find(x => x.id === barContext); if(!t.bar) t.bar = []; t.bar.push({name: item.name, price: item.price}); }
-    document.getElementById('bar-modal').style.display = 'none'; saveToCloud();
+    if(item.qty <= 0) return alert("Товар закончился!");
+    
+    let qtyStr = prompt(`Сколько штук добавить?\nТовар: ${item.name}\nВ наличии: ${item.qty} шт.`, "1");
+    if (qtyStr === null) return; // Нажали "Отмена"
+    
+    let qty = parseInt(qtyStr);
+    if (isNaN(qty) || qty <= 0) return alert("Некорректное количество!");
+    if (qty > item.qty) return alert(`Ошибка! На складе только ${item.qty} шт.`);
+    
+    // Списываем со склада
+    item.qty -= qty;
+    
+    // Формируем массив товаров для добавления в чек
+    let itemsToAdd = [];
+    for(let i = 0; i < qty; i++) {
+        itemsToAdd.push({name: item.name, price: item.price});
+    }
+
+    if(barContext === 'standalone') { 
+        const name = prompt("Имя гостя для чека бара:"); 
+        if(name) {
+            createOrMergeCheck(name, "Бар", 0, itemsToAdd); 
+        } else {
+            // Если передумали и не ввели имя, возвращаем товар на склад
+            item.qty += qty;
+            return;
+        }
+    } 
+    else { 
+        const t = cloudState.tables.find(x => x.id === barContext); 
+        if(!t.bar) t.bar = []; 
+        t.bar = t.bar.concat(itemsToAdd); 
+    }
+    document.getElementById('bar-modal').style.display = 'none'; 
+    saveToCloud();
 }
+
 function createOrMergeCheck(name, tableId, timeCost, barItems) {
     if(!cloudState.checks) cloudState.checks = []; let barTotal = barItems.reduce((s, i) => s + i.price, 0); let exist = cloudState.checks.find(c => c.name.toLowerCase() === name.toLowerCase());
     if(exist && confirm(`Объединить с чеком гостя "${exist.name}"?`)) { 
@@ -192,13 +226,9 @@ function processPayment(method) {
     let finalTimeCost = c.timeCost; let finalBarCost = c.barCost;
     if(c.discount && c.discount > 0) { let ratio = 1 - (c.discount / 100); finalTimeCost = Math.round(c.timeCost * ratio); finalBarCost = c.total - finalTimeCost; c.details += ` [Скидка ${c.discount}%]`; }
 
-    // Подсчет наличных для Z-отчета
     let addedCash = 0;
     if(method === 'Наличные') { addedCash = c.total; }
-    else if (method.startsWith('Нал:')) { 
-        let match = method.match(/Нал:\s*(\d+)/); 
-        if(match) addedCash = parseInt(match[1]); 
-    }
+    else if (method.startsWith('Нал:')) { let match = method.match(/Нал:\s*(\d+)/); if(match) addedCash = parseInt(match[1]); }
     localAuth.shiftCash = (localAuth.shiftCash || 0) + addedCash;
 
     if(method === 'Долг') { if(!cloudState.debts) cloudState.debts = []; let d = cloudState.debts.find(x => x.name.toLowerCase() === c.name.toLowerCase()); if(d) { d.total += c.total; d.history.push(`+${c.total}₸ (${new Date().toLocaleDateString()})`); } else { cloudState.debts.push({ name: c.name, total: c.total, history: [`+${c.total}₸`] }); } }
