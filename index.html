@@ -42,15 +42,15 @@
         <div class="global-stats-bar">
             <div class="global-stat-item">
                 <div class="stat-label">ВЫРУЧКА СМЕНЫ</div>
-                <div class="stat-value gold-text"><span id="global-rev">0</span> ₸</div>
+                <div class="stat-value gold-text" id="global-rev">0 ₸</div>
             </div>
             <div class="global-stat-item">
                 <div class="stat-label">ЗП СМЕНЫ (8%+6к)</div>
-                <div class="stat-value"><span id="global-shift-zp">0</span> ₸</div>
+                <div class="stat-value" id="global-shift-zp">0 ₸</div>
             </div>
             <div class="global-stat-item" style="border-right: none;">
                 <div class="stat-label" style="color:var(--green);">НАКОПЛЕНО К ВЫПЛАТЕ</div>
-                <div class="stat-value" style="color:var(--green);"><span id="global-total-zp">0</span> ₸</div>
+                <div class="stat-value" style="color:var(--green);" id="global-total-zp">0 ₸</div>
             </div>
         </div>
 
@@ -86,11 +86,11 @@
             </div>
 
             <div id="tab-debts" class="tab-pane" style="display:none;">
-                <div class="card"><table class="data-table"><thead><tr><th>КЛИЕНТ</th><th>СУММА ДОЛГА</th><th>ИСТОРИЯ</th><th>УПРАВЛЕНИЕ</th></tr></thead><tbody id="debts-list"></tbody></table></div>
+                <div class="card"><table class="data-table"><thead><tr><th>КЛИЕНТ</th><th>СУММА ДОЛГА</th><th>ИСТОРИЯ (ДАТА / АДМИН)</th><th>УПРАВЛЕНИЕ</th></tr></thead><tbody id="debts-list"></tbody></table></div>
             </div>
 
             <div id="tab-stats" class="tab-pane" style="display:none;">
-                <div class="card"><h3 class="gold-text">ИСТОРИЯ ВАШИХ СМЕН</h3><table class="data-table" style="margin-top:20px;"><thead><tr><th>НАЧАЛО</th><th>КОНЕЦ</th><th>БАР</th><th>СТОЛЫ</th><th>КАССА</th><th>ЗП</th></tr></thead><tbody id="my-history-list"></tbody></table></div>
+                <div class="card"><h3 class="gold-text">ИСТОРИЯ ВАШИХ СМЕН</h3><table class="data-table" style="margin-top:20px;"><thead><tr><th>НАЧАЛО</th><th>КОНЕЦ</th><th>НАЛ / QR</th><th>КАССА</th><th>ЗП</th></tr></thead><tbody id="my-history-list"></tbody></table></div>
             </div>
 
             <div id="tab-acc" class="tab-pane" style="display:none;">
@@ -107,13 +107,13 @@
                     </div>
 
                     <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-bottom:30px;">
-                        <div class="dash-card"><span class="dash-label">ОБЩАЯ ВЫРУЧКА КАССЫ</span><div class="dash-val gold-text"><span id="acc-trev">0</span> ₸</div><div style="font-size:11px; color:var(--gray); margin-top:5px;">Бар: <span id="acc-brev">0</span>₸ | Столы: <span id="acc-tblrev">0</span>₸</div></div>
-                        <div class="dash-card" style="border-color:var(--red);"><span class="dash-label" style="color:var(--red);">РАСХОДЫ (ЗАРПЛАТА)</span><div class="dash-val" style="color:var(--red);"><span id="acc-sal">0</span> ₸</div></div>
-                        <div class="dash-card" style="border-color:var(--green); background:rgba(46, 204, 113, 0.05);"><span class="dash-label" style="color:var(--green);">ЧИСТАЯ ПРИБЫЛЬ</span><div class="dash-val" style="color:var(--green);"><span id="acc-net">0</span> ₸</div></div>
+                        <div class="dash-card"><span class="dash-label">ОБЩАЯ ВЫРУЧКА КАССЫ</span><div class="dash-val gold-text" id="acc-trev">0</div><div style="font-size:11px; color:var(--gray); margin-top:5px;">Бар: <span id="acc-brev">0</span>₸ | Столы: <span id="acc-tblrev">0</span>₸</div></div>
+                        <div class="dash-card" style="border-color:var(--red);"><span class="dash-label" style="color:var(--red);">РАСХОДЫ (ЗАРПЛАТА)</span><div class="dash-val" style="color:var(--red);" id="acc-sal">0</div></div>
+                        <div class="dash-card" style="border-color:var(--green); background:rgba(46, 204, 113, 0.05);"><span class="dash-label" style="color:var(--green);">ЧИСТАЯ ПРИБЫЛЬ</span><div class="dash-val" style="color:var(--green);" id="acc-net">0</div></div>
                     </div>
                     
                     <h3 class="gold-text">ИСТОРИЯ СМЕН (ДЕТАЛИЗАЦИЯ)</h3>
-                    <table class="data-table"><thead><tr><th>АДМИН</th><th>СМЕНА</th><th>БАР</th><th>СТОЛЫ</th><th>КАССА / Z-ОТЧЕТ</th><th>ЗП</th></tr></thead><tbody id="history-list"></tbody></table>
+                    <table class="data-table"><thead><tr><th>АДМИН</th><th>СМЕНА</th><th>НАЛ / QR</th><th>КАССА / Z-ОТЧЕТ</th><th>ЗП</th><th>УДАЛИТЬ</th></tr></thead><tbody id="history-list"></tbody></table>
                 </div>
             </div>
 
