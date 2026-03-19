@@ -14,8 +14,8 @@ const dbRef = db.ref('sensei_erp_pro');
 
 const STAFF_HARDCODED = [
     { id: "0", name: "Султан", pin: "1111", role: "admin" }, 
-    { id: "1", name: "Дидар", pin: "1111", role: "admin" }, 
-    { id: "owner", name: "Хозяин", pin: "0000", role: "owner" }
+    { id: "1", name: "Дидар", pin: "2222", role: "admin" }, 
+    { id: "owner", name: "Хозяин", pin: "1201", role: "owner" }
 ];
 
 let localAuth = JSON.parse(localStorage.getItem('sensei_auth_pro')) || { isAuth: false, user: null, shiftStart: null, tableRev: 0, barRev: 0, shiftCash: 0 };
