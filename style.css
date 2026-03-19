@@ -32,6 +32,7 @@ input:focus, select:focus { border-color: var(--gold); box-shadow: 0 0 10px rgba
 .shadow-gold { box-shadow: 0 8px 20px rgba(212, 175, 55, 0.2); }
 .btn-red { background: linear-gradient(135deg, #e74c3c, #c0392b); color: #fff; border: none; padding: 18px; width: 100%; border-radius: 12px; font-weight: 700; cursor: pointer; }
 .btn-outline { background: transparent; border: 1px solid var(--gold-dim); color: var(--gold); padding: 12px; border-radius: 10px; font-weight: 600; cursor: pointer; text-align: center; transition: 0.2s; }
+.btn-outline:hover { background: rgba(212, 175, 55, 0.05); }
 
 .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: #040d07; border-bottom: 1px solid var(--border); }
 .nav { display: flex; gap: 5px; overflow-x: auto; padding: 10px 20px; background: #06140b; border-bottom: 1px solid var(--border); }
@@ -45,25 +46,43 @@ input:focus, select:focus { border-color: var(--gold); box-shadow: 0 0 10px rgba
 .stat-value { font-size: 18px; font-weight: 800; }
 
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; padding: 20px; }
-.table-card { background: var(--bg-card); border: 1px solid var(--border); padding: 25px; border-radius: 20px; text-align: center; position: relative; transition: 0.3s; }
-.table-card.active { border: 1px solid var(--gold); background: #0c1e12; }
+.table-card { background: var(--bg-card); border: 1px solid var(--border); padding: 25px; border-radius: 20px; text-align: center; display: flex; flex-direction: column; position: relative; overflow: hidden; transition: 0.3s; }
+.table-card.active { border: 1px solid var(--gold); background: #0c1e12; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+.table-card.active::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--gold), var(--gold-light)); }
 .timer { font-size: 48px; font-weight: 700; font-family: 'Courier New', monospace; margin: 15px 0; color: #fff; letter-spacing: 2px; }
 .table-actions { display: flex; gap: 8px; margin-top: 15px; }
+.flex-1 { flex: 1; }
 
-.check-row { background: var(--bg-card); padding: 20px; border-radius: 16px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; margin: 10px 20px; }
-.modal-card { background: var(--bg-card); padding: 30px; border-radius: 24px; width: 90%; max-width: 420px; position: relative; border: 1px solid var(--border); }
+.section-header { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; margin-top: 10px; }
+.checks-container { padding: 15px 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 15px; }
+.check-row { background: var(--bg-card); padding: 20px; border-radius: 16px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.modal-card { background: var(--bg-card); padding: 30px; border-radius: 24px; width: 90%; max-width: 420px; position: relative; border: 1px solid var(--border); box-shadow: 0 20px 60px rgba(0,0,0,0.9); }
 .modal-close { position: absolute; top: 20px; right: 25px; font-size: 30px; color: var(--gray); cursor: pointer; }
-.pay-amount { font-size: 46px; font-weight: 800; text-align: center; margin: 10px 0; }
-.pay-info { text-align: center; color: var(--gray); margin-bottom: 20px; }
+.search-input { margin-bottom: 20px; background: #030a05; }
+.large-input { font-size: 24px; text-align: center; padding: 20px; font-weight: 700; }
+.scroll-list { max-height: 50vh; overflow-y: auto; }
+.bar-item-row { display: flex; justify-content: space-between; padding: 15px; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 16px; transition: 0.2s; }
+.bar-item-row:hover { background: #0d2616; }
+.pay-amount { font-size: 46px; font-weight: 800; margin: 10px 0 5px; color: var(--white); text-align: center; }
+.pay-info { font-size: 13px; color: var(--gray); text-align: center; margin-bottom: 25px; }
 .pay-buttons { display: flex; flex-direction: column; gap: 10px; }
-.btn-pay { padding: 16px; border-radius: 12px; font-weight: 700; border: none; cursor: pointer; }
+.btn-pay { padding: 16px; border-radius: 12px; font-weight: 700; border: none; cursor: pointer; font-size: 15px; transition: 0.2s; }
+.btn-pay:active { transform: scale(0.98); }
 .cash { background: #fff; color: #000; }
 .qr { background: #e74c3c; color: #fff; }
 .mix { background: #9b59b6; color: #fff; }
 .debt { background: transparent; border: 1px solid var(--red); color: var(--red); }
+.text-gray { border-color: #333; color: var(--gray); }
 
 .card { background: var(--bg-card); border-radius: 20px; padding: 25px; margin: 20px; border: 1px solid var(--border); overflow-x: auto; }
 .data-table { width: 100%; border-collapse: collapse; min-width: 600px; }
-.data-table th { text-align: left; padding: 15px; border-bottom: 1px solid var(--border); color: var(--gold-dim); font-size: 12px; }
+.data-table th { text-align: left; padding: 15px; border-bottom: 1px solid var(--border); color: var(--gold-dim); font-size: 12px; letter-spacing: 1px; }
 .data-table td { padding: 15px; border-bottom: 1px solid #112816; font-size: 14px; }
-.dash-card { background: #030a05; padding: 20px; border-radius: 16px; border: 1px solid var(--border); text-align: center; }
+.res-item { display: flex; justify-content: space-between; font-size: 12px; color: var(--gray); padding: 10px 0; border-top: 1px dashed var(--border); margin-top: 15px; }
+
+.dash-card { background: #030a05; padding: 25px; border-radius: 16px; border: 1px solid var(--border); text-align: center; display: flex; flex-direction: column; justify-content: center; }
+.dash-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; margin-bottom: 10px; }
+.dash-val { font-size: 32px; font-weight: 800; }
+.acc-filter.active { background: var(--gold); color: #000; border-color: var(--gold); }
+
+.edit-bar-item { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #222; font-size:14px; }
