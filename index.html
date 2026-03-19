@@ -76,7 +76,7 @@
             </div>
 
             <div id="tab-archive" class="tab-pane" style="display:none;">
-                <div class="card"><table class="data-table"><thead><tr><th>ДАТА / ВРЕМЯ</th><th>ИМЯ</th><th>ДЕТАЛИ (БАР И СТОЛ)</th><th>СУММА</th><th>МЕТОД</th><th>АДМИН</th><th id="th-archive-del" style="display:none;">УДАЛИТЬ</th></tr></thead><tbody id="archive-list"></tbody></table></div>
+                <div class="card"><table class="data-table"><thead><tr><th>ДАТА / ВРЕМЯ</th><th>ИМЯ</th><th>ДЕТАЛИ (БАР И СТОЛ)</th><th>СУММА</th><th>МЕТОД</th><th>АДМИН</th><th>ДЕЙСТВИЕ</th></tr></thead><tbody id="archive-list"></tbody></table></div>
             </div>
 
             <div id="tab-stock" class="tab-pane" style="display:none;">
@@ -255,6 +255,20 @@
                 <span id="bill-discount-row" style="color:red; display:none;">СКИДКА: -<span id="bill-discount-val"></span>%<br></span>
                 <span style="font-size:20px;">ИТОГО: <span id="bill-total"></span> ₸</span>
             </div>
+        </div>
+    </div>
+
+    <div id="table-bill-modal" class="overlay" style="display:none; z-index:100000;">
+        <div class="modal-card">
+            <div class="modal-close" onclick="document.getElementById('table-bill-modal').style.display='none'">×</div>
+            <h2 class="gold-text" style="margin-top:0;">СЧЕТ СТОЛА <span id="table-bill-id"></span></h2>
+            <div style="font-size:14px; margin-bottom:15px;">Время игры: <span id="table-bill-time-val" class="gold-text" style="font-size:18px; font-weight:bold;">0 ₸</span></div>
+            <div class="input-group">
+                <label>ЗАКАЗЫ БАРА (СУММА: <span id="table-bill-bar-sum">0</span> ₸)</label>
+                <div id="table-bill-bar-list" style="background:#030a05; border:1px solid var(--border); border-radius:12px; padding:10px; max-height:200px; overflow-y:auto;"></div>
+            </div>
+            <div style="font-size:24px; font-weight:800; margin-top:20px; text-align:right;">ИТОГО: <span id="table-bill-total" class="gold-text">0</span> ₸</div>
+            <button onclick="document.getElementById('table-bill-modal').style.display='none'" class="btn-gold btn-large shadow-gold" style="margin-top:20px;">ГОТОВО</button>
         </div>
     </div>
 
