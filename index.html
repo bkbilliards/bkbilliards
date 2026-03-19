@@ -69,7 +69,7 @@
             <div id="tab-hall" class="tab-pane active">
                 <div id="tables-grid" class="grid"></div>
                 <div class="section-header">
-                    <h3 class="gold-text">ОЖИДАЮТ ОПЛАТЫ</h3>
+                    <h3 class="gold-text" style="margin:0;">ОЖИДАЮТ ОПЛАТЫ</h3>
                     <button onclick="openBarModal('standalone')" class="btn-outline">+ ПРОДАЖА БАР</button>
                 </div>
                 <div id="active-checks" class="checks-container"></div>
@@ -130,6 +130,7 @@
                     
                     <div style="margin-top:50px; padding:30px; border:1px dashed var(--red); border-radius:20px; text-align:center; background: rgba(231, 76, 60, 0.05);">
                         <h3 style="color:var(--red); margin-top:0;">ОПАСНАЯ ЗОНА</h3>
+                        <p style="font-size:12px; color:var(--gray); margin-bottom:20px;">Кнопка ниже полностью удаляет все данные сайта. Использовать только при полной очистке базы.</p>
                         <button onclick="resetDatabase()" class="btn-red" style="width:auto; padding:15px 40px; box-shadow: 0 5px 20px rgba(231, 76, 60, 0.3);">⚠️ ОБНОВИТЬ (ОЧИСТИТЬ) БАЗУ</button>
                     </div>
                 </div>
@@ -225,6 +226,11 @@
                 <button onclick="processPayment('Наличные')" class="btn-pay cash">💵 НАЛИЧНЫЕ</button>
                 <button onclick="processPayment('QR')" class="btn-pay qr">📱 QR-КОД</button>
                 <button onclick="showMixPay()" class="btn-pay mix">☯️ РАЗДЕЛИТЬ (НАЛ + QR)</button>
+                <div style="display:flex; gap:10px;">
+                    <button onclick="splitPayment(2)" class="btn-outline flex-1">На 2х</button>
+                    <button onclick="splitPayment(3)" class="btn-outline flex-1">На 3х</button>
+                    <button onclick="splitPayment(4)" class="btn-outline flex-1">На 4х</button>
+                </div>
                 <button onclick="processPayment('Долг')" class="btn-pay debt">В ДОЛГ</button>
             </div>
 
