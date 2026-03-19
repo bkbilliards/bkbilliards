@@ -20,7 +20,6 @@ const STAFF_HARDCODED = [
 
 let localAuth = JSON.parse(localStorage.getItem('sensei_auth_pro')) || { isAuth: false, user: null };
 
-// Базовое состояние
 let cloudState = { tables: Array.from({length: 6}, (_, i) => ({ id: i + 1, active: false, start: null, res: [], bar: [] })), checks: [], archive: [], inventory: [], debts: [], history: [], ownerAcc: {}, customAdmins: [], expenses: [] };
 
 db.ref('.info/connected').on('value', snap => { const el = document.getElementById('sync-status'); if(el) el.innerText = snap.val() ? '🟢' : '🔴'; });
@@ -32,7 +31,8 @@ function toArr(data) {
     return Object.values(data);
 }
 
-// Загрузка с бронежилетом
+let lastAdminCount = -1; // Для защиты от моргания списка
+
 dbRef.on('value', snap => {
     if (snap.exists() && snap.val()) {
         let data = snap.val();
@@ -65,6 +65,7 @@ window.onload = () => {
                 renderTableBill();
             }
         } else {
+            // Отрисовываем меню входа безопасно
             render(); 
         }
     }, 1000); 
@@ -145,7 +146,7 @@ function confirmZReport() {
         cloudState.ownerAcc[localAuth.user.name] = (cloudState.ownerAcc[localAuth.user.name] || 0) + salary;
     }
     
-    saveToCloud(); localAuth = { isAuth: false }; saveLocalAuth(); 
+    saveToCloud(); localAuth = { isAuth: false, user: null }; saveLocalAuth(); 
     let diffMsg = diff < 0 ? `НЕДОСТАЧА: ${diff} ₸` : (diff > 0 ? `ИЗЛИШЕК: +${diff} ₸` : `КАССА ИДЕАЛЬНА`);
     alert(`Смена закрыта.\nОжидалось наличных (за вычетом расходов): ${shift.expectedCash} ₸\nВ кассе: ${physicalCash} ₸\n${diffMsg}`);
     location.reload();
@@ -502,18 +503,24 @@ function openFullCheck(idx) {
 
 function render() {
     if (!localAuth.isAuth) { 
-        let html = '<option value="0">Султан</option><option value="1">Дидар</option><option value="owner">Хозяин</option>';
-        toArr(cloudState.customAdmins).forEach((a, i) => { html += `<option value="custom_${a.id}">${a.name}</option>`; });
-        let selectElem = document.getElementById('staff-select');
-        if(selectElem) { selectElem.innerHTML = html; }
-        
-        document.getElementById('auth-screen').style.display='flex'; 
-        document.getElementById('app').style.display='none'; 
-        return; 
+        let currentAdminCount = toArr(cloudState.customAdmins).length;
+        if(currentAdminCount !== lastAdminCount) {
+            let html = '<option value="0">Султан</option><option value="1">Дидар</option><option value="owner">Хозяин</option>';
+            toArr(cloudState.customAdmins).forEach((a, i) => { html += `<option value="custom_${a.id}">${a.name}</option>`; });
+            let selectElem = document.getElementById('staff-select');
+            if(selectElem) { 
+                let curVal = selectElem.value;
+                selectElem.innerHTML = html; 
+                if (curVal && selectElem.querySelector(`option[value="${curVal}"]`)) {
+                    selectElem.value = curVal;
+                }
+            }
+            lastAdminCount = currentAdminCount;
+        }
+        document.getElementById('auth-screen').style.display='flex'; document.getElementById('app').style.display='none'; return; 
     }
     
-    document.getElementById('auth-screen').style.display='none'; 
-    document.getElementById('app').style.display='block';
+    document.getElementById('auth-screen').style.display='none'; document.getElementById('app').style.display='block';
     
     document.getElementById('user-display').innerText = localAuth.user.name;
     
