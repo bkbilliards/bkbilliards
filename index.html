@@ -16,11 +16,12 @@
             <h1 class="brand-title gold-gradient">SENSEI</h1>
             <p class="tagline">BILLIARD CLUB</p>
             <div class="input-group">
-                <label>АДМИНИСТРАТОР</label>
-                <select id="staff-select"><option value="0">Султан</option><option value="1">Дидар</option><option value="2">Хозяин</option></select>
+                <label>ВЫБЕРИТЕ СОТРУДНИКА</label>
+                <select id="staff-select">
+                    </select>
             </div>
             <div class="input-group">
-                <label>ПАРОЛЬ</label>
+                <label>ПАРОЛЬ (PIN)</label>
                 <input type="password" id="pass-input" placeholder="••••">
             </div>
             <button onclick="login()" class="btn-gold btn-large shadow-gold">ОТКРЫТЬ СМЕНУ</button>
@@ -36,7 +37,7 @@
                 <span id="user-display" style="font-weight: 600;">---</span>
                 <span id="sync-status" class="status-indicator">🟢</span>
             </div>
-            <button onclick="logout()" class="btn-exit">ВЫЙТИ</button>
+            <button onclick="logout()" class="btn-exit">ВЫЙТИ СО СМЕНЫ</button>
         </header>
 
         <div class="global-stats-bar">
@@ -60,6 +61,7 @@
             <button class="nav-link" onclick="showTab('stock', this)">СКЛАД</button>
             <button class="nav-link" onclick="showTab('debts', this)">ДОЛГИ</button>
             <button class="nav-link" onclick="showTab('stats', this)">СТАТИСТИКА</button>
+            <button id="acc-tab" class="nav-link" onclick="showTab('acc', this)" style="display:none; color:var(--green);">БУХГАЛТЕРИЯ</button>
             <button id="owner-tab" class="nav-link" onclick="showTab('owner', this)" style="display:none; color:var(--gold);">УПРАВЛЕНИЕ</button>
         </nav>
 
@@ -97,12 +99,52 @@
                 </div>
             </div>
 
+            <div id="tab-acc" class="tab-pane" style="display:none;">
+                <div class="card">
+                    <div style="display:flex; justify-content:center; gap:10px; margin-bottom:20px;">
+                        <button class="btn-outline acc-filter active" onclick="setAccPeriod('all', this)">Всё время</button>
+                        <button class="btn-outline acc-filter" onclick="setAccPeriod('year', this)">За год</button>
+                        <button class="btn-outline acc-filter" onclick="setAccPeriod('month', this)">За месяц</button>
+                        <button class="btn-outline acc-filter" onclick="setAccPeriod('week', this)">За неделю</button>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-bottom:30px;">
+                        <div class="dash-card">
+                            <span class="dash-label">ОБЩАЯ ВЫРУЧКА КАССЫ</span>
+                            <div class="dash-val gold-text"><span id="acc-trev">0</span> ₸</div>
+                            <div style="font-size:11px; color:var(--gray); margin-top:5px;">Бар: <span id="acc-brev">0</span>₸ | Столы: <span id="acc-tblrev">0</span>₸</div>
+                        </div>
+                        <div class="dash-card" style="border-color:var(--red);">
+                            <span class="dash-label" style="color:var(--red);">РАСХОДЫ (ВЫПЛАЧЕННАЯ ЗП)</span>
+                            <div class="dash-val" style="color:var(--red);"><span id="acc-sal">0</span> ₸</div>
+                        </div>
+                        <div class="dash-card" style="border-color:var(--green); background:rgba(46, 204, 113, 0.05);">
+                            <span class="dash-label" style="color:var(--green);">ЧИСТАЯ ПРИБЫЛЬ</span>
+                            <div class="dash-val" style="color:var(--green);"><span id="acc-net">0</span> ₸</div>
+                        </div>
+                    </div>
+                    
+                    <h3 class="gold-text">ИСТОРИЯ СМЕН (ДЕТАЛИЗАЦИЯ)</h3>
+                    <table class="data-table"><thead><tr><th>АДМИН</th><th>СМЕНА</th><th>БАР</th><th>СТОЛЫ</th><th>КАССА</th><th>ЗП</th></tr></thead><tbody id="history-list"></tbody></table>
+                </div>
+            </div>
+
             <div id="tab-owner" class="tab-pane" style="display:none;">
                 <div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <h3 class="gold-text">УПРАВЛЕНИЕ ПЕРСОНАЛОМ</h3>
+                        <button onclick="addCustomAdmin()" class="btn-gold shadow-gold" style="width:auto; padding: 10px 20px;">+ ДОБАВИТЬ ВРЕМЕННОГО АДМИНА</button>
+                    </div>
+                    <div id="custom-admins-list" style="margin-bottom:30px; display:flex; gap:10px; flex-wrap:wrap; margin-top:15px;"></div>
+
                     <h3 class="gold-text">ВЫПЛАТА ЗАРПЛАТ (ОБЩИЕ ДОЛГИ КЛУБА ПЕРЕД АДМИНАМИ)</h3>
                     <div id="admin-salaries-list" style="margin-bottom:30px; display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:15px;"></div>
-                    <h3 class="gold-text">ИСТОРИЯ ВСЕХ СМЕН</h3>
-                    <table class="data-table"><thead><tr><th>АДМИН</th><th>СМЕНА</th><th>БАР</th><th>СТОЛЫ</th><th>КАССА</th><th>ЗП</th></tr></thead><tbody id="history-list"></tbody></table>
+                    
+                    <div style="margin-top:50px; padding:30px; border:1px dashed var(--red); border-radius:20px; text-align:center; background: rgba(231, 76, 60, 0.05);">
+                        <h3 style="color:var(--red); margin-top:0;">ОПАСНАЯ ЗОНА</h3>
+                        <p style="font-size:12px; color:var(--gray); margin-bottom:20px;">Кнопка ниже полностью удаляет все данные сайта (чеки, склады, долги). Использовать только при полной очистке базы для работы с чистого листа.</p>
+                        <button onclick="resetDatabase()" class="btn-red" style="width:auto; padding:15px 40px; box-shadow: 0 5px 20px rgba(231, 76, 60, 0.3);">⚠️ ОБНОВИТЬ (ОЧИСТИТЬ) БАЗУ</button>
+                    </div>
                 </div>
             </div>
         </main>
