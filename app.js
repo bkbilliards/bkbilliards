@@ -20,24 +20,27 @@ const STAFF_HARDCODED = [
 
 let localAuth = JSON.parse(localStorage.getItem('sensei_auth_pro')) || { isAuth: false, user: null };
 
-// Базовое состояние
-let cloudState = { tables: Array.from({length: 6}, (_, i) => ({ id: i + 1, active: false, start: null, res: [], bar: [] })), checks: [], archive: [], inventory: [], debts: [], history: [], ownerAcc: {}, customAdmins: [], expenses: [] };
+// Базовое состояние с защитой всех массивов
+let cloudState = { 
+    tables: Array.from({length: 6}, (_, i) => ({ id: i + 1, active: false, start: null, res: [], bar: [] })), 
+    checks: [], archive: [], inventory: [], debts: [], history: [], ownerAcc: {}, customAdmins: [], expenses: [] 
+};
 
 db.ref('.info/connected').on('value', snap => { const el = document.getElementById('sync-status'); if(el) el.innerText = snap.val() ? '🟢' : '🔴'; });
 
 // ЗАЩИТА ДАННЫХ: Бронежилет от скрытых массивов Firebase
 dbRef.on('value', snap => {
     if (snap.val()) {
-        cloudState = snap.val();
-        if (!cloudState.tables) cloudState.tables = Array.from({length: 6}, (_, i) => ({ id: i + 1, active: false, start: null, res: [], bar: [] }));
-        if (!cloudState.checks) cloudState.checks = [];
-        if (!cloudState.archive) cloudState.archive = [];
-        if (!cloudState.inventory) cloudState.inventory = [];
-        if (!cloudState.debts) cloudState.debts = [];
-        if (!cloudState.history) cloudState.history = [];
-        if (!cloudState.ownerAcc) cloudState.ownerAcc = {};
-        if (!cloudState.customAdmins) cloudState.customAdmins = [];
-        if (!cloudState.expenses) cloudState.expenses = [];
+        let data = snap.val();
+        cloudState.tables = data.tables || Array.from({length: 6}, (_, i) => ({ id: i + 1, active: false, start: null, res: [], bar: [] }));
+        cloudState.checks = data.checks || [];
+        cloudState.archive = data.archive || [];
+        cloudState.inventory = data.inventory || [];
+        cloudState.debts = data.debts || [];
+        cloudState.history = data.history || [];
+        cloudState.ownerAcc = data.ownerAcc || {};
+        cloudState.customAdmins = data.customAdmins || [];
+        cloudState.expenses = data.expenses || [];
     } else {
         saveToCloud();
     }
@@ -135,7 +138,7 @@ function confirmZReport() {
         cloudState.ownerAcc[localAuth.user.name] = (cloudState.ownerAcc[localAuth.user.name] || 0) + salary;
     }
     
-    saveToCloud(); localAuth = { isAuth: false }; saveLocalAuth(); 
+    saveToCloud(); localAuth = { isAuth: false, user: null }; saveLocalAuth(); 
     let diffMsg = diff < 0 ? `НЕДОСТАЧА: ${diff} ₸` : (diff > 0 ? `ИЗЛИШЕК: +${diff} ₸` : `КАССА ИДЕАЛЬНА`);
     alert(`Смена закрыта.\nОжидалось наличных (за вычетом расходов): ${shift.expectedCash} ₸\nВ кассе: ${physicalCash} ₸\n${diffMsg}`);
     location.reload();
