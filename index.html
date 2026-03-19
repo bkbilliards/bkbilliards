@@ -6,45 +6,39 @@
     <title>SENSEI BILLIARD CRM</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 </head>
 <body>
-    <div id="auth-screen" class="overlay" style="display: flex;">
+    <div id="auth-screen" class="overlay">
         <div class="auth-card">
             <div class="logo-circle">S</div>
             <h1 class="gold-text">SENSEI</h1>
             <p class="tagline">BILLIARD CLUB</p>
-            
             <div class="input-group">
                 <label>АДМИНИСТРАТОР</label>
-                <select id="staff-select" onchange="toggleExtraName()">
-                    <option value="0">Султан</option>
-                    <option value="1">Дидар</option>
-                    <option value="2">Другой админ...</option>
-                    <option value="3">Хозяин</option>
-                </select>
-                <input type="text" id="extra-name" placeholder="Введите ваше имя" style="display:none; margin-top:10px;">
+                <select id="staff-select"></select>
             </div>
-            
             <div class="input-group">
                 <label>ПАРОЛЬ</label>
                 <input type="password" id="pass-input" placeholder="••••">
             </div>
-            
-            <button onclick="login()" class="btn-gold">ВОЙТИ В СИСТЕМУ</button>
+            <button onclick="login()" class="btn-gold">ОТКРЫТЬ СМЕНУ</button>
             <p id="auth-error" class="error-msg" style="display:none;">❌ Неверный пароль!</p>
         </div>
     </div>
 
     <div id="app" style="display:none;">
         <header class="header">
-            <div class="header-brand">
-                <span class="gold-text">SENSEI</span> <span class="divider">|</span> <span id="user-display">---</span>
+            <div class="header-left">
+                <span class="gold-text">SENSEI</span> <span class="divider">|</span> 
+                <span id="user-display">---</span>
+                <span id="sync-status" style="margin-left:15px; font-size:10px; color:#2ecc71;">🟢 ОНЛАЙН</span>
             </div>
             <nav class="nav">
                 <button class="nav-link active" onclick="showTab('hall', this)">ЗАЛ</button>
                 <button class="nav-link" onclick="showTab('stock', this)">СКЛАД</button>
                 <button class="nav-link" onclick="showTab('debts', this)">ДОЛГИ</button>
-                <button class="nav-link" onclick="showTab('stats', this)">МОЯ СТАТИСТИКА</button>
                 <button id="owner-tab" class="nav-link" onclick="showTab('owner', this)" style="display:none;">БУХГАЛТЕРИЯ</button>
             </nav>
             <button onclick="logout()" class="btn-exit">ЗАКРЫТЬ СМЕНУ</button>
@@ -52,71 +46,55 @@
 
         <div class="top-stats">
             <div class="stat-item">
-                <span class="label">ОБЩАЯ ВЫРУЧКА СМЕНЫ</span>
+                <span class="label">ВЫРУЧКА СМЕНЫ</span>
                 <span class="value"><span id="rev-val">0</span> ₸</span>
             </div>
             <div class="stat-item">
-                <span class="label">ВАША ЗАРПЛАТА (8% + 6000 ₸)</span>
+                <span class="label">ВАША ЗП (8% + 6к)</span>
                 <span class="value gold-text"><span id="salary-val">0</span> ₸</span>
             </div>
         </div>
 
         <main class="content">
-            <div id="tab-hall" class="tab-pane active">
+            <div id="tab-hall" class="tab-content active">
                 <div id="tables-grid" class="grid"></div>
-                <h3 class="section-title gold-text">📊 ЧЕКИ (ОЖИДАЮТ ОПЛАТЫ)</h3>
-                <div id="active-checks"></div>
+                
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:0 30px;">
+                    <h3 class="section-title gold-text">📊 ЧЕКИ (ОЖИДАЮТ ОПЛАТЫ)</h3>
+                    <button onclick="sellBarOnly()" class="btn-outline" style="width:auto; padding:10px 20px;">+ ПРОДАЖА ПО БАРУ (БЕЗ СТОЛА)</button>
+                </div>
+                <div id="active-checks" class="checks-container"></div>
             </div>
 
-            <div id="tab-stock" class="tab-pane" style="display:none;">
+            <div id="tab-stock" class="tab-content" style="display:none;">
                 <div class="card">
-                    <div class="card-header">
-                        <input type="text" id="stock-search" placeholder="Поиск товара по складу..." oninput="renderStock()">
-                        <button id="add-item-btn" onclick="addItem()" class="btn-small" style="display:none;">+ ТОВАР</button>
-                    </div>
+                    <button id="add-item-btn" onclick="addItem()" class="btn-gold" style="width:auto; margin-bottom:15px; display:none;">+ ТОВАР</button>
                     <table class="data-table">
-                        <thead><tr><th>НАИМЕНОВАНИЕ</th><th>ЦЕНА</th><th>ПРОДАЖА</th></tr></thead>
+                        <thead><tr><th>ТОВАР</th><th>ОСТАТОК</th><th>ЦЕНА</th><th>УПРАВЛЕНИЕ</th></tr></thead>
                         <tbody id="stock-list"></tbody>
                     </table>
                 </div>
             </div>
 
-            <div id="tab-debts" class="tab-pane" style="display:none;">
+            <div id="tab-debts" class="tab-content" style="display:none;">
                 <div class="card">
-                    <h3 class="gold-text">⚠️ СПИСОК ДОЛЖНИКОВ</h3>
                     <table class="data-table">
-                        <thead><tr><th>ГОСТЬ</th><th>СУММА ДОЛГА</th><th>ДАТА</th></tr></thead>
+                        <thead><tr><th>ИМЯ</th><th>СУММА ДОЛГА</th><th>ДАТА</th><th>УПРАВЛЕНИЕ</th></tr></thead>
                         <tbody id="debts-list"></tbody>
                     </table>
                 </div>
             </div>
 
-            <div id="tab-stats" class="tab-pane" style="display:none;">
+            <div id="tab-owner" class="tab-content" style="display:none;">
                 <div class="card">
-                    <h2 class="gold-text">👤 ИНФОРМАЦИЯ ПО ВАШЕМУ ЗАРАБОТКУ</h2>
-                    <div class="accumulated-box">
-                        <p style="margin:0; font-size:12px; color:#888;">НАКОПЛЕНО К ВЫПЛАТЕ (ОБЩИЙ ИТОГ):</p>
-                        <h1 style="margin:5px 0 20px 0; color:#2ecc71;"><span id="acc-salary">0</span> ₸</h1>
-                    </div>
                     <table class="data-table">
-                        <thead><tr><th>ДАТА СМЕНЫ</th><th>СДАННАЯ ВЫРУЧКА</th><th>ВАША ЗП ЗА ДЕНЬ</th></tr></thead>
-                        <tbody id="my-history-list"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div id="tab-owner" class="tab-pane" style="display:none;">
-                <div class="card">
-                    <h3 class="gold-text">📈 ГЛОБАЛЬНАЯ ИСТОРИЯ СМЕН</h3>
-                    <table class="data-table">
-                        <thead><tr><th>ДАТА</th><th>АДМИН</th><th>ВЫРУЧКА КЛУБА</th><th>НАЧИСЛЕНО ЗП</th></tr></thead>
-                        <tbody id="global-history-list"></tbody>
+                        <thead><tr><th>ДАТА</th><th>АДМИН</th><th>ВЫРУЧКА</th><th>ЗП</th></tr></thead>
+                        <tbody id="history-list"></tbody>
                     </table>
                 </div>
             </div>
         </main>
     </div>
-
     <script src="app.js"></script>
 </body>
 </html>
