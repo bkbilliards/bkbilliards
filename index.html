@@ -12,10 +12,9 @@
 <body>
     <div id="auth-screen" class="overlay">
         <div class="auth-card">
-            <div class="auth-logo-circle">S</div>
+            <div class="logo-circle">S</div>
             <h1 class="gold-text">SENSEI</h1>
             <p class="tagline">BILLIARD CLUB</p>
-            
             <div class="input-group">
                 <label>АДМИНИСТРАТОР</label>
                 <select id="staff-select">
@@ -24,12 +23,10 @@
                     <option value="2">Хозяин</option>
                 </select>
             </div>
-            
             <div class="input-group">
                 <label>ПАРОЛЬ</label>
                 <input type="password" id="pass-input" placeholder="••••">
             </div>
-            
             <button onclick="login()" class="btn-gold">ОТКРЫТЬ СМЕНУ</button>
             <p id="auth-error" class="error-msg" style="display:none;">❌ Неверный пароль!</p>
         </div>
@@ -40,12 +37,14 @@
             <div class="header-left">
                 <span class="gold-text">SENSEI</span> <span class="divider">|</span> 
                 <span id="user-display">---</span>
-                <span style="margin-left:15px; font-size:10px; color:#2ecc71;">🟢 ONLINE</span>
+                <span style="margin-left:15px; font-size:10px; color:#2ecc71;">🟢 ОНЛАЙН СИНХРОНИЗАЦИЯ</span>
             </div>
             <nav class="nav">
                 <button class="nav-link active" onclick="showTab('hall', this)">ЗАЛ</button>
+                <button class="nav-link" onclick="showTab('calc', this)">КАЛЬКУЛЯТОР</button>
                 <button class="nav-link" onclick="showTab('stock', this)">СКЛАД</button>
                 <button class="nav-link" onclick="showTab('debts', this)">ДОЛГИ</button>
+                <button class="nav-link" onclick="showTab('stats', this)">МОЯ ЗП</button>
                 <button id="owner-tab" class="nav-link" onclick="showTab('owner', this)" style="display:none;">УПРАВЛЕНИЕ</button>
             </nav>
             <button onclick="logout()" class="btn-exit">ЗАКРЫТЬ СМЕНУ</button>
@@ -53,28 +52,67 @@
 
         <div class="top-stats">
             <div class="stat-item">
-                <span class="label">ВЫРУЧКА СМЕНЫ</span>
+                <span class="label">ОБЩАЯ ВЫРУЧКА СМЕНЫ</span>
                 <span class="value"><span id="rev-val">0</span> ₸</span>
             </div>
             <div class="stat-item">
-                <span class="label">ВАША ЗП (8% + 6к)</span>
+                <span class="label">ВАША ЗАРПЛАТА (8% + 6000 ₸)</span>
                 <span class="value gold-text"><span id="salary-val">0</span> ₸</span>
             </div>
         </div>
 
         <main class="content">
-            <div id="tab-hall" class="tab-content active">
+            <div id="tab-hall" class="tab-pane active">
                 <div id="tables-grid" class="grid"></div>
                 <div style="display:flex; justify-content:space-between; align-items:center; padding:0 30px;">
                     <h3 class="section-title gold-text">📊 ЧЕКИ (ОЖИДАЮТ ОПЛАТЫ)</h3>
-                    <button onclick="sellBarOnly()" class="btn-outline" style="width:auto; padding:10px 20px;">+ БАР (БЕЗ СТОЛА)</button>
                 </div>
                 <div id="active-checks" class="checks-container"></div>
             </div>
 
-            <div id="tab-stock" class="tab-content" style="display:none;">
+            <div id="tab-calc" class="tab-pane" style="display:none;">
+                <div class="card" style="max-width: 600px; margin: 0 auto;">
+                    <h2 class="gold-text" style="text-align:center;">🎱 КАЛЬКУЛЯТОР КОММЕРЦИИ</h2>
+                    
+                    <div style="display:flex; gap:10px; margin-bottom: 20px;">
+                        <button id="btn-mode-1" class="btn-gold" onclick="setCalcMode(1)">КАЖДЫЙ САМ ЗА СЕБЯ</button>
+                        <button id="btn-mode-2" class="btn-outline" onclick="setCalcMode(2)">КОМАНДНЫЙ (2 на 2)</button>
+                    </div>
+
+                    <div class="input-group">
+                        <label>СТАВКА ЗА ОЧКО (₸)</label>
+                        <input type="number" id="calc-rate" value="400">
+                    </div>
+                    
+                    <div id="calc-players">
+                        <div style="display:flex; gap:10px; margin-bottom:10px;">
+                            <input type="text" class="p-name" placeholder="Игрок 1 (Подсказка)">
+                            <input type="number" class="p-score" placeholder="Очки">
+                        </div>
+                        <div style="display:flex; gap:10px; margin-bottom:10px;">
+                            <input type="text" class="p-name" placeholder="Игрок 2 (Подсказка)">
+                            <input type="number" class="p-score" placeholder="Очки">
+                        </div>
+                        <div style="display:flex; gap:10px; margin-bottom:10px;">
+                            <input type="text" class="p-name" placeholder="Игрок 3 (Подсказка)">
+                            <input type="number" class="p-score" placeholder="Очки">
+                        </div>
+                        <div style="display:flex; gap:10px; margin-bottom:10px;">
+                            <input type="text" class="p-name" placeholder="Игрок 4 (Подсказка)">
+                            <input type="number" class="p-score" placeholder="Очки">
+                        </div>
+                    </div>
+                    
+                    <button onclick="runCalculator()" class="btn-gold" style="margin-top:20px;">РАССЧИТАТЬ ОПЛАТУ</button>
+                    <div id="calc-result" style="margin-top:25px; font-size:16px; line-height:1.8; padding:20px; border-radius:10px; border:1px solid #333; background:#000;">
+                        Здесь появится результат расчета...
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-stock" class="tab-pane" style="display:none;">
                 <div class="card">
-                    <button id="add-item-btn" onclick="addItem()" class="btn-gold" style="width:auto; margin-bottom:15px; display:none;">+ ДОБАВИТЬ ТОВАР</button>
+                    <button id="add-item-btn" onclick="addItem()" class="btn-gold" style="width:auto; margin-bottom:15px; display:none;">+ ТОВАР</button>
                     <table class="data-table">
                         <thead><tr><th>ТОВАР</th><th>ОСТАТОК</th><th>ЦЕНА</th></tr></thead>
                         <tbody id="stock-list"></tbody>
@@ -82,7 +120,7 @@
                 </div>
             </div>
 
-            <div id="tab-debts" class="tab-content" style="display:none;">
+            <div id="tab-debts" class="tab-pane" style="display:none;">
                 <div class="card">
                     <table class="data-table">
                         <thead><tr><th>ИМЯ</th><th>СУММА ДОЛГА</th><th>ДАТА</th></tr></thead>
@@ -91,7 +129,15 @@
                 </div>
             </div>
 
-            <div id="tab-owner" class="tab-content" style="display:none;">
+            <div id="tab-stats" class="tab-pane" style="display:none;">
+                <div class="card">
+                    <table class="data-table">
+                        <thead><tr><th>ДАТА</th><th>ВЫРУЧКА СМЕНЫ</th><th>ЗАРАБОТАНО (ЗП)</th></tr></thead>
+                        <tbody id="my-history-list"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="tab-owner" class="tab-pane" style="display:none;">
                 <div class="card">
                     <table class="data-table">
                         <thead><tr><th>ДАТА</th><th>АДМИН</th><th>ВЫРУЧКА</th><th>ЗП</th></tr></thead>
