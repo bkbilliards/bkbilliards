@@ -113,7 +113,7 @@
                     </div>
                     
                     <h3 class="gold-text">ИСТОРИЯ СМЕН (ДЕТАЛИЗАЦИЯ)</h3>
-                    <table class="data-table"><thead><tr><th>АДМИН</th><th>СМЕНА</th><th>БАР</th><th>СТОЛЫ</th><th>КАССА</th><th>ЗП</th></tr></thead><tbody id="history-list"></tbody></table>
+                    <table class="data-table"><thead><tr><th>АДМИН</th><th>СМЕНА</th><th>БАР</th><th>СТОЛЫ</th><th>КАССА / Z-ОТЧЕТ</th><th>ЗП</th></tr></thead><tbody id="history-list"></tbody></table>
                 </div>
             </div>
 
@@ -136,6 +136,19 @@
                 </div>
             </div>
         </main>
+    </div>
+
+    <div id="z-report-modal" class="overlay" style="display:none; z-index:100000;">
+        <div class="modal-card" style="text-align:center;">
+            <div class="modal-close" onclick="document.getElementById('z-report-modal').style.display='none'">×</div>
+            <h2 class="gold-text" style="margin-top:0;">СВЕРКА КАССЫ (Z-ОТЧЕТ)</h2>
+            <p style="color:var(--gray); font-size:13px; margin-bottom:20px;">Пожалуйста, пересчитайте физические деньги в кассе.</p>
+            <div class="input-group">
+                <label style="text-align:center; font-size:14px;">СКОЛЬКО НАЛИЧНЫХ В КАССЕ? (₸)</label>
+                <input type="number" id="z-cash-input" placeholder="0" class="large-input" style="background:#030a05;">
+            </div>
+            <button onclick="confirmZReport()" class="btn-gold btn-large shadow-gold" style="margin-top:10px;">ПОДТВЕРДИТЬ И ЗАКРЫТЬ СМЕНУ</button>
+        </div>
     </div>
 
     <div id="add-item-modal" class="overlay" style="display:none;">
