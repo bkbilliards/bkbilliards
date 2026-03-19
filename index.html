@@ -2,9 +2,9 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SENSEI BILLIARD CRM</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -13,110 +13,117 @@
     <div id="auth-screen" class="overlay">
         <div class="auth-card">
             <div class="logo-circle">S</div>
-            <h1 class="gold-text">SENSEI</h1>
+            <h1 class="brand-title">SENSEI</h1>
             <p class="tagline">BILLIARD CLUB</p>
             <div class="input-group">
                 <label>АДМИНИСТРАТОР</label>
                 <select id="staff-select"><option value="0">Султан</option><option value="1">Дидар</option><option value="2">Хозяин</option></select>
             </div>
-            <div class="input-group"><label>ПАРОЛЬ</label><input type="password" id="pass-input" placeholder="••••"></div>
-            <button onclick="login()" class="btn-gold">ОТКРЫТЬ СМЕНУ</button>
+            <div class="input-group">
+                <label>ПАРОЛЬ</label>
+                <input type="password" id="pass-input" placeholder="••••">
+            </div>
+            <button onclick="login()" class="btn-gold btn-large">ОТКРЫТЬ СМЕНУ</button>
             <p id="auth-error" class="error-msg" style="display:none;">❌ Неверный пароль!</p>
         </div>
     </div>
 
     <div id="app" style="display:none;">
         <header class="header">
-            <div class="header-left"><span class="gold-text">SENSEI</span> <span class="divider">|</span> <span id="user-display">---</span><span id="sync-status" style="margin-left:15px; font-size:10px; color:#2ecc71;">🟢 ОНЛАЙН</span></div>
+            <div class="header-brand">
+                <span class="gold-text" style="font-weight:800; letter-spacing:2px;">SENSEI</span> <span style="color:#444; margin:0 10px;">|</span> <span id="user-display">---</span>
+                <span id="sync-status" class="status-indicator">🟢</span>
+            </div>
             <nav class="nav">
                 <button class="nav-link active" onclick="showTab('hall', this)">ЗАЛ</button>
-                <button class="nav-link" onclick="showTab('archive', this)">АРХИВ ЧЕКОВ</button>
+                <button class="nav-link" onclick="showTab('archive', this)">ЧЕКИ</button>
                 <button class="nav-link" onclick="showTab('stock', this)">СКЛАД</button>
                 <button class="nav-link" onclick="showTab('debts', this)">ДОЛГИ</button>
-                <button class="nav-link" onclick="showTab('stats', this)">МОЯ СМЕНА</button>
-                <button id="owner-tab" class="nav-link" onclick="showTab('owner', this)" style="display:none;">БУХГАЛТЕРИЯ</button>
+                <button class="nav-link" onclick="showTab('stats', this)">ЗАРПЛАТА</button>
+                <button id="owner-tab" class="nav-link" onclick="showTab('owner', this)" style="display:none;">УПРАВЛЕНИЕ</button>
             </nav>
-            <button onclick="logout()" class="btn-exit">ЗАКРЫТЬ СМЕНУ</button>
+            <button onclick="logout()" class="btn-exit">ВЫЙТИ</button>
         </header>
 
         <main class="content">
             <div id="tab-hall" class="tab-pane active">
                 <div id="tables-grid" class="grid"></div>
-                <div style="display:flex; justify-content:space-between; align-items:center; padding:0 30px;">
-                    <h3 class="gold-text">📊 ЧЕКИ (ОЖИДАЮТ ОПЛАТЫ)</h3>
-                    <button onclick="openBarModal('standalone')" class="btn-outline" style="padding:10px 20px;">+ БАР (БЕЗ СТОЛА)</button>
+                <div class="section-header">
+                    <h3 class="gold-text">ОЖИДАЮТ ОПЛАТЫ</h3>
+                    <button onclick="openBarModal('standalone')" class="btn-outline">+ ПРОДАЖА БАР</button>
                 </div>
                 <div id="active-checks" class="checks-container"></div>
             </div>
 
             <div id="tab-archive" class="tab-pane" style="display:none;">
-                <div class="card"><table class="data-table"><thead><tr><th>ДАТА</th><th>ИМЯ</th><th>СТОЛ</th><th>СУММА</th><th>ОПЛАТА</th><th>АДМИН</th></tr></thead><tbody id="archive-list"></tbody></table></div>
+                <div class="card">
+                    <table class="data-table"><thead><tr><th>ВРЕМЯ</th><th>ИМЯ</th><th>СТОЛ</th><th>ИТОГО</th><th>ТИП</th></tr></thead><tbody id="archive-list"></tbody></table>
+                </div>
             </div>
 
             <div id="tab-stock" class="tab-pane" style="display:none;">
                 <div class="card">
-                    <button id="add-item-btn" onclick="addItem()" class="btn-gold" style="width:auto; margin-bottom:15px; display:none;">+ ТОВАР</button>
-                    <table class="data-table"><thead><tr><th>ТОВАР</th><th>ОСТАТОК</th><th>ЦЕНА</th><th>УПРАВЛЕНИЕ</th></tr></thead><tbody id="stock-list"></tbody></table>
+                    <button id="add-item-btn" onclick="addItem()" class="btn-gold" style="width:auto; margin-bottom:20px; display:none;">+ НОВЫЙ ТОВАР</button>
+                    <table class="data-table"><thead><tr><th>НАИМЕНОВАНИЕ</th><th>ОСТАТОК</th><th>ЦЕНА</th><th></th></tr></thead><tbody id="stock-list"></tbody></table>
                 </div>
             </div>
 
             <div id="tab-debts" class="tab-pane" style="display:none;">
-                <div class="card"><table class="data-table"><thead><tr><th>ИМЯ ГОСТЯ</th><th>ОБЩИЙ ДОЛГ</th><th>ИСТОРИЯ</th><th>УПРАВЛЕНИЕ</th></tr></thead><tbody id="debts-list"></tbody></table></div>
+                <div class="card"><table class="data-table"><thead><tr><th>КЛИЕНТ</th><th>СУММА ДОЛГА</th><th></th></tr></thead><tbody id="debts-list"></tbody></table></div>
             </div>
 
             <div id="tab-stats" class="tab-pane" style="display:none;">
                 <div class="card">
-                    <div class="stat-boxes" style="display:flex; gap:15px; margin-bottom:20px;">
-                        <div class="stat-box"><span>ВЫРУЧКА БАР</span><br><b id="stat-bar">0</b> ₸</div>
-                        <div class="stat-box"><span>ВЫРУЧКА СТОЛЫ</span><br><b id="stat-tables">0</b> ₸</div>
-                        <div class="stat-box"><span>ОБЩАЯ ВЫРУЧКА</span><br><b id="stat-total" class="gold-text">0</b> ₸</div>
-                        <div class="stat-box" style="border-color:#2ecc71;"><span>ВАША ЗП (8% + 6к)</span><br><b id="stat-salary" style="color:#2ecc71;">0</b> ₸</div>
+                    <div class="stat-boxes">
+                        <div class="stat-box"><span>СТОЛЫ</span><br><b id="stat-tables">0</b> ₸</div>
+                        <div class="stat-box"><span>БАР</span><br><b id="stat-bar">0</b> ₸</div>
+                        <div class="stat-box"><span>ОБЩАЯ КАССА</span><br><b id="stat-total" class="gold-text">0</b> ₸</div>
+                        <div class="stat-box highlight"><span>К ВЫПЛАТЕ (8% + 6к)</span><br><b id="stat-salary">0</b> ₸</div>
                     </div>
-                    <h3 class="gold-text">ИСТОРИЯ ВАШИХ СМЕН</h3>
-                    <table class="data-table"><thead><tr><th>НАЧАЛО</th><th>КОНЕЦ</th><th>БАР</th><th>СТОЛЫ</th><th>ИТОГО</th><th>ЗП</th></tr></thead><tbody id="my-history-list"></tbody></table>
+                    <table class="data-table" style="margin-top:20px;"><thead><tr><th>СМЕНА</th><th>БАР</th><th>СТОЛЫ</th><th>КАССА</th><th>ЗП</th></tr></thead><tbody id="my-history-list"></tbody></table>
                 </div>
             </div>
 
             <div id="tab-owner" class="tab-pane" style="display:none;">
                 <div class="card">
-                    <h3 class="gold-text">ЗАРПЛАТЫ АДМИНИСТРАТОРОВ</h3>
-                    <div id="admin-salaries-list" style="margin-bottom:20px;"></div>
-                    <h3 class="gold-text">ВСЕ СМЕНЫ КЛУБА</h3>
-                    <table class="data-table"><thead><tr><th>АДМИН</th><th>НАЧАЛО</th><th>КОНЕЦ</th><th>ВЫРУЧКА</th><th>ЗП</th></tr></thead><tbody id="history-list"></tbody></table>
+                    <h3 class="gold-text">ВЫПЛАТА ЗАРПЛАТ</h3>
+                    <div id="admin-salaries-list" style="margin-bottom:30px;"></div>
+                    <h3 class="gold-text">ИСТОРИЯ СМЕН</h3>
+                    <table class="data-table"><thead><tr><th>АДМИН</th><th>СМЕНА</th><th>КАССА</th><th>ЗП</th></tr></thead><tbody id="history-list"></tbody></table>
                 </div>
             </div>
         </main>
     </div>
 
-    <div id="bar-modal" class="overlay" style="display:none; z-index:99999;">
-        <div class="card" style="width:400px; text-align:center; position:relative;">
-            <span onclick="document.getElementById('bar-modal').style.display='none'" style="position:absolute; top:15px; right:20px; font-size:24px; cursor:pointer; color:#e74c3c;">×</span>
+    <div id="bar-modal" class="overlay" style="display:none;">
+        <div class="modal-card">
+            <div class="modal-close" onclick="document.getElementById('bar-modal').style.display='none'">×</div>
             <h2 class="gold-text">МЕНЮ БАРА</h2>
-            <input type="text" id="bar-search" placeholder="Поиск товара..." oninput="renderBarSearch()" style="margin-bottom:15px;">
-            <div id="bar-items-list" style="max-height:300px; overflow-y:auto; text-align:left;"></div>
+            <input type="text" id="bar-search" placeholder="Поиск напитка/закуски..." oninput="renderBarSearch()" class="search-input">
+            <div id="bar-items-list" class="scroll-list"></div>
         </div>
     </div>
 
-    <div id="pay-modal" class="overlay" style="display:none; z-index:99999;">
-        <div class="card" style="width:400px; text-align:center; position:relative;">
-            <span onclick="document.getElementById('pay-modal').style.display='none'" style="position:absolute; top:15px; right:20px; font-size:24px; cursor:pointer; color:#e74c3c;">×</span>
-            <h2 class="gold-text">ОПЛАТА ЧЕКА</h2>
-            <h1 id="pay-total" style="margin:10px 0;">0 ₸</h1>
-            <p id="pay-info" style="font-size:12px; color:#aaa; margin-bottom:20px;"></p>
-            
-            <button onclick="processPayment('Наличные')" class="btn-gold" style="margin-bottom:10px;">💵 НАЛИЧНЫЕ</button>
-            <button onclick="processPayment('QR')" class="btn-gold" style="background:#3498db; margin-bottom:10px;">📱 QR-КОД (KASPI)</button>
-            <button onclick="processPayment('50/50')" class="btn-gold" style="background:#9b59b6; margin-bottom:10px;">☯️ НАЛИЧНЫЕ + QR (50/50)</button>
-            <div style="display:flex; gap:10px; margin-bottom:10px;">
-                <button onclick="splitPayment(2)" class="btn-outline">На 2х</button>
-                <button onclick="splitPayment(3)" class="btn-outline">На 3х</button>
-                <button onclick="splitPayment(4)" class="btn-outline">На 4х</button>
+    <div id="pay-modal" class="overlay" style="display:none;">
+        <div class="modal-card">
+            <div class="modal-close" onclick="document.getElementById('pay-modal').style.display='none'">×</div>
+            <h2 class="gold-text">ОПЛАТА</h2>
+            <div class="pay-amount" id="pay-total">0 ₸</div>
+            <p id="pay-info" class="pay-info"></p>
+            <div class="pay-buttons">
+                <button onclick="processPayment('Наличные')" class="btn-pay cash">💵 НАЛИЧНЫЕ</button>
+                <button onclick="processPayment('QR')" class="btn-pay qr">📱 QR-КОД</button>
+                <button onclick="processPayment('50/50')" class="btn-pay mix">☯️ 50/50 (НАЛИЧНЫЕ + QR)</button>
+                <div style="display:flex; gap:10px;">
+                    <button onclick="splitPayment(2)" class="btn-outline flex-1">На 2х</button>
+                    <button onclick="splitPayment(3)" class="btn-outline flex-1">На 3х</button>
+                    <button onclick="splitPayment(4)" class="btn-outline flex-1">На 4х</button>
+                </div>
+                <button onclick="processPayment('Долг')" class="btn-pay debt">В ДОЛГ</button>
+                <button onclick="editCheckName()" class="btn-outline text-gray">✏️ ИЗМЕНИТЬ ИМЯ</button>
             </div>
-            <button onclick="processPayment('Долг')" class="btn-red" style="margin-bottom:10px;">ПЕРЕВЕСТИ В ДОЛГ</button>
-            <button onclick="editCheckName()" class="btn-outline" style="border-color:#555; color:#aaa;">✏️ ИЗМЕНИТЬ ИМЯ</button>
         </div>
     </div>
-
     <script src="app.js"></script>
 </body>
 </html>
