@@ -1,59 +1,34 @@
-:root {
-    --bg-color: #061108; 
-    --card-bg: #0d1a0d;
-    --black: #000000;
-    --gold: #d4af37;
-    --gold-dark: #aa8a2e;
-    --text: #ffffff;
-    --gray: #888888;
-    --red: #c0392b;
-    --green: #2ecc71;
-}
-
+:root { --bg-color: #051005; --card-bg: #0a170a; --black: #000000; --gold: #d4af37; --gold-dark: #aa8a2e; --text: #ffffff; --gray: #888888; --red: #c0392b; --green: #2ecc71; }
 body { background: var(--bg-color); color: var(--text); font-family: 'Montserrat', sans-serif; margin: 0; padding: 0; }
 .gold-text { color: var(--gold) !important; }
-
-/* ОКНО ВХОДА */
-.overlay { position: fixed; inset: 0; background: radial-gradient(circle, #0a1f0a 0%, #000 100%); display: flex; align-items: center; justify-content: center; z-index: 10000; }
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; z-index: 10000; }
 .auth-card { background: var(--black); padding: 40px; border-radius: 20px; border: 2px solid var(--gold); text-align: center; width: 320px; box-shadow: 0 10px 40px rgba(212, 175, 55, 0.2); }
 .logo-circle { width: 70px; height: 70px; border: 2px solid var(--gold); border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 32px; color: var(--gold); font-weight: bold; }
 .tagline { font-size: 10px; letter-spacing: 4px; color: var(--gold-dark); margin-bottom: 30px; }
-
-/* ШАПКА */
 .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 30px; background: var(--black); border-bottom: 2px solid var(--gold); }
 .nav { display: flex; gap: 10px; }
 .nav-link { background: none; border: none; color: var(--gray); font-weight: bold; cursor: pointer; padding: 10px 15px; font-family: inherit; transition: 0.3s; }
 .nav-link.active { color: var(--gold); border-bottom: 2px solid var(--gold); }
 .btn-exit { background: var(--red); color: #fff; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; }
-
-/* СТАТИСТИКА */
-.top-stats { display: flex; gap: 20px; padding: 20px 30px; }
-.stat-item { flex: 1; background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid #1a331a; }
-.stat-item .label { font-size: 11px; color: var(--gray); font-weight: bold; }
-.stat-item .value { display: block; font-size: 28px; font-weight: bold; margin-top: 5px; }
-
-/* СТОЛЫ */
-.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; padding: 0 30px 30px; }
-.table-card { background: var(--black); border: 2px solid #222; padding: 20px; border-radius: 15px; text-align: center; transition: 0.3s; display: flex; flex-direction: column; }
-.table-card.active { border-color: var(--gold); background: #071707; box-shadow: 0 0 20px rgba(212, 175, 55, 0.1); }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; padding: 20px 30px; }
+.table-card { background: var(--black); border: 2px solid #222; padding: 20px; border-radius: 15px; text-align: center; display: flex; flex-direction: column; }
+.table-card.active { border-color: var(--gold); background: #071707; box-shadow: 0 0 15px rgba(212,175,55,0.1); }
 .timer { font-size: 38px; font-weight: bold; font-family: monospace; margin: 10px 0; color: #fff; }
-.res-list { text-align: left; font-size: 11px; color: var(--gray); margin-top: 10px; border-top: 1px dashed #333; padding-top: 10px; }
-
-/* КНОПКИ */
-.btn-gold { background: var(--gold); color: #000; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.2s; }
+.btn-gold { background: var(--gold); color: #000; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
 .btn-gold:hover { background: var(--gold-dark); }
-.btn-red { background: var(--red); color: #fff; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+.btn-red { background: var(--red); color: #fff; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; }
 .btn-action-group { display: flex; gap: 5px; margin-top: 10px; }
 .btn-outline { background: none; border: 1px solid var(--gold); color: var(--gold); padding: 8px; border-radius: 6px; font-size: 10px; font-weight: bold; flex: 1; cursor: pointer; }
-
-/* ТАБЛИЦЫ И ЧЕКИ */
 .card { background: var(--card-bg); border: 1px solid #1a331a; border-radius: 15px; padding: 25px; margin: 0 30px; }
 .data-table { width: 100%; border-collapse: collapse; }
 .data-table th { text-align: left; padding: 12px; border-bottom: 1px solid var(--gold-dark); color: var(--gold); font-size: 12px; }
 .data-table td { padding: 12px; border-bottom: 1px solid #222; font-size: 14px; }
 .checks-container { padding: 0 30px; }
 .check-row { background: var(--black); padding: 15px 20px; border-radius: 10px; margin-bottom: 10px; border: 1px solid var(--gold-dark); }
-.check-header { display: flex; justify-content: space-between; border-bottom: 1px dashed #333; padding-bottom: 10px; margin-bottom: 10px; }
 .input-group { text-align: left; margin-bottom: 20px; }
 .input-group label { font-size: 10px; color: var(--gold); display: block; margin-bottom: 5px; font-weight: bold; }
-input, select { width: 100%; background: var(--black); border: 1px solid var(--gold-dark); color: #fff; padding: 12px; border-radius: 8px; box-sizing: border-box; }
+input, select { width: 100%; background: var(--black); border: 1px solid var(--gold-dark); color: #fff; padding: 12px; border-radius: 8px; box-sizing: border-box; font-size: 14px; outline:none; }
+.stat-box { flex:1; background:var(--black); padding:15px; border-radius:10px; border:1px solid #333; text-align:center; }
+.res-item { display:flex; justify-content:space-between; align-items:center; font-size:11px; color:#aaa; margin-top:5px; border-top:1px dashed #333; padding-top:5px; }
+.bar-item-row { display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #222; cursor:pointer; }
+.bar-item-row:hover { background:#111; }
