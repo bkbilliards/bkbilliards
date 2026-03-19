@@ -12,9 +12,7 @@
 <body>
     <div id="auth-screen" class="overlay">
         <div class="auth-card">
-            <div class="logo-wrapper">
-                <div class="logo-circle">S</div>
-            </div>
+            <div class="logo-wrapper"><div class="logo-circle">S</div></div>
             <h1 class="brand-title gold-gradient">SENSEI</h1>
             <p class="tagline">BILLIARD CLUB</p>
             <div class="input-group">
@@ -83,7 +81,7 @@
 
             <div id="tab-stock" class="tab-pane" style="display:none;">
                 <div class="card">
-                    <button id="add-item-btn" onclick="addItem()" class="btn-gold" style="width:auto; margin-bottom:20px; display:none;">+ НОВЫЙ ТОВАР</button>
+                    <button id="btn-open-add-item" onclick="openAddItemModal()" class="btn-gold shadow-gold" style="width:auto; margin-bottom:20px; padding: 12px 25px; display:none;">+ ДОБАВИТЬ ТОВАР</button>
                     <table class="data-table"><thead><tr><th>НАИМЕНОВАНИЕ</th><th>ОСТАТОК</th><th>ЦЕНА</th><th>УПРАВЛЕНИЕ</th></tr></thead><tbody id="stock-list"></tbody></table>
                 </div>
             </div>
@@ -108,6 +106,26 @@
                 </div>
             </div>
         </main>
+    </div>
+
+    <div id="add-item-modal" class="overlay" style="display:none;">
+        <div class="modal-card">
+            <div class="modal-close" onclick="document.getElementById('add-item-modal').style.display='none'">×</div>
+            <h2 class="gold-text" style="margin-top:0;">НОВЫЙ ТОВАР</h2>
+            <div class="input-group">
+                <label>НАЗВАНИЕ ТОВАРА</label>
+                <input type="text" id="new-item-name" placeholder="Например: Coca-Cola 0.5">
+            </div>
+            <div class="input-group">
+                <label>ЦЕНА ПРОДАЖИ (₸)</label>
+                <input type="number" id="new-item-price" placeholder="500">
+            </div>
+            <div class="input-group">
+                <label>КОЛИЧЕСТВО НА СКЛАДЕ (ШТ)</label>
+                <input type="number" id="new-item-qty" placeholder="24">
+            </div>
+            <button onclick="saveNewItem()" class="btn-gold btn-large shadow-gold">СОХРАНИТЬ ТОВАР</button>
+        </div>
     </div>
 
     <div id="bar-modal" class="overlay" style="display:none;">
@@ -140,7 +158,7 @@
             </div>
 
             <div id="mix-pay-section" style="display:none; text-align:left;">
-                <p style="font-size:12px; color:var(--gray); margin-bottom:5px;">Введите сумму оплаты НАЛИЧНЫМИ:</p>
+                <p style="font-size:12px; color:var(--gray); margin-bottom:5px;">Сумма оплаты НАЛИЧНЫМИ:</p>
                 <input type="number" id="mix-cash-input" placeholder="0" oninput="calcMixQr()" class="large-input">
                 <div style="margin:20px 0; font-size:16px; font-weight:600; text-align:center;">
                     Остаток на QR: <span id="mix-qr-val" class="gold-text" style="font-size:24px;">0</span> ₸
