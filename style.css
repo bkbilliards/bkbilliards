@@ -1,24 +1,61 @@
-:root { --bg: #081408; --card: #111; --gold: #d4af37; --red: #e74c3c; --green: #2ecc71; }
-body { background: var(--bg); color: #fff; font-family: 'Montserrat', sans-serif; margin: 0; }
-.overlay { position: fixed; inset: 0; background: #000; display: flex; align-items: center; justify-content: center; z-index: 999; }
-.auth-card { background: var(--card); padding: 40px; border-radius: 20px; border: 1px solid var(--gold); text-align: center; width: 300px; box-shadow: 0 0 30px rgba(212,175,55,0.1); }
-.logo-circle { width: 70px; height: 70px; border: 2px solid var(--gold); border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 35px; color: var(--gold); font-weight: bold; }
-.gold-text { color: var(--gold); }
-.header { display: flex; justify-content: space-between; align-items: center; padding: 15px 30px; background: #000; border-bottom: 1px solid var(--gold); }
-.nav { display: flex; gap: 15px; }
-.nav-link { background: none; border: none; color: #888; font-weight: bold; cursor: pointer; padding: 10px; font-family: inherit;}
+:root {
+    --bg-color: #050d06; /* Темно-зеленый бильярдный цвет */
+    --card-bg: #0a140a;
+    --black: #000000;
+    --gold: #d4af37;
+    --gold-dark: #aa8a2e;
+    --text: #ffffff;
+    --gray: #888888;
+    --red: #c0392b;
+    --green: #2ecc71;
+}
+
+body { background: var(--bg-color); color: var(--text); font-family: 'Montserrat', sans-serif; margin: 0; padding: 0; }
+.gold-text { color: var(--gold) !important; }
+
+/* ОКНО АВТОРИЗАЦИИ */
+.overlay { position: fixed; inset: 0; background: radial-gradient(circle, #0a1f0a 0%, #000 100%); align-items: center; justify-content: center; z-index: 10000; }
+.auth-card { background: var(--black); padding: 40px; border-radius: 20px; border: 2px solid var(--gold); text-align: center; width: 320px; box-shadow: 0 10px 40px rgba(212, 175, 55, 0.2); }
+.logo-circle { width: 70px; height: 70px; border: 2px solid var(--gold); border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 32px; color: var(--gold); font-weight: bold; }
+.auth-card h1 { margin: 0; letter-spacing: 3px; }
+.tagline { font-size: 10px; letter-spacing: 4px; color: var(--gold-dark); margin-bottom: 30px; }
+
+/* ШАПКА */
+.header { display: flex; justify-content: space-between; align-items: center; padding: 15px 30px; background: var(--black); border-bottom: 2px solid var(--gold); }
+.header-brand { font-size: 18px; font-weight: bold; }
+.divider { color: var(--gray); margin: 0 10px; }
+.nav { display: flex; gap: 10px; }
+.nav-link { background: none; border: none; color: var(--gray); font-weight: bold; cursor: pointer; padding: 10px 15px; font-family: inherit; transition: 0.3s; }
 .nav-link.active { color: var(--gold); border-bottom: 2px solid var(--gold); }
-.stats { display: flex; gap: 15px; padding: 20px 30px; }
-.stat-box { flex: 1; background: var(--card); padding: 15px; border-radius: 10px; border: 1px solid #222; }
-.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; padding: 20px 30px; }
-.table-card { background: var(--card); border: 1px solid #333; padding: 20px; border-radius: 15px; text-align: center; }
-.table-card.active { border-color: var(--gold); box-shadow: 0 0 15px rgba(212,175,55,0.2); }
-.timer { font-size: 28px; font-family: monospace; margin: 10px 0; font-weight: bold; }
-.btn-gold { background: var(--gold); color: #000; border: none; padding: 12px; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer; margin-top: 10px; }
-.btn-red { background: var(--red); color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer; margin-top: 10px; }
-.btn-group { display: flex; gap: 5px; margin-top: 5px; }
-.btn-small { background: none; border: 1px solid var(--gold); color: var(--gold); padding: 5px; border-radius: 5px; flex: 1; font-size: 10px; cursor: pointer; }
-input, select { width: 100%; background: #000; border: 1px solid #333; color: #fff; padding: 10px; border-radius: 5px; margin: 5px 0 15px; box-sizing: border-box; }
-.check-row { background: #000; padding: 15px; border-radius: 10px; margin: 10px 30px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333; }
-.table-list { width: 100%; border-collapse: collapse; margin-top: 20px; }
-.table-list th, .table-list td { padding: 10px; border-bottom: 1px solid #333; text-align: left; }
+.btn-exit { background: var(--red); color: #fff; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+
+/* СТАТИСТИКА (ВВЕРХУ) */
+.top-stats { display: flex; gap: 20px; padding: 20px 30px; }
+.stat-item { flex: 1; background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid #1a331a; }
+.stat-item .label { font-size: 11px; color: var(--gray); font-weight: bold; }
+.stat-item .value { display: block; font-size: 28px; font-weight: bold; margin-top: 5px; }
+
+/* СТОЛЫ И СЕТКА */
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; padding: 0 30px 30px; }
+.table-card { background: var(--black); border: 2px solid #222; padding: 25px; border-radius: 15px; text-align: center; transition: 0.3s; }
+.table-card.active { border-color: var(--gold); background: #071707; box-shadow: 0 0 20px rgba(212, 175, 55, 0.1); }
+.timer { font-size: 32px; font-weight: bold; font-family: monospace; margin: 15px 0; color: #fff; }
+.btn-gold { background: var(--gold); color: #000; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.2s; }
+.btn-gold:hover { background: var(--gold-dark); }
+.btn-red { background: var(--red); color: #fff; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+.btn-action-group { display: flex; gap: 5px; margin-top: 10px; }
+.btn-outline { background: none; border: 1px solid var(--gold); color: var(--gold); padding: 8px; border-radius: 6px; font-size: 10px; font-weight: bold; flex: 1; cursor: pointer; }
+
+/* ФОРМЫ И ТАБЛИЦЫ */
+.input-group { text-align: left; margin-bottom: 20px; }
+.input-group label { font-size: 10px; color: var(--gold); display: block; margin-bottom: 5px; font-weight: bold; }
+input, select { width: 100%; background: var(--black); border: 1px solid var(--gold-dark); color: #fff; padding: 12px; border-radius: 8px; box-sizing: border-box; font-family: inherit; }
+.card { background: var(--card-bg); border: 1px solid #1a331a; border-radius: 15px; padding: 25px; margin: 0 30px; }
+.card-header { display: flex; gap: 10px; margin-bottom: 20px; }
+.btn-small { background: var(--gold); color: #000; border: none; padding: 0 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th { text-align: left; padding: 12px; border-bottom: 1px solid var(--gold-dark); color: var(--gold); font-size: 12px; }
+.data-table td { padding: 12px; border-bottom: 1px solid #222; font-size: 14px; }
+.check-row { background: var(--black); padding: 15px 20px; border-radius: 10px; margin: 0 30px 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--gold-dark); }
+.error-msg { color: var(--red); font-size: 12px; margin-top: 10px; }
+.accumulated-box { background: rgba(46, 204, 113, 0.1); padding: 15px; border-left: 4px solid var(--green); border-radius: 8px; margin-bottom: 20px; }
