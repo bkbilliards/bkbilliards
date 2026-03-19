@@ -12,17 +12,24 @@
 <body>
     <div id="auth-screen" class="overlay">
         <div class="auth-card">
-            <div class="logo-circle">S</div>
+            <div class="auth-logo-circle">S</div>
             <h1 class="gold-text">SENSEI</h1>
             <p class="tagline">BILLIARD CLUB</p>
+            
             <div class="input-group">
                 <label>АДМИНИСТРАТОР</label>
-                <select id="staff-select"></select>
+                <select id="staff-select">
+                    <option value="0">Султан</option>
+                    <option value="1">Дидар</option>
+                    <option value="2">Хозяин</option>
+                </select>
             </div>
+            
             <div class="input-group">
                 <label>ПАРОЛЬ</label>
                 <input type="password" id="pass-input" placeholder="••••">
             </div>
+            
             <button onclick="login()" class="btn-gold">ОТКРЫТЬ СМЕНУ</button>
             <p id="auth-error" class="error-msg" style="display:none;">❌ Неверный пароль!</p>
         </div>
@@ -33,13 +40,13 @@
             <div class="header-left">
                 <span class="gold-text">SENSEI</span> <span class="divider">|</span> 
                 <span id="user-display">---</span>
-                <span id="sync-status" style="margin-left:15px; font-size:10px; color:#2ecc71;">🟢 ОНЛАЙН</span>
+                <span style="margin-left:15px; font-size:10px; color:#2ecc71;">🟢 ONLINE</span>
             </div>
             <nav class="nav">
                 <button class="nav-link active" onclick="showTab('hall', this)">ЗАЛ</button>
                 <button class="nav-link" onclick="showTab('stock', this)">СКЛАД</button>
                 <button class="nav-link" onclick="showTab('debts', this)">ДОЛГИ</button>
-                <button id="owner-tab" class="nav-link" onclick="showTab('owner', this)" style="display:none;">БУХГАЛТЕРИЯ</button>
+                <button id="owner-tab" class="nav-link" onclick="showTab('owner', this)" style="display:none;">УПРАВЛЕНИЕ</button>
             </nav>
             <button onclick="logout()" class="btn-exit">ЗАКРЫТЬ СМЕНУ</button>
         </header>
@@ -58,19 +65,18 @@
         <main class="content">
             <div id="tab-hall" class="tab-content active">
                 <div id="tables-grid" class="grid"></div>
-                
                 <div style="display:flex; justify-content:space-between; align-items:center; padding:0 30px;">
                     <h3 class="section-title gold-text">📊 ЧЕКИ (ОЖИДАЮТ ОПЛАТЫ)</h3>
-                    <button onclick="sellBarOnly()" class="btn-outline" style="width:auto; padding:10px 20px;">+ ПРОДАЖА ПО БАРУ (БЕЗ СТОЛА)</button>
+                    <button onclick="sellBarOnly()" class="btn-outline" style="width:auto; padding:10px 20px;">+ БАР (БЕЗ СТОЛА)</button>
                 </div>
                 <div id="active-checks" class="checks-container"></div>
             </div>
 
             <div id="tab-stock" class="tab-content" style="display:none;">
                 <div class="card">
-                    <button id="add-item-btn" onclick="addItem()" class="btn-gold" style="width:auto; margin-bottom:15px; display:none;">+ ТОВАР</button>
+                    <button id="add-item-btn" onclick="addItem()" class="btn-gold" style="width:auto; margin-bottom:15px; display:none;">+ ДОБАВИТЬ ТОВАР</button>
                     <table class="data-table">
-                        <thead><tr><th>ТОВАР</th><th>ОСТАТОК</th><th>ЦЕНА</th><th>УПРАВЛЕНИЕ</th></tr></thead>
+                        <thead><tr><th>ТОВАР</th><th>ОСТАТОК</th><th>ЦЕНА</th></tr></thead>
                         <tbody id="stock-list"></tbody>
                     </table>
                 </div>
@@ -79,7 +85,7 @@
             <div id="tab-debts" class="tab-content" style="display:none;">
                 <div class="card">
                     <table class="data-table">
-                        <thead><tr><th>ИМЯ</th><th>СУММА ДОЛГА</th><th>ДАТА</th><th>УПРАВЛЕНИЕ</th></tr></thead>
+                        <thead><tr><th>ИМЯ</th><th>СУММА ДОЛГА</th><th>ДАТА</th></tr></thead>
                         <tbody id="debts-list"></tbody>
                     </table>
                 </div>
