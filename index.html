@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SENSEI BILLIARD CRM</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <title>SENSEI BILLIARD CLUB</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -25,6 +25,87 @@
             </div>
             <button onclick="login()" class="btn-gold btn-large shadow-gold">ОТКРЫТЬ СМЕНУ</button>
             <p id="auth-error" class="error-msg" style="display:none; color:var(--red); margin-top:15px; font-weight:700;">❌ Неверный пароль!</p>
+            
+            <button onclick="showGuestPage()" class="btn-outline" style="width:100%; margin-top:30px; font-size:12px; letter-spacing:2px; border-color:var(--gray); color:var(--white);">🌐 САЙТ ДЛЯ ГОСТЕЙ</button>
+        </div>
+    </div>
+
+    <div id="guest-app" style="display:none;">
+        <button class="btn-back" onclick="hideGuestPage()">⬅ НАЗАД В CRM</button>
+        
+        <div class="guest-hero">
+            <div class="logo-circle" style="margin: 0 auto 20px;">S</div>
+            <h1 class="guest-title gold-gradient">SENSEI</h1>
+            <div class="guest-subtitle">PREMIUM BILLIARD CLUB</div>
+            <p style="color:var(--gray); max-width:600px; margin:0 auto; font-size:15px; line-height:1.6;">Атмосфера настоящего бильярда. Профессиональное оборудование, элитный бар и безупречный сервис для ценителей игры.</p>
+            <a href="#booking-form" style="display:inline-block; margin-top:30px; background:var(--gold); color:#000; padding:15px 30px; border-radius:12px; font-weight:800; text-decoration:none; text-transform:uppercase;">Забронировать стол</a>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-card">
+                <div class="info-icon">🎱</div>
+                <div class="info-title">Столы Xingjue</div>
+                <div class="info-desc">Официальные турнирные столы премиум-класса. Идеальная геометрия и отскок для профессионалов.</div>
+            </div>
+            <div class="info-card">
+                <div class="info-icon">🟢</div>
+                <div class="info-title">Сукно Iwan Simonis</div>
+                <div class="info-desc">Легендарное бельгийское сукно. Обеспечивает идеальное скольжение и контроль винта.</div>
+            </div>
+            <div class="info-card">
+                <div class="info-icon">⚪</div>
+                <div class="info-title">Шары Aramith</div>
+                <div class="info-desc">Эталонные бельгийские шары из фенол-альдегидной смолы. Идеальная балансировка и вес.</div>
+            </div>
+            <div class="info-card">
+                <div class="info-icon">💡</div>
+                <div class="info-title">Свет Pro Lighting</div>
+                <div class="info-desc">Профессиональное бестеневое освещение столов, чтобы ваши глаза не уставали во время игры.</div>
+            </div>
+        </div>
+
+        <div id="booking-form" class="booking-section">
+            <div class="booking-form">
+                <h2 class="gold-text" style="text-align:center; margin-top:0; margin-bottom:30px;">БРОНЬ СТОЛА ОНЛАЙН</h2>
+                <div class="input-group">
+                    <label>ВАШЕ ИМЯ</label>
+                    <input type="text" id="guest-name" placeholder="Например: Сержан">
+                </div>
+                <div class="input-group">
+                    <label>ТЕЛЕФОН</label>
+                    <input type="tel" id="guest-phone" placeholder="+7 (777) 000-00-00">
+                </div>
+                <div style="display:flex; gap:15px;">
+                    <div class="input-group" style="flex:1;">
+                        <label>ДАТА</label>
+                        <input type="date" id="guest-date">
+                    </div>
+                    <div class="input-group" style="flex:1;">
+                        <label>ВРЕМЯ</label>
+                        <input type="time" id="guest-time">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>ВЫБЕРИТЕ СТОЛ</label>
+                    <select id="guest-table-num">
+                        <option value="1">Стол №1</option>
+                        <option value="2">Стол №2</option>
+                        <option value="3">Стол №3</option>
+                        <option value="4">Стол №4</option>
+                        <option value="5">Стол №5</option>
+                        <option value="6">Стол №6</option>
+                    </select>
+                </div>
+                <button onclick="submitGuestReservation()" class="btn-gold btn-large shadow-gold" style="margin-top:10px;">ОТПРАВИТЬ ЗАЯВКУ</button>
+            </div>
+        </div>
+
+        <div class="guest-footer">
+            <h3 class="gold-text" style="margin-bottom:10px;">КОНТАКТЫ</h3>
+            <p style="font-size:16px; font-weight:bold; color:var(--white);">📞 +7 777 123 45 67</p>
+            <p>📍 г. Алматы, ул. Бильярдная, 10</p>
+            <button class="btn-outline" style="font-size:12px; padding:10px 20px; margin-top:10px;">🗺️ ОТКРЫТЬ В 2GIS</button>
+            <div style="margin-top:40px; opacity:0.5;">© 2026 SENSEI BILLIARD CLUB</div>
         </div>
     </div>
 
@@ -69,7 +150,7 @@
             <div id="tab-hall" class="tab-pane active">
                 <div id="tables-grid" class="grid"></div>
                 <div class="section-header">
-                    <h3 class="gold-text" style="margin:0;">ОЖИДАЮТ ОПЛАТЫ</h3>
+                    <h3 class="gold-text">ОЖИДАЮТ ОПЛАТЫ</h3>
                     <div style="display:flex; gap:10px;">
                         <button onclick="openBarModal('owner')" class="btn-outline" style="border-color:var(--gold); color:var(--gold);">👑 ХОЗЯИН</button>
                         <button onclick="openBarModal('standalone')" class="btn-outline">+ ПРОДАЖА БАР</button>
@@ -97,7 +178,7 @@
             </div>
 
             <div id="tab-stats" class="tab-pane" style="display:none;">
-                <div class="card"><h3 class="gold-text">ИСТОРИЯ ВАШИХ СМЕН</h3><table class="data-table" style="margin-top:20px;"><thead><tr><th>НАЧАЛО</th><th>КОНЕЦ</th><th>НАЛ / QR</th><th>КАССА</th><th>ЗП</th></tr></thead><tbody id="my-history-list"></tbody></table></div>
+                <div class="card"><h3 class="gold-text">ИСТОРИЯ ВАШИХ СМЕН</h3><table class="data-table" style="margin-top:20px;"><thead><tr><th>НАЧАЛО</th><th>КОНЕЦ</th><th>НАЛ / QR</th><th>КАССА</th><th>ЗП</th><th>УДАЛИТЬ</th></tr></thead><tbody id="my-history-list"></tbody></table></div>
             </div>
 
             <div id="tab-acc" class="tab-pane" style="display:none;">
@@ -197,7 +278,7 @@
             <div class="modal-close" onclick="document.getElementById('z-report-modal').style.display='none'">×</div>
             <h2 class="gold-text" style="margin-top:0;">СВЕРКА КАССЫ (Z-ОТЧЕТ)</h2>
             <p style="color:var(--gray); font-size:14px; margin-bottom:25px;">Пожалуйста, пересчитайте физические деньги в кассе.</p>
-            <div class="input-group"><label style="text-align:center; font-size:15px;">СКОЛЬКО НАЛИЧНЫХ В КАССЕ? (₸)</label><input type="number" id="z-cash-input" placeholder="0" class="large-input"></div>
+            <div class="input-group"><label style="text-align:center; font-size:15px;">СКОЛЬКО НАЛИЧНЫХ В КАССЕ? (₸)</label><input type="number" id="z-cash-input" placeholder="0" class="large-input" style="background:#030a05;"></div>
             <button onclick="confirmZReport()" class="btn-gold btn-large shadow-gold">ПОДТВЕРДИТЬ И ЗАКРЫТЬ СМЕНУ</button>
             <button onclick="document.getElementById('z-report-modal').style.display='none'" class="btn-outline" style="width:100%; margin-top:15px; border-color:var(--gray); color:var(--gray);">ОТМЕНА</button>
         </div>
