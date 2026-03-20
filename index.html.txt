@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SENSEI BILLIARD CLUB - КАСКЕЛЕН</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+</head>
+<body>
+    <div class="guest-hero">
+        <div class="logo-circle" style="margin: 0 auto 20px;">S</div>
+        <h1 class="guest-title gold-gradient">SENSEI</h1>
+        <div class="guest-subtitle">ЕДИНСТВЕННЫЙ ПРЕМИУМ БИЛЬЯРД В КАСКЕЛЕНЕ</div>
+        <p style="color:var(--gray); max-width:600px; margin:0 auto; font-size:16px; line-height:1.6;">Атмосфера настоящего бильярда. Турнирное оборудование мирового класса, профессиональный свет и безупречный сервис.</p>
+        <a href="#booking-section" class="btn-book-action">Забронировать стол</a>
+    </div>
+
+    <div class="guest-section">
+        <h2 class="gold-text guest-section-title">СТАТУС СТОЛОВ ONLINE</h2>
+        <div id="guest-tables-list" class="guest-tables-grid"></div>
+    </div>
+
+    <div class="guest-section" style="background:rgba(10,17,13,0.5); border-top:1px solid rgba(255,255,255,0.05);">
+        <h2 class="gold-text guest-section-title">НАШЕ ОБОРУДОВАНИЕ</h2>
+        <div class="equip-grid">
+            <div class="equip-card">
+                <img src="WhatsApp%20Image%202026-03-20%20at%2006.39.44%20(1).jpeg" class="equip-img">
+                <div class="equip-content"><div class="equip-title">Столы «Ливерпуль»</div><div class="equip-desc">Официальные столы Чемпионатов Мира. Массивная конструкция, идеальная геометрия бортов и раскат для профессионалов.</div></div>
+            </div>
+            <div class="equip-card">
+                <img src="WhatsApp%20Image%202026-03-20%20at%2006.39.45%20(3).jpeg" class="equip-img">
+                <div class="equip-content"><div class="equip-title">Шары Super Aramith Pro-Cup</div><div class="equip-desc">Оригинальные бельгийские шары (67 мм). Высший стандарт мирового бильярда с идеальной центровкой.</div></div>
+            </div>
+            <div class="equip-card">
+                <img src="WhatsApp%20Image%202026-03-20%20at%2006.39.43%20(5).jpeg" class="equip-img">
+                <div class="equip-content"><div class="equip-title">Сукно Iwan Simonis 760</div><div class="equip-desc">Максимальная точность винта и контроль траектории шара. Гарантированный раскат.</div></div>
+            </div>
+            <div class="equip-card">
+                <img src="WhatsApp%20Image%202026-03-20%20at%2006.39.43%20(3).jpeg" class="equip-img">
+                <div class="equip-content"><div class="equip-title">Профессиональный свет 900W</div><div class="equip-desc">Никаких теней и бликов, ваши глаза не устанут даже после 10 часов игры.</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="booking-section" class="guest-section">
+        <div class="booking-form-box">
+            <h2 class="gold-text" style="text-align:center; margin:0 0 35px; font-weight:900;">ОСТАВИТЬ БРОНЬ</h2>
+            <div class="input-group"><label>ВАШЕ ИМЯ</label><input type="text" id="guest-name" placeholder="Например: Сержан"></div>
+            <div class="input-group"><label>ТЕЛЕФОН</label><input type="tel" id="guest-phone" placeholder="8747XXXXXXX"></div>
+            <div style="display:flex; gap:20px;">
+                <div class="input-group" style="flex:1;"><label>ДАТА</label><input type="date" id="guest-date"></div>
+                <div class="input-group" style="flex:1;"><label>ВРЕМЯ</label><input type="time" id="guest-time"></div>
+            </div>
+            <div class="input-group">
+                <label>ВЫБЕРИТЕ СТОЛ</label>
+                <select id="guest-table-num">
+                    <option value="1">Стол №1</option><option value="2">Стол №2</option><option value="3">Стол №3</option>
+                    <option value="4">Стол №4</option><option value="5">Стол №5</option><option value="6">Стол №6</option>
+                </select>
+            </div>
+            <button onclick="submitGuestReservation()" class="btn-gold-action btn-large shadow-gold">ОТПРАВИТЬ ЗАЯВКУ</button>
+        </div>
+    </div>
+
+    <div class="guest-footer">
+        <h3 class="gold-text" style="font-weight:900; margin-bottom:15px;">КОНТАКТЫ И АДРЕС</h3>
+        <p style="font-size:26px; font-weight:900; color:var(--white); margin:15px 0;">📞 8 747 182 10 11</p>
+        <p style="font-size:16px;">📍 г. Каскелен, ул. Каражанова, 1а</p>
+        <a href="https://2gis.kz/almaty/firm/70000001101734090" target="_blank" class="btn-2gis">🗺️ ОТКРЫТЬ В 2GIS</a>
+        <div style="margin-top:60px; opacity:0.3; font-size:12px;">© 2026 Sensei Billiard Club</div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

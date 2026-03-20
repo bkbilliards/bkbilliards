@@ -1,0 +1,424 @@
+const firebaseConfig = {
+    apiKey: "AIzaSyCBGxNJfQWUqSqaExMbrayDsrHIjS5sXL8",
+    authDomain: "sensei-crm-e73b4.firebaseapp.com",
+    databaseURL: "https://sensei-crm-e73b4-default-rtdb.firebaseio.com",
+    projectId: "sensei-crm-e73b4",
+    storageBucket: "sensei-crm-e73b4.firebasestorage.app",
+    messagingSenderId: "223977226546",
+    appId: "1:223977226546:web:504388217da3949e60d72b"
+};
+
+try { if (!firebase.apps.length) firebase.initializeApp(firebaseConfig); } catch(e) { console.error(e); }
+const db = firebase.database();
+const dbRef = db.ref('sensei_erp_pro');
+
+const STAFF_HARDCODED = [
+    { id: "0", name: "Султан", pin: "1111", role: "admin" }, 
+    { id: "1", name: "Дидар", pin: "1111", role: "admin" }, 
+    { id: "owner", name: "Хозяин", pin: "0000", role: "owner" }
+];
+
+let localAuth = JSON.parse(localStorage.getItem('sensei_auth_pro')) || { isAuth: false, user: null };
+
+let cloudState = { 
+    tables: Array.from({length: 6}, (_, i) => ({ id: i + 1, active: false, start: null, res: [], bar: [] })), 
+    checks: [], archive: [], inventory: [], debts: [], history: [], ownerAcc: {}, customAdmins: [], expenses: [], vips: [], stockLog: [] 
+};
+
+db.ref('.info/connected').on('value', snap => { const el = document.getElementById('sync-status'); if(el) el.innerText = snap.val() ? '🟢' : '🔴'; });
+
+function toArr(data) {
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    return Object.values(data);
+}
+
+dbRef.on('value', snap => {
+    if (snap.exists() && snap.val()) {
+        let data = snap.val();
+        cloudState.tables = toArr(data.tables);
+        if (cloudState.tables.length === 0) cloudState.tables = Array.from({length: 6}, (_, i) => ({ id: i + 1, active: false, start: null, res: [], bar: [] }));
+        cloudState.checks = toArr(data.checks);
+        cloudState.archive = toArr(data.archive);
+        cloudState.inventory = toArr(data.inventory);
+        cloudState.debts = toArr(data.debts);
+        cloudState.history = toArr(data.history);
+        cloudState.customAdmins = toArr(data.customAdmins);
+        cloudState.expenses = toArr(data.expenses);
+        cloudState.vips = toArr(data.vips); 
+        cloudState.stockLog = toArr(data.stockLog);
+        cloudState.ownerAcc = data.ownerAcc || {};
+    } else {
+        saveToCloud();
+    }
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    if(urlParams.get('guest') === 'true') {
+        if(document.getElementById('guest-app').style.display !== 'block') {
+            showGuestPage();
+        } else {
+            renderGuestTables();
+        }
+    } else {
+        render();
+    }
+});
+
+function saveToCloud() { dbRef.set(cloudState).catch(e => console.error(e)); }
+function saveLocalAuth() { localStorage.setItem('sensei_auth_pro', JSON.stringify(localAuth)); }
+
+function logStock(action, itemName, qtyChange) {
+    cloudState.stockLog = toArr(cloudState.stockLog);
+    cloudState.stockLog.push({
+        id: Date.now(), date: new Date().toLocaleString(), admin: localAuth.user ? localAuth.user.name : 'Гость',
+        action: action, item: itemName, qtyChange: qtyChange
+    });
+    if (cloudState.stockLog.length > 100) cloudState.stockLog.shift();
+}
+
+window.onload = () => { 
+    const urlParams = new URLSearchParams(window.location.search);
+    if(urlParams.get('guest') === 'true') {
+        showGuestPage();
+    } else {
+        render(); 
+    }
+    
+    setInterval(() => { 
+        if(localAuth.isAuth) {
+            renderTables();
+            if(document.getElementById('table-bill-modal') && document.getElementById('table-bill-modal').style.display === 'flex') {
+                renderTableBill();
+            }
+        } else if (document.getElementById('guest-app').style.display === 'block') {
+            renderGuestTables();
+        } else {
+            render(); 
+        }
+    }, 1000); 
+};
+
+// === ГОСТЕВОЙ САЙТ ===
+window.showGuestPage = function() {
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('guest-app').style.display = 'block';
+    let today = new Date().toISOString().split('T')[0];
+    document.getElementById('guest-date').value = today;
+    renderGuestTables();
+}
+window.hideGuestPage = function() { window.location.href = window.location.pathname; }
+window.renderGuestTables = function() {
+    if(!cloudState.tables) return;
+    let html = '';
+    toArr(cloudState.tables).forEach(t => {
+        let status = t.active ? '<span style="color:var(--red); font-weight:800; font-size:16px;">🔴 ЗАНЯТ</span>' : '<span style="color:var(--green); font-weight:800; font-size:16px;">🟢 СВОБОДЕН</span>';
+        let resHtml = '';
+        if(t.res && toArr(t.res).length > 0) {
+            let times = toArr(t.res).map(r => r.split('|')[0].trim()).join(', ');
+            resHtml = `<div style="margin-top:15px; font-size:13px; font-weight:700; color:var(--gold); background:rgba(212,175,55,0.1); padding:8px; border-radius:8px;">⏳ Бронь: ${times}</div>`;
+        }
+        html += `<div class="guest-table-card">
+            <h3 style="margin:0 0 15px; color:var(--white); font-size:22px; font-weight:900;">СТОЛ ${t.id}</h3>
+            ${status}
+            ${resHtml}
+        </div>`;
+    });
+    let el = document.getElementById('guest-tables-list');
+    if(el) el.innerHTML = html;
+}
+
+window.submitGuestReservation = function() {
+    let name = document.getElementById('guest-name').value.trim();
+    let phone = document.getElementById('guest-phone').value.trim();
+    let date = document.getElementById('guest-date').value;
+    let time = document.getElementById('guest-time').value;
+    let tableId = parseInt(document.getElementById('guest-table-num').value);
+    if(!name || !phone || !date || !time) return alert("Пожалуйста, заполните все поля!");
+    let dParts = date.split('-');
+    let shortDate = `${dParts[2]}.${dParts[1]}`;
+    let resString = `${shortDate}, ${time} | ${name} (${phone})`;
+    cloudState.tables = toArr(cloudState.tables);
+    let t = cloudState.tables.find(x => x.id === tableId);
+    if(t) {
+        t.res = toArr(t.res); t.res.push(resString); saveToCloud();
+        alert("Успешно! Ваша бронь отправлена администратору.");
+        document.getElementById('guest-name').value = ''; document.getElementById('guest-phone').value = ''; document.getElementById('guest-time').value = '';
+        renderGuestTables();
+    }
+}
+
+// === АВТОРИЗАЦИЯ ===
+window.login = function() {
+    const val = document.getElementById('staff-select').value;
+    const pin = document.getElementById('pass-input').value;
+    let user = STAFF_HARDCODED.find(s => s.id === val) || toArr(cloudState.customAdmins).find(a => "custom_"+a.id === val);
+    if (user && user.pin === pin) {
+        localAuth = { isAuth: true, user: user, shiftStart: new Date().toLocaleString() };
+        saveLocalAuth(); document.getElementById('pass-input').value = ""; document.getElementById('auth-error').style.display = 'none'; render();
+    } else { document.getElementById('auth-error').style.display = 'block'; }
+}
+window.logout = function() { document.getElementById('z-report-modal').style.display = 'flex'; }
+
+// === ДАННЫЕ СМЕНЫ ===
+function getCurrentShiftData() {
+    // BUGFIX: Жестко прописываем время начала работы текущего админа (20.03.2026, 14:00)
+    // Timestamp для этой даты (2026-03-20 14:00:00 в Almaty) = 1773997200000
+    const startOfCurrentShift_Bugfix = 1773997200000;
+
+    // Считаем выручку только по чекам, созданным ПОСЛЕ этого времени.
+    // Автоматический маркер lastZ из истории пока игнорируем, т.к. он сбился.
+    let currentChecks = toArr(cloudState.archive).filter(c => c.id > startOfCurrentShift_Bugfix);
+    let currentExp = toArr(cloudState.expenses).filter(e => e.id > startOfCurrentShift_Bugfix);
+    
+    let cash = 0, qr = 0, table = 0, bar = 0, total = 0, salaryBase = 0;
+    let debtReturns = 0, debtIssued = 0, checksCount = 0;
+    let barCostTotal = 0; // Себестоимость проданного
+    
+    currentChecks.forEach(c => {
+        if (c.payMethod === 'Долг') { debtIssued += c.total; return; } 
+        if (c.isDebtPayment) {
+            debtReturns += c.total;
+            if (c.payMethod === 'Наличные') cash += c.total;
+            else if (c.payMethod === 'QR') qr += c.total;
+            return; 
+        }
+
+        checksCount++;
+        let cTot = c.total || 0;
+        total += cTot; 
+        salaryBase += cTot; 
+        
+        if (c.payMethod === 'Наличные') cash += cTot;
+        else if (c.payMethod === 'QR') qr += cTot;
+        else if (c.payMethod && c.payMethod.startsWith('Нал:')) {
+            let mCash = c.payMethod.match(/Нал:\s*(\d+)/); let mQr = c.payMethod.match(/QR:\s*(\d+)/);
+            if(mCash) cash += parseInt(mCash[1]); if(mQr) qr += parseInt(mQr[1]);
+        }
+        
+        let discRatio = 1 - (c.discount || 0)/100;
+        table += Math.round((c.timeCost || 0) * discRatio);
+        
+        let cBarSell = cTot - Math.round((c.timeCost || 0) * discRatio);
+        bar += cBarSell;
+        
+        // Считаем себестоимость бара из чека
+        if(c.bar && toArr(c.bar).length > 0) {
+            toArr(c.bar).forEach(bItem => {
+                let bCost = bItem.cost || 0;
+                barCostTotal += Math.round(bCost * discRatio); // Себестоимость тоже со скидкой, если чек был со скидкой
+            });
+        }
+    });
+    
+    let expTotal = currentExp.reduce((s, e) => s + e.sum, 0);
+    return { cash, qr, table, bar, total, salaryBase, expTotal, expectedCash: cash - expTotal, debtReturns, debtIssued, checksCount, barCostTotal };
+}
+
+window.confirmZReport = function() {
+    let physicalCash = parseInt(document.getElementById('z-cash-input').value) || 0;
+    let shift = getCurrentShiftData();
+    let diff = physicalCash - shift.expectedCash;
+    
+    let salary = 0;
+    if (localAuth.user.role !== 'owner') {
+        if (shift.salaryBase === 0) {
+            let todayStr = new Date().toLocaleDateString();
+            let someoneElseWorked = toArr(cloudState.history).some(h => (h.timestamp ? new Date(h.timestamp).toLocaleDateString() : "") === todayStr && h.admin !== localAuth.user.name && h.total > 0);
+            salary = someoneElseWorked ? 0 : 6000;
+        } else {
+            salary = Math.round(shift.salaryBase * 0.08 + 6000);
+        }
+    }
+    
+    cloudState.history = toArr(cloudState.history);
+    cloudState.history.push({ 
+        id: Date.now(),
+        admin: localAuth.user.name, start: localAuth.shiftStart, end: new Date().toLocaleString(), timestamp: Date.now(), 
+        barRev: shift.bar, tableRev: shift.table, total: shift.total, sal: salary,
+        expectedCash: shift.expectedCash, physicalCash: physicalCash, diff: diff, cashRev: shift.cash, qrRev: shift.qr, 
+        expTotal: shift.expTotal, debtReturns: shift.debtReturns, debtIssued: shift.debtIssued, checksCount: shift.checksCount,
+        barCostTotal: shift.barCostTotal
+    });
+    
+    if(localAuth.user.role !== 'owner') {
+        if(!cloudState.ownerAcc) cloudState.ownerAcc = {};
+        cloudState.ownerAcc[localAuth.user.name] = (cloudState.ownerAcc[localAuth.user.name] || 0) + salary;
+    }
+    
+    saveToCloud(); localAuth = { isAuth: false, user: null }; saveLocalAuth(); 
+    let diffMsg = diff < 0 ? `НЕДОСТАЧА: ${diff} ₸` : (diff > 0 ? `ИЗЛИШЕК: +${diff} ₸` : `КАССА ИДЕАЛЬНА`);
+    alert(`Смена закрыта.\nОжидалось наличных (за вычетом расходов): ${shift.expectedCash} ₸\nВ кассе: ${physicalCash} ₸\n${diffMsg}`);
+    location.reload();
+}
+
+window.saveExpense = function() {
+    let sum = parseInt(document.getElementById('exp-sum').value); let desc = document.getElementById('exp-desc').value;
+    if(!sum || !desc) return alert("Заполните все поля!");
+    cloudState.expenses = toArr(cloudState.expenses);
+    cloudState.expenses.push({ id: Date.now(), sum: sum, desc: desc, admin: localAuth.user.name, date: new Date().toLocaleString() });
+    document.getElementById('expense-modal').style.display='none'; saveToCloud(); alert("Расход записан!");
+}
+
+window.openExpenseLogModal = function() {
+    let currentExp = [];
+    if(accPeriod === 'today') {
+        // BUGFIX: Здесь тоже жестко прописываем отсечку
+        const startOfCurrentShift_Bugfix = 1773997200000;
+        currentExp = toArr(cloudState.expenses).filter(e => e.id > startOfCurrentShift_Bugfix);
+    } else {
+        const nowTime = new Date().getTime();
+        currentExp = toArr(cloudState.expenses).filter(e => {
+            let diffDays = (nowTime - e.id) / (1000 * 60 * 60 * 24);
+            if(accPeriod === 'week') return diffDays <= 7;
+            if(accPeriod === 'month') return diffDays <= 30;
+            return true;
+        });
+    }
+
+    if(currentExp.length === 0) {
+        document.getElementById('expense-log-list').innerHTML = '<span style="color:var(--gray); font-size:13px;">За этот период расходов нет.</span>';
+    } else {
+        document.getElementById('expense-log-list').innerHTML = currentExp.map(e => `
+            <div style="display:flex; justify-content:space-between; border-bottom:1px solid #1c2e22; padding:12px 0; font-size:13px;">
+                <div><b style="color:var(--white);">${e.desc}</b><br><span style="color:var(--gray); font-size:11px;">${e.date} (${e.admin})</span></div>
+                <div style="color:var(--red); font-weight:800; font-size:18px;">-${e.sum} ₸</div>
+            </div>
+        `).join('');
+    }
+    document.getElementById('expense-log-modal').style.display='flex';
+}
+
+window.openStockLogModal = function() {
+    let slogs = toArr(cloudState.stockLog).slice().reverse();
+    if(slogs.length === 0) {
+        document.getElementById('stock-log-list').innerHTML = '<span style="color:var(--gray);">История пуста.</span>';
+    } else {
+        document.getElementById('stock-log-list').innerHTML = slogs.map(l => {
+            let qtyColor = l.qtyChange > 0 ? "var(--green)" : "var(--red)";
+            let qtySign = l.qtyChange > 0 ? "+" : "";
+            return `<div style="border-bottom:1px solid #1c2e22; padding:10px 0; display:flex; justify-content:space-between;">
+                <div><b style="color:var(--gold); font-size:14px;">${l.item}</b><br><span style="color:var(--gray); font-size:11px;">${l.date} | ${l.admin}</span><br><span style="color:var(--white); font-weight:600;">${l.action}</span></div>
+                <div style="color:${qtyColor}; font-size:20px; font-weight:800;">${qtySign}${l.qtyChange}</div>
+            </div>`;
+        }).join('');
+    }
+    document.getElementById('stock-log-modal').style.display='flex';
+}
+
+window.deleteHistory = function(ts) { if(confirm("Удалить эту смену?")) { cloudState.history = toArr(cloudState.history).filter(h => h.timestamp !== ts && h.id !== ts); saveToCloud(); } }
+
+function reverseCheckStats(c) {
+    if(c.payMethod === 'Долг' && cloudState.debts) {
+        let debtsArr = toArr(cloudState.debts);
+        let d = debtsArr.find(x => x.name.toLowerCase() === c.name.toLowerCase());
+        if(d) {
+            d.total -= c.total; 
+            d.history = toArr(d.history); d.history.push(`Отмена чека: -${c.total}₸`);
+            if(d.total <= 0) cloudState.debts = debtsArr.filter(x => x.name.toLowerCase() !== c.name.toLowerCase());
+            else cloudState.debts = debtsArr;
+        }
+    }
+}
+
+window.restoreArchiveCheck = function(id) {
+    let hist = toArr(cloudState.history);
+    let lastZ = (hist && hist.length > 0) ? hist[hist.length - 1].timestamp : 0;
+    cloudState.archive = toArr(cloudState.archive);
+    let cIdx = cloudState.archive.findIndex(x => x.id === id);
+    if(cIdx === -1) return; let c = cloudState.archive[cIdx];
+    
+    if(!localAuth.user || localAuth.user.role !== 'owner') {
+         if(c.id < lastZ) return alert("Этот чек из прошлой смены! Вернуть нельзя.");
+    }
+
+    if(confirm(`Вернуть чек "${c.name}" в неоплаченные?`)) {
+        reverseCheckStats(c); delete c.payMethod; delete c.admin; delete c.isDebtPayment;
+        cloudState.checks = toArr(cloudState.checks);
+        cloudState.checks.push(c); cloudState.archive.splice(cIdx, 1); saveToCloud();
+    }
+}
+
+window.restoreDebtCheck = function(name) {
+    let arch = toArr(cloudState.archive);
+    let hist = toArr(cloudState.history);
+    let lastZ = (hist.length > 0) ? hist[hist.length - 1].timestamp : 0;
+    let cArr = arch.filter(x => x.name.toLowerCase() === name.toLowerCase() && x.payMethod === 'Долг' && x.id > lastZ);
+    if(cArr.length === 0) return alert("Исходный чек не найден в текущей смене!");
+    let c = cArr[cArr.length - 1]; 
+    window.restoreArchiveCheck(c.id);
+}
+
+window.deleteArchiveCheck = function(ts) {
+    if(confirm("УДАЛИТЬ ЧЕК ИЗ АРХИВА НАВСЕГДА?")) {
+        cloudState.archive = toArr(cloudState.archive);
+        let cIdx = cloudState.archive.findIndex(x => x.id === ts);
+        if(cIdx === -1) return; let c = cloudState.archive[cIdx];
+        reverseCheckStats(c); 
+        if(c.bar && toArr(c.bar).length > 0) { 
+            cloudState.inventory = toArr(cloudState.inventory); 
+            toArr(c.bar).forEach(bItem => { 
+                let invItem = cloudState.inventory.find(x => x.name === bItem.name); 
+                if(invItem) invItem.qty += 1; else cloudState.inventory.push({name: bItem.name, cost: bItem.cost||0, price: bItem.price, qty: 1}); 
+                logStock('Возврат из Архива', bItem.name, 1);
+            }); 
+        }
+        cloudState.archive.splice(cIdx, 1); saveToCloud();
+    }
+}
+
+window.addCustomAdmin = function() { let name = prompt("Имя администратора:"); if(!name) return; let pin = prompt(`PIN-код:`); if(name && pin) { cloudState.customAdmins = toArr(cloudState.customAdmins); cloudState.customAdmins.push({id: Date.now(), name: name, pin: pin, role: "admin"}); saveToCloud(); } }
+window.resetDatabase = function() { if(confirm("ОЧИСТИТЬ?")) { cloudState = { tables: Array.from({length: 6}, (_, i) => ({ id: i + 1, active: false, start: null, res: [], bar:[] })), checks: [], archive: [], inventory: [], debts: [], history: [], ownerAcc: {}, customAdmins: [], expenses:[], vips: [] }; saveToCloud(); location.reload(); } }
+
+window.addVipGuest = function() {
+    let name = prompt("Имя VIP гостя:"); if(!name) return;
+    let discStr = prompt(`Размер скидки для "${name}" (в %, например 20):`, "20");
+    if(!discStr) return; let disc = parseInt(discStr); if(isNaN(disc) || disc < 0 || disc > 100) return alert("Неверная скидка");
+    cloudState.vips = toArr(cloudState.vips);
+    let exist = cloudState.vips.find(v => v.name.toLowerCase() === name.toLowerCase());
+    if(exist) exist.discount = disc; else cloudState.vips.push({id: Date.now(), name: name, discount: disc});
+    saveToCloud(); alert(`VIP гость ${name} добавлен со скидкой ${disc}%!`);
+}
+window.delVipGuest = function(id) { if(confirm("Удалить VIP гостя?")) { cloudState.vips = toArr(cloudState.vips).filter(v => v.id !== id); saveToCloud(); } }
+
+function applyVipLogic(check) {
+    let vips = toArr(cloudState.vips); let vip = vips.find(v => v.name.toLowerCase() === check.name.toLowerCase());
+    if (vip) { check.discount = vip.discount; check.isVip = true; } else { check.isVip = false; }
+    let baseTot = check.timeCost + check.barCost; check.total = check.discount ? Math.round(baseTot * (1 - check.discount/100)) : baseTot;
+}
+
+function formatTime(ms) { if(ms<0) ms=0; let s = Math.floor(ms / 1000), h = String(Math.floor(s / 3600)).padStart(2, '0'), m = String(Math.floor((s % 3600) / 60)).padStart(2, '0'); return `${h}:${m}:${String(s % 60).padStart(2, '0')}`; }
+
+// === ИДЕАЛЬНЫЙ ТАРИФ (Поминутный расчет с учетом плавающего времени) ===
+function calcCost(start) { 
+    if(!start) return 0; 
+    let startTime = new Date(start).getTime();
+    let endTime = Date.now();
+    if(endTime < startTime) return 0;
+    
+    let totalCost = 0;
+    let currentMs = startTime;
+    
+    while (currentMs < endTime) {
+        let h = new Date(currentMs).getHours();
+        let ratePerHour = (h >= 11 && h < 18) ? 2000 : 3000;
+        totalCost += ratePerHour / 60; 
+        currentMs += 60000; 
+    }
+    
+    return Math.ceil(totalCost / 50) * 50; 
+}
+
+window.startTable = function(id) { cloudState.tables = toArr(cloudState.tables); let t = cloudState.tables.find(x => x.id === id); if(t) { t.active = true; t.start = Date.now(); t.bar = []; saveToCloud(); } };
+window.stopTable = function(id) { cloudState.tables = toArr(cloudState.tables); let t = cloudState.tables.find(x => x.id === id); const name = prompt("Имя:"); if (!name) return; createCheck(name, id, calcCost(t.start), t.bar); t.active = false; t.bar = []; saveToCloud(); };
+function createCheck(name, table, timeCost, bar) { cloudState.checks = toArr(cloudState.checks); let vip = toArr(cloudState.vips).find(v => v.name.toLowerCase() === name.toLowerCase()); let disc = vip ? vip.discount : 0; let base = timeCost + toArr(bar).reduce((s,i)=>s+i.price,0); let check = { id: Date.now(), name, table, timeCost, barCost: toArr(bar).reduce((s,i)=>s+i.price,0), total: Math.round(base * (1 - disc/100)), discount: disc }; cloudState.checks.push(check); }
+let currentCheckIndex = null;
+window.openPayModal = function(idx) { currentCheckIndex = idx; let c = toArr(cloudState.checks)[idx]; document.getElementById('pay-total').innerText = c.total + " ₸"; document.getElementById('pay-info').innerText = `${c.name} | Стол ${c.table}`; document.getElementById('pay-modal').style.display = 'flex'; };
+window.applyDiscount = function(pct) { cloudState.checks = toArr(cloudState.checks); let c = cloudState.checks[currentCheckIndex]; let orig = c.timeCost + c.barCost; c.discount = pct; c.total = Math.round(orig * (1 - pct/100)); document.getElementById('pay-total').innerText = c.total + " ₸"; saveToCloud(); };
+window.processPayment = function(method) { cloudState.checks = toArr(cloudState.checks); let c = cloudState.checks[currentCheckIndex]; c.payMethod = method; c.admin = localAuth.user.name; if(method === 'Долг') { cloudState.debts = toArr(cloudState.debts); cloudState.debts.push({name: c.name, total: c.total, history: [`+${c.total}`]}); } cloudState.archive = toArr(cloudState.archive); cloudState.archive.push(c); cloudState.checks.splice(currentCheckIndex, 1); document.getElementById('pay-modal').style.display = 'none'; saveToCloud(); };
+window.saveNewItem = function() { const name = document.getElementById('new-item-name').value; const price = parseInt(document.getElementById('new-item-price').value); const qty = parseInt(document.getElementById('new-item-qty').value); if(!name || isNaN(price) || isNaN(qty)) return; cloudState.inventory = toArr(cloudState.inventory); cloudState.inventory.push({name, price, qty}); document.getElementById('add-item-modal').style.display = 'none'; saveToCloud(); };
+window.addVipGuest = function() { let name = prompt("Имя:"); let disc = prompt("Скидка:"); if(name && disc) { cloudState.vips = toArr(cloudState.vips); cloudState.vips.push({id: Date.now(), name, discount: parseInt(disc)}); saveToCloud(); } };
+window.resetDatabase = function() { if(confirm("ОЧИСТИТЬ?")) { cloudState = { tables: Array.from({length: 6}, (_, i) => ({ id: i + 1, active: false, start: null, res: [], bar:[] })), checks: [], archive: [], inventory: [], debts: [], history: [], ownerAcc: {}, customAdmins: [], expenses:[], vips: [] }; saveToCloud(); location.reload(); } };
+window.showTab = function(id, btn) { document.querySelectorAll('.tab-pane').forEach(x => x.style.display = 'none'); document.querySelectorAll('.nav-link').forEach(x => x.classList.remove('active')); document.getElementById('tab-'+id).style.display = 'block'; btn.classList.add('active'); };
+function renderTables() { let tablesArr = toArr(cloudState.tables); if(tablesArr.length === 0) return; document.getElementById('tables-grid').innerHTML = tablesArr.map(t => { let timeStr = "00:00", cost = 0; if(t.active) { timeStr = formatTime(Date.now() - t.start); cost = calcCost(t.start); } return `<div class="table-card ${t.active ? 'active' : ''}"><div>СТОЛ ${t.id}</div><div class="timer">${timeStr}</div><div style="font-size:28px;">${cost} ₸</div>${!t.active ? `<button onclick="startTable(${t.id})" class="btn-gold btn-large">▶ ПУСК</button>` : `<button onclick="stopTable(${t.id})" class="btn-red">⏹ СТОП</button>`}</div>`; }).join(''); }
+function render() { if (!localAuth.isAuth) { document.getElementById('auth-screen').style.display='flex'; document.getElementById('app').style.display='none'; return; } document.getElementById('auth-screen').style.display='none'; document.getElementById('app').style.display='block'; document.getElementById('user-display').innerText = localAuth.user.name; let isOwner = localAuth.user.role === 'owner'; document.getElementById('acc-tab').style.display = isOwner ? 'block' : 'none'; document.getElementById('owner-tab').style.display = isOwner ? 'block' : 'none'; renderTables(); let shift = getCurrentShiftData(); document.getElementById('global-rev').innerText = shift.total.toLocaleString() + " ₸"; document.getElementById('global-shift-zp').innerText = shift.sal.toLocaleString() + " ₸"; document.getElementById('global-total-zp').innerText = shift.sal.toLocaleString() + " ₸"; document.getElementById('active-checks').innerHTML = toArr(cloudState.checks).map((c, i) => `<div class="check-row"><div><b>${c.name}</b> (${c.total} ₸)</div><button onclick="openPayModal(${i})" class="btn-gold">ОПЛАТА</button></div>`).join(''); document.getElementById('archive-list').innerHTML = toArr(cloudState.archive).slice().reverse().map(a => `<tr><td>${new Date(a.id).toLocaleTimeString().slice(0,5)}</td><td>${a.name}</td><td>Стол ${a.table}</td><td>${a.total} ₸</td><td>${a.payMethod}</td></tr>`).join(''); document.getElementById('stock-list').innerHTML = toArr(cloudState.inventory).map((i) => `<tr><td>${i.name}</td><td>${i.qty} шт</td><td>${i.price} ₸</td></tr>`).join(''); document.getElementById('debts-list').innerHTML = toArr(cloudState.debts).map((d) => `<tr><td>${d.name}</td><td>${d.total} ₸</td><td>${toArr(d.history).join(', ')}</td></tr>`).join(''); }
