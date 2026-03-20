@@ -51,7 +51,17 @@ dbRef.on('value', snap => {
     } else {
         saveToCloud();
     }
-    render();
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    if(urlParams.get('guest') === 'true') {
+        if(document.getElementById('guest-app').style.display !== 'block') {
+            showGuestPage();
+        } else {
+            renderGuestTables();
+        }
+    } else {
+        render();
+    }
 });
 
 function saveToCloud() { dbRef.set(cloudState).catch(e => console.error(e)); }
@@ -67,13 +77,21 @@ function logStock(action, itemName, qtyChange) {
 }
 
 window.onload = () => { 
-    render(); 
+    const urlParams = new URLSearchParams(window.location.search);
+    if(urlParams.get('guest') === 'true') {
+        showGuestPage();
+    } else {
+        render(); 
+    }
+    
     setInterval(() => { 
         if(localAuth.isAuth) {
             renderTables();
             if(document.getElementById('table-bill-modal') && document.getElementById('table-bill-modal').style.display === 'flex') {
                 renderTableBill();
             }
+        } else if (document.getElementById('guest-app').style.display === 'block') {
+            renderGuestTables();
         } else {
             render(); 
         }
@@ -83,14 +101,35 @@ window.onload = () => {
 // === ЛОГИКА САЙТА ГОСТЕЙ ===
 window.showGuestPage = function() {
     document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'none';
     document.getElementById('guest-app').style.display = 'block';
     let today = new Date().toISOString().split('T')[0];
     document.getElementById('guest-date').value = today;
+    renderGuestTables();
 }
 
 window.hideGuestPage = function() {
-    document.getElementById('guest-app').style.display = 'none';
-    document.getElementById('auth-screen').style.display = 'flex';
+    window.location.href = window.location.pathname; // Сброс URL
+}
+
+window.renderGuestTables = function() {
+    if(!cloudState.tables) return;
+    let html = '';
+    toArr(cloudState.tables).forEach(t => {
+        let status = t.active ? '<span style="color:var(--red); font-weight:800; font-size:16px;">🔴 ЗАНЯТ</span>' : '<span style="color:var(--green); font-weight:800; font-size:16px;">🟢 СВОБОДЕН</span>';
+        let resHtml = '';
+        if(t.res && toArr(t.res).length > 0) {
+            let times = toArr(t.res).map(r => r.split('|')[0].trim()).join(', ');
+            resHtml = `<div style="margin-top:15px; font-size:13px; font-weight:700; color:var(--gold); background:rgba(212,175,55,0.1); padding:8px; border-radius:8px;">⏳ Бронь: ${times}</div>`;
+        }
+        html += `<div class="guest-table-card">
+            <h3 style="margin:0 0 15px; color:var(--white); font-size:22px; font-weight:900;">СТОЛ ${t.id}</h3>
+            ${status}
+            ${resHtml}
+        </div>`;
+    });
+    let el = document.getElementById('guest-tables-list');
+    if(el) el.innerHTML = html;
 }
 
 window.submitGuestReservation = function() {
@@ -116,6 +155,7 @@ window.submitGuestReservation = function() {
         document.getElementById('guest-name').value = '';
         document.getElementById('guest-phone').value = '';
         document.getElementById('guest-time').value = '';
+        renderGuestTables();
     }
 }
 // =============================
@@ -710,6 +750,15 @@ function renderTableBill() {
     let barSum = 0; let html = toArr(t.bar).map((b, i) => { barSum += b.price; return `<div class="edit-bar-item"><span>${b.name} (${b.price} ₸)</span> <button onclick="removeTableBarItem(${i})" class="btn-outline" style="color:var(--red); border-color:var(--red); padding:3px 8px; font-size:10px;">❌</button></div>`; }).join('');
     document.getElementById('table-bill-bar-list').innerHTML = html || '<span style="color:var(--gray); font-size:12px;">Пусто</span>'; document.getElementById('table-bill-bar-sum').innerText = barSum.toLocaleString(); document.getElementById('table-bill-total').innerText = (cost + barSum).toLocaleString();
 }
+window.removeTableBarItem = function(idx) {
+    if(!confirm("Убрать товар? Он вернется на склад.")) return; 
+    cloudState.tables = toArr(cloudState.tables);
+    let t = cloudState.tables.find(x => x.id === currentBillTableId); t.bar = toArr(t.bar); let item = t.bar.splice(idx, 1)[0];
+    cloudState.inventory = toArr(cloudState.inventory); let invItem = cloudState.inventory.find(x => x.name === item.name); 
+    if(invItem) invItem.qty += 1; 
+    logStock('Возврат (Счет Стола)', item.name, 1);
+    saveToCloud(); renderTableBill(); 
+}
 
 function renderTables() {
     if(!document.getElementById('tables-grid')) return;
@@ -742,17 +791,17 @@ function render() {
     let selectElem = document.getElementById('staff-select');
     
     if (!localAuth.isAuth) { 
-        let adminsArr = toArr(cloudState.customAdmins);
-        let expectedCount = 3 + adminsArr.length;
-
-        if (selectElem && selectElem.options.length !== expectedCount) {
-            let html = '<option value="0">Султан</option><option value="1">Дидар</option><option value="owner">Хозяин</option>';
-            adminsArr.forEach((a) => { html += `<option value="custom_${a.id}">${a.name}</option>`; });
+        let html = '<option value="0">Султан</option><option value="1">Дидар</option><option value="owner">Хозяин</option>';
+        toArr(cloudState.customAdmins).forEach((a, i) => { html += `<option value="custom_${a.id}">${a.name}</option>`; });
+        
+        if(selectElem && selectElem.innerHTML !== html) { 
             let curVal = selectElem.value;
             selectElem.innerHTML = html; 
-            if (curVal) selectElem.value = curVal;
+            if (curVal && selectElem.querySelector(`option[value="${curVal}"]`)) {
+                selectElem.value = curVal;
+            }
         }
-
+        
         if (document.getElementById('guest-app') && document.getElementById('guest-app').style.display !== 'block') {
             document.getElementById('auth-screen').style.display='flex'; 
         }
@@ -815,6 +864,7 @@ function render() {
         
         let histArr = toArr(cloudState.history);
         let lastZ = (histArr && histArr.length > 0) ? histArr[histArr.length - 1].timestamp : 0;
+        
         let restoreBtn = (a.id > lastZ || isOwner) ? `<button onclick="restoreArchiveCheck(${a.id})" class="btn-outline" style="padding:6px 10px; font-size:11px; margin-right:8px; border-color:var(--gold-dim); color:var(--gold);">↩️ ВЕРНУТЬ</button>` : '';
         let delBtn = isOwner ? `<button onclick="deleteArchiveCheck(${a.id})" class="btn-red" style="padding:6px 10px; font-size:11px;">🗑️</button>` : '';
         
