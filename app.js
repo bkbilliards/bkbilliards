@@ -20,7 +20,11 @@ const STAFF_HARDCODED = [
 
 let localAuth = JSON.parse(localStorage.getItem('sensei_auth_pro')) || { isAuth: false, user: null };
 
-let cloudState = { tables: Array.from({length: 6}, (_, i) => ({ id: i + 1, active: false, start: null, res: [], bar: [] })), checks: [], archive: [], inventory: [], debts: [], history: [], ownerAcc: {}, customAdmins: [], expenses: [] };
+// Базовое состояние с защитой всех массивов
+let cloudState = { 
+    tables: Array.from({length: 6}, (_, i) => ({ id: i + 1, active: false, start: null, res: [], bar: [] })), 
+    checks: [], archive: [], inventory: [], debts: [], history: [], ownerAcc: {}, customAdmins: [], expenses: [] 
+};
 
 db.ref('.info/connected').on('value', snap => { const el = document.getElementById('sync-status'); if(el) el.innerText = snap.val() ? '🟢' : '🔴'; });
 
@@ -31,8 +35,7 @@ function toArr(data) {
     return Object.values(data);
 }
 
-let lastAdminCount = -1; // Для защиты от моргания списка
-
+// ЗАЩИТА ДАННЫХ: Бронежилет от скрытых массивов Firebase
 dbRef.on('value', snap => {
     if (snap.exists() && snap.val()) {
         let data = snap.val();
@@ -65,8 +68,7 @@ window.onload = () => {
                 renderTableBill();
             }
         } else {
-            // Отрисовываем меню входа безопасно
-            render(); 
+            render(); // Гарантированно отрисовываем выпадающий список
         }
     }, 1000); 
 };
@@ -465,9 +467,11 @@ function openTableBill(id) { currentBillTableId = id; renderTableBill(); documen
 function renderTableBill() {
     if (!currentBillTableId) return; let t = toArr(cloudState.tables).find(x => x.id === currentBillTableId); if (!t) return;
     document.getElementById('table-bill-id').innerText = t.id;
-    let timeCost = t.active ? calcCost(t.start) : 0; document.getElementById('table-bill-time-val').innerText = timeCost.toLocaleString() + " ₸";
+    let cost = 0; let timeStr = "00:00:00";
+    if(t.active) { timeStr = formatTime(Date.now() - t.start); cost = calcCost(t.start); }
+    document.getElementById('table-bill-time-val').innerText = cost.toLocaleString() + " ₸";
     let barSum = 0; let html = toArr(t.bar).map((b, i) => { barSum += b.price; return `<div class="edit-bar-item"><span>${b.name} (${b.price} ₸)</span> <button onclick="removeTableBarItem(${i})" class="btn-outline" style="color:var(--red); border-color:var(--red); padding:3px 8px; font-size:10px;">❌</button></div>`; }).join('');
-    document.getElementById('table-bill-bar-list').innerHTML = html || '<span style="color:var(--gray); font-size:12px;">Пусто</span>'; document.getElementById('table-bill-bar-sum').innerText = barSum.toLocaleString(); document.getElementById('table-bill-total').innerText = (timeCost + barSum).toLocaleString();
+    document.getElementById('table-bill-bar-list').innerHTML = html || '<span style="color:var(--gray); font-size:12px;">Пусто</span>'; document.getElementById('table-bill-bar-sum').innerText = barSum.toLocaleString(); document.getElementById('table-bill-total').innerText = (cost + barSum).toLocaleString();
 }
 function removeTableBarItem(idx) {
     if(!confirm("Убрать товар? Он вернется на склад.")) return; let t = toArr(cloudState.tables).find(x => x.id === currentBillTableId); t.bar = toArr(t.bar); let item = t.bar.splice(idx, 1)[0];
@@ -477,8 +481,8 @@ function removeTableBarItem(idx) {
 function renderTables() {
     if(!document.getElementById('tables-grid')) return;
     document.getElementById('tables-grid').innerHTML = toArr(cloudState.tables).map(t => {
-        let timeStr = "00:00:00", costStr = "0";
-        if(t.active) { timeStr = formatTime(Date.now() - t.start); costStr = calcCost(t.start).toLocaleString(); }
+        let timeStr = "00:00:00", cost = 0;
+        if(t.active) { timeStr = formatTime(Date.now() - t.start); cost = calcCost(t.start); }
         let barSum = 0; let barHtml = '';
         let bArr = toArr(t.bar);
         if(t.active && bArr.length > 0) {
@@ -487,7 +491,7 @@ function renderTables() {
         }
         let totalDisplay = cost + barSum;
         let resHtml = toArr(t.res).map((r, i) => `<div class="res-item"><span>📅 ${r}</span> <div><span onclick="editRes(${t.id},${i})" style="cursor:pointer; margin-right:10px;">✏️</span><span onclick="delRes(${t.id},${i})" style="color:var(--red); cursor:pointer;">❌</span></div></div>`).join('');
-        return `<div class="table-card ${t.active ? 'active' : ''}"><div style="font-size:22px; font-weight:800; color:var(--gold);">СТОЛ ${t.id}</div><div class="timer">${timeStr}</div><div style="font-size:28px; font-weight:800; color:var(--white); margin-bottom:15px;">${totalDisplay} ₸</div>${barHtml}${!t.active ? `<button onclick="startTable(${t.id})" class="btn-gold btn-large shadow-gold" style="margin-top:auto;">▶ ПУСК СТОЛА</button>` : `<button onclick="stopTable(${t.id})" class="btn-red" style="margin-bottom:10px;">⏹ СТОП В ЧЕК</button><div class="table-actions"><button class="btn-outline flex-1" onclick="openBarModal(${t.id})">🍸 БАР</button><button class="btn-outline flex-1" onclick="openTableBill(${t.id})">📄 СЧЕТ</button><button class="btn-outline flex-1" onclick="commTable(${t.id})">🔄 КОММЕРЦ</button></div>`}<button class="btn-outline" style="width:100%; margin-top:15px; border-color:var(--border); color:var(--gray);" onclick="addRes(${t.id})">+ ДОБАВИТЬ БРОНЬ</button>${resHtml}</div>`;
+        return `<div class="table-card ${t.active ? 'active' : ''}"><div style="font-size:22px; font-weight:800; color:var(--gold);">СТОЛ ${t.id}</div><div class="timer">${timeStr}</div><div style="font-size:28px; font-weight:800; color:var(--white); margin-bottom:15px;">${totalDisplay.toLocaleString()} ₸</div>${barHtml}${!t.active ? `<button onclick="startTable(${t.id})" class="btn-gold btn-large shadow-gold" style="margin-top:auto;">▶ ПУСК СТОЛА</button>` : `<button onclick="stopTable(${t.id})" class="btn-red" style="margin-bottom:10px;">⏹ СТОП В ЧЕК</button><div class="table-actions"><button class="btn-outline flex-1" onclick="openBarModal(${t.id})">🍸 БАР</button><button class="btn-outline flex-1" onclick="openTableBill(${t.id})">📄 СЧЕТ</button><button class="btn-outline flex-1" onclick="commTable(${t.id})">🔄 КОММЕРЦ</button></div>`}<button class="btn-outline" style="width:100%; margin-top:15px; border-color:var(--border); color:var(--gray);" onclick="addRes(${t.id})">+ ДОБАВИТЬ БРОНЬ</button>${resHtml}</div>`;
     }).join('');
 }
 
@@ -503,19 +507,15 @@ function openFullCheck(idx) {
 
 function render() {
     if (!localAuth.isAuth) { 
-        let currentAdminCount = toArr(cloudState.customAdmins).length;
-        if(currentAdminCount !== lastAdminCount) {
-            let html = '<option value="0">Султан</option><option value="1">Дидар</option><option value="owner">Хозяин</option>';
-            toArr(cloudState.customAdmins).forEach((a, i) => { html += `<option value="custom_${a.id}">${a.name}</option>`; });
-            let selectElem = document.getElementById('staff-select');
-            if(selectElem) { 
-                let curVal = selectElem.value;
-                selectElem.innerHTML = html; 
-                if (curVal && selectElem.querySelector(`option[value="${curVal}"]`)) {
-                    selectElem.value = curVal;
-                }
+        let html = '<option value="0">Султан</option><option value="1">Дидар</option><option value="owner">Хозяин</option>';
+        toArr(cloudState.customAdmins).forEach((a, i) => { html += `<option value="custom_${a.id}">${a.name}</option>`; });
+        let selectElem = document.getElementById('staff-select');
+        if(selectElem) { 
+            let curVal = selectElem.value;
+            selectElem.innerHTML = html; 
+            if (curVal && selectElem.querySelector(`option[value="${curVal}"]`)) {
+                selectElem.value = curVal;
             }
-            lastAdminCount = currentAdminCount;
         }
         document.getElementById('auth-screen').style.display='flex'; document.getElementById('app').style.display='none'; return; 
     }
