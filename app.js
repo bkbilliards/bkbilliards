@@ -57,7 +57,6 @@ dbRef.on('value', snap => {
 function saveToCloud() { dbRef.set(cloudState).catch(e => console.error(e)); }
 function saveLocalAuth() { localStorage.setItem('sensei_auth_pro', JSON.stringify(localAuth)); }
 
-// Логгирование склада
 function logStock(action, itemName, qtyChange) {
     cloudState.stockLog = toArr(cloudState.stockLog);
     cloudState.stockLog.push({
@@ -213,7 +212,6 @@ function openStockLogModal() {
     document.getElementById('stock-log-modal').style.display='flex';
 }
 
-
 function deleteHistory(ts) { if(confirm("Удалить эту смену из Бухгалтерии?")) { cloudState.history = toArr(cloudState.history).filter(h => h.timestamp !== ts); saveToCloud(); } }
 
 function reverseCheckStats(c) {
@@ -289,7 +287,6 @@ function startTable(id) { cloudState.tables = toArr(cloudState.tables); let t = 
 function stopTable(id) { cloudState.tables = toArr(cloudState.tables); let t = cloudState.tables.find(x => x.id === id); const name = prompt("Имя гостя:"); if (!name) return; createOrMergeCheck(name, id, calcCost(t.start), toArr(t.bar)); t.active = false; t.start = null; t.bar = []; saveToCloud(); }
 function commTable(id) { cloudState.tables = toArr(cloudState.tables); let t = cloudState.tables.find(x => x.id === id); const name = prompt("Коммерция. Кто проиграл?"); if (!name) return; createOrMergeCheck(name, id, calcCost(t.start), toArr(t.bar)); t.start = Date.now(); t.bar = []; saveToCloud(); }
 
-// --- ПЕРЕСАДКА СТОЛА ---
 window.moveTable = function(fromId) {
     let toIdStr = prompt("На какой стол пересадить? (введите номер 1-6):");
     if(!toIdStr) return;
@@ -300,13 +297,8 @@ window.moveTable = function(fromId) {
     if(!tTo) return alert("Такого стола нет!");
     if(tTo.active) return alert("Этот стол уже занят!");
 
-    tTo.active = true;
-    tTo.start = tFrom.start;
-    tTo.bar = toArr(tFrom.bar);
-
-    tFrom.active = false;
-    tFrom.start = null;
-    tFrom.bar = [];
+    tTo.active = true; tTo.start = tFrom.start; tTo.bar = toArr(tFrom.bar);
+    tFrom.active = false; tFrom.start = null; tFrom.bar = [];
     saveToCloud();
 }
 
@@ -319,14 +311,15 @@ function openBarModal(context) {
     barContext = context; 
     document.getElementById('bar-modal').style.display = 'flex'; 
     document.getElementById('bar-search').value = ''; 
+    document.getElementById('bar-modal-title').innerText = context === 'owner' ? "БАР (БЕСПЛАТНО ХОЗЯИНУ)" : "МЕНЮ БАРА";
     
-    // ТОП БАР
     let inv = toArr(cloudState.inventory).filter(i => i.qty > 0);
     let topHtml = inv.slice(0, 6).map(i => `<button class="top-bar-btn" onclick="selectBarItem('${i.name}')">${i.name}</button>`).join('');
     document.getElementById('top-bar-items').innerHTML = topHtml;
     
     renderBarSearch(); 
 }
+
 function renderBarSearch() {
     let invArr = toArr(cloudState.inventory);
     if(invArr.length === 0) return;
@@ -345,8 +338,18 @@ window.selectBarItem = function(itemName) {
     let qtyStr = prompt(`Сколько добавить?\n${item.name} (Остаток: ${item.qty} шт.)`, "1");
     if (!qtyStr) return; let qty = parseInt(qtyStr);
     if (isNaN(qty) || qty <= 0 || qty > item.qty) return alert("Некорректно!");
+    
     item.qty -= qty;
     
+    // ЛОГИКА ХОЗЯИНА (БЕСПЛАТНЫЙ БАР)
+    if (barContext === 'owner') {
+        logStock('Списание (Хозяин)', item.name, -qty);
+        document.getElementById('bar-modal').style.display = 'none';
+        saveToCloud();
+        alert(`Списано на Хозяина: ${item.name} (${qty} шт.)`);
+        return;
+    }
+
     logStock('Продажа', item.name, -qty);
     
     let itemsToAdd = []; for(let i = 0; i < qty; i++) itemsToAdd.push({name: item.name, price: item.price});
@@ -402,24 +405,6 @@ function createOrMergeCheck(name, tableId, timeCost, barItems) {
         let newCheck = { id: Date.now(), name: name, table: tableId, date: now.toLocaleDateString(), startTime: startStr, endTime: timeStr, duration: duration, timeCost: timeCost, barCost: barTotal, bar: bArr, total: timeCost + barTotal, discount: 0, details: `Стол ${tableId}` };
         applyVipLogic(newCheck); 
         cloudState.checks.push(newCheck); 
-    }
-}
-
-window.deleteCheck = function(idx) {
-    if(confirm("Вы точно хотите безвозвратно УДАЛИТЬ этот чек?\nВсе товары бара из него будут возвращены на склад.")) {
-        cloudState.checks = toArr(cloudState.checks);
-        cloudState.inventory = toArr(cloudState.inventory);
-        let c = cloudState.checks[idx];
-        if(c.bar && toArr(c.bar).length > 0) { 
-            toArr(c.bar).forEach(bItem => { 
-                let invItem = cloudState.inventory.find(x => x.name === bItem.name); 
-                if(invItem) invItem.qty += 1; 
-                else cloudState.inventory.push({name: bItem.name, price: bItem.price, qty: 1}); 
-                logStock('Удаление чека', bItem.name, 1);
-            }); 
-        }
-        cloudState.checks.splice(idx, 1); 
-        saveToCloud();
     }
 }
 
@@ -645,7 +630,7 @@ function renderTables() {
         }
         let totalDisplay = cost !== 0 ? (cost + barSum) : barSum;
         let resHtml = toArr(t.res).map((r, i) => `<div class="res-item"><span>📅 ${r}</span> <div><span onclick="editRes(${t.id},${i})" style="cursor:pointer; margin-right:10px;">✏️</span><span onclick="delRes(${t.id},${i})" style="color:var(--red); cursor:pointer;">❌</span></div></div>`).join('');
-        return `<div class="table-card ${t.active ? 'active' : ''}"><div style="font-size:22px; font-weight:800; color:var(--gold);">СТОЛ ${t.id}</div><div class="timer">${timeStr}</div><div style="font-size:28px; font-weight:800; color:var(--white); margin-bottom:15px;">${totalDisplay.toLocaleString()} ₸</div>${barHtml}${!t.active ? `<button onclick="startTable(${t.id})" class="btn-gold btn-large shadow-gold" style="margin-top:auto;">▶ ПУСК СТОЛА</button>` : `<button onclick="stopTable(${t.id})" class="btn-red" style="margin-bottom:10px;">⏹ СТОП В ЧЕК</button><div class="table-actions"><button class="btn-outline" onclick="openBarModal(${t.id})">🍸 БАР</button><button class="btn-outline" onclick="openTableBill(${t.id})">📄 СЧЕТ</button><button class="btn-outline" onclick="commTable(${t.id})">🔄 КОММЕРЦ</button><button class="btn-outline" onclick="moveTable(${t.id})">➡️ ПЕРЕСАДКА</button></div>`}<button class="btn-outline" style="width:100%; margin-top:15px; border-color:var(--border); color:var(--gray);" onclick="addRes(${t.id})">+ ДОБАВИТЬ БРОНЬ</button>${resHtml}</div>`;
+        return `<div class="table-card ${t.active ? 'active' : ''}"><div style="font-size:22px; font-weight:800; color:var(--gold);">СТОЛ ${t.id}</div><div class="timer">${timeStr}</div><div style="font-size:28px; font-weight:800; color:var(--white); margin-bottom:15px;">${totalDisplay.toLocaleString()} ₸</div>${barHtml}${!t.active ? `<button onclick="startTable(${t.id})" class="btn-gold btn-large shadow-gold" style="margin-top:auto;">▶ ПУСК СТОЛА</button>` : `<button onclick="stopTable(${t.id})" class="btn-red" style="margin-bottom:10px;">⏹ СТОП В ЧЕК</button><div class="table-actions"><button class="btn-outline flex-1" onclick="openBarModal(${t.id})">🍸 БАР</button><button class="btn-outline flex-1" onclick="openTableBill(${t.id})">📄 СЧЕТ</button><button class="btn-outline flex-1" onclick="commTable(${t.id})">🔄 КОММЕРЦ</button><button class="btn-outline flex-1" onclick="moveTable(${t.id})">➡️ ПЕРЕСАДКА</button></div>`}<button class="btn-outline" style="width:100%; margin-top:15px; border-color:var(--border); color:var(--gray);" onclick="addRes(${t.id})">+ ДОБАВИТЬ БРОНЬ</button>${resHtml}</div>`;
     }).join('');
 }
 
@@ -719,7 +704,8 @@ function render() {
         return `<div class="check-row"><div style="flex:1;"><div><b style="font-size:20px; color:var(--gold);">${c.name}</b> ${vipBadge} <span style="font-size:11px;color:var(--gray);margin-left:10px;">${c.date}</span></div><div style="font-size:13px;color:var(--gray);margin-top:8px;">${c.details} (${c.timeCost} ₸) ${timeInfo} ${bHtml?`<br>🍸 Бар: ${bHtml} (${c.barCost} ₸)`:''}</div><div style="font-size:24px;font-weight:800;margin-top:10px;">${c.total} ₸ ${discountHtml}</div></div><div style="display:flex; flex-direction:column; gap:5px;"><button onclick="openPayModal(${i})" class="btn-gold shadow-gold" style="padding:15px; border-radius:12px;">ОПЛАТА</button><button onclick="openFullCheck(${i})" class="btn-outline">📄 ЧЕК</button>${adminButtons}</div></div>`; 
     }).join('');
     
-    document.getElementById('archive-list').innerHTML = toArr(cloudState.archive).map(a => {
+    // --- ПЕРЕВОРОТ АРХИВА (НОВЫЕ СВЕРХУ) ---
+    document.getElementById('archive-list').innerHTML = toArr(cloudState.archive).slice().reverse().map(a => {
         let barInfo = ''; let bArr = toArr(a.bar); if(bArr.length>0) { let gr = {}; bArr.forEach(i=>{gr[i.name]=gr[i.name]||{q:0}; gr[i.name].q++;}); barInfo = Object.keys(gr).map(k=>`${k} x${gr[k].q}`).join(', '); }
         let timeInfo = a.startTime ? `🕒 ${a.startTime}-${a.endTime} (${a.duration})` : '';
         
@@ -737,22 +723,31 @@ function render() {
         return `<tr><td><b style="color:${colorClass};">${i.name}</b></td><td><b style="font-size:16px; color:${colorClass};">${i.qty} шт</b></td><td class="gold-text"><b style="font-size:16px;">${i.price} ₸</b></td><td style="display:flex; gap:5px; flex-wrap:wrap;">${stockBtns}</td></tr>`;
     }).join('');
     
-    document.getElementById('debts-list').innerHTML = toArr(cloudState.debts).map((d, i) => {
-        let daysOld = 0;
-        if (d.timestamp) daysOld = Math.floor((Date.now() - d.timestamp) / (1000 * 60 * 60 * 24));
+    // --- ТАЙМЕРЫ И ОБЩАЯ СУММА ДОЛГОВ ---
+    let debtsArr = toArr(cloudState.debts);
+    let totalDebtsSum = 0;
+    
+    let debtsHtml = debtsArr.map((d, i) => {
+        totalDebtsSum += d.total;
+        
+        let ts = d.timestamp || Date.now();
+        let deadline = ts + (15 * 24 * 60 * 60 * 1000);
+        let diff = deadline - Date.now();
         
         let warningHtml = '';
         let penaltyBtn = '';
         
-        if (daysOld >= 15) {
-            warningHtml = `<br><span style="color:var(--red); font-size:11px; font-weight:bold;">⚠️ ПРОСРОЧЕНО: ${daysOld} дн.</span>`;
-            if(isOwner && d.total > 0) penaltyBtn = `<button onclick="deductDebtFromAdmin(${i})" class="btn-outline" style="border-color:var(--red); color:var(--red); margin-top:5px; width:100%; font-size:10px;">УДЕРЖАТЬ С АДМИНА</button>`;
-        } else if (daysOld > 0) {
-            warningHtml = `<br><span style="color:var(--gold); font-size:10px;">Дней долгу: ${daysOld}</span>`;
+        if (diff < 0 && d.total > 0) {
+            let daysOver = Math.floor(Math.abs(diff) / (1000 * 60 * 60 * 24));
+            warningHtml = `<br><span style="color:var(--red); font-size:11px; font-weight:bold;">⚠️ ПРОСРОЧЕНО: ${daysOver} дн.</span>`;
+            if(isOwner) penaltyBtn = `<button onclick="deductDebtFromAdmin(${i})" class="btn-outline" style="border-color:var(--red); color:var(--red); margin-top:5px; width:100%; font-size:10px;">УДЕРЖАТЬ С АДМИНА</button>`;
+        } else if (d.total > 0) {
+            let dLeft = Math.floor(diff / (1000 * 60 * 60 * 24));
+            let hLeft = Math.floor((diff / (1000 * 60 * 60)) % 24);
+            warningHtml = `<br><span style="color:var(--gold); font-size:10px;">⏳ До расчета: ${dLeft} дн. ${hLeft} ч.</span>`;
         }
 
         let delBtn = isOwner ? `<button onclick="delDebt(${i})" style="background:none; border:none; color:var(--red); cursor:pointer; font-size:22px; margin-left:10px;">×</button>` : '';
-        
         let payBtn = d.total > 0 ? `<button onclick="payDebt(${i})" class="btn-outline" style="border-color:var(--green); color:var(--green); width:100%;">Расчет</button>` : `<span style="color:var(--green); font-size:12px; font-weight:bold;">ОПЛАЧЕНО<br>Ждет проверки</span>`;
 
         return `<tr>
@@ -766,6 +761,12 @@ function render() {
             </td>
         </tr>`;
     }).join('');
+    
+    // Добавляем итоговую строку для долгов
+    if(debtsArr.length > 0) {
+        debtsHtml += `<tr><td colspan="3" style="text-align:right; font-size:16px;"><b>ОБЩИЙ ДОЛГ:</b></td><td style="color:var(--red); font-size:24px; font-weight:900;">${totalDebtsSum.toLocaleString()} ₸</td></tr>`;
+    }
+    document.getElementById('debts-list').innerHTML = debtsHtml;
     
     document.getElementById('my-history-list').innerHTML = toArr(cloudState.history).filter(h => h.admin === localAuth.user.name).map(h => `<tr><td>${h.start}</td><td>${h.end}</td><td><span style="font-size:11px; color:var(--gray);">Нал: ${h.cashRev||0}<br>QR: ${h.qrRev||0}</span></td><td class="gold-text"><b>${h.total} ₸</b></td><td style="color:var(--green);"><b>${h.sal} ₸</b></td></tr>`).join('');
     
