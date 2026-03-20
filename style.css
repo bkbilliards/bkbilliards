@@ -1,14 +1,14 @@
 :root { 
-    --bg-main: #0a110d; /* Глубокий темный фон (снимает усталость глаз) */
-    --bg-card: #111d16; /* Благородный темно-зеленый для карточек */
+    --bg-main: #0a110d; 
+    --bg-card: #111d16; 
     --gold: #d4af37; 
     --gold-dim: #997f28;
     --gold-light: #f9e596;
-    --white: #e8f0ea; /* Мягкий белый, не режет глаз */
+    --white: #e8f0ea; 
     --gray: #8b9d90; 
     --red: #ff4c4c; 
     --green: #00cc66; 
-    --border: #1c2e22; /* Мягкие границы */
+    --border: #1c2e22; 
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body { background: var(--bg-main); color: var(--white); font-family: 'Montserrat', sans-serif; margin: 0; padding: 0; letter-spacing: 0.3px; }
@@ -45,7 +45,6 @@ input:focus, select:focus { border-color: var(--gold); box-shadow: inset 0 2px 1
 .btn-exit { background: transparent; border: 1px solid rgba(255, 76, 76, 0.5); color: var(--red); padding: 10px 20px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 12px; transition: 0.2s; }
 .btn-exit:hover { background: rgba(255, 76, 76, 0.1); }
 
-/* Кружок уведомления для склада */
 .alert-dot { display: inline-flex; justify-content: center; align-items: center; background: var(--red); color: #fff; font-size: 10px; font-weight: 800; width: 18px; height: 18px; border-radius: 50%; margin-left: 8px; vertical-align: baseline; box-shadow: 0 0 10px var(--red); animation: pulse 2s infinite; }
 @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 76, 76, 0.7); } 70% { box-shadow: 0 0 0 8px rgba(255, 76, 76, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 76, 76, 0); } }
 
@@ -111,3 +110,19 @@ input:focus, select:focus { border-color: var(--gold); box-shadow: inset 0 2px 1
 .top-bar-scroll::-webkit-scrollbar { display: none; }
 .top-bar-btn { background: rgba(212,175,55,0.05); border: 1px solid var(--gold-dim); color: var(--gold); padding: 10px 20px; border-radius: 12px; font-size: 13px; font-weight: 700; white-space: nowrap; cursor: pointer; transition: 0.2s; }
 .top-bar-btn:active { transform: scale(0.95); background: rgba(212,175,55,0.15);}
+
+/* СТИЛИ ДЛЯ САЙТА ГОСТЕЙ */
+#guest-app { background: var(--bg-main); min-height: 100vh; overflow-y: auto; }
+.guest-hero { background: linear-gradient(rgba(10, 17, 13, 0.8), rgba(10, 17, 13, 0.95)), url('https://images.unsplash.com/photo-1544067332-9a00a12e2f92?q=80&w=1000') center/cover; padding: 80px 20px 50px; text-align: center; border-bottom: 1px solid var(--gold-dim); }
+.guest-title { font-size: 48px; font-weight: 900; margin: 0; letter-spacing: 6px; text-shadow: 0 5px 20px rgba(0,0,0,0.8); }
+.guest-subtitle { font-size: 14px; color: var(--gold-light); letter-spacing: 4px; text-transform: uppercase; margin-top: 10px; margin-bottom: 40px; }
+.info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; padding: 40px 20px; max-width: 1200px; margin: 0 auto; }
+.info-card { background: rgba(17, 29, 22, 0.6); backdrop-filter: blur(10px); border: 1px solid var(--border); padding: 30px; border-radius: 20px; text-align: center; transition: 0.3s; }
+.info-card:hover { border-color: var(--gold-dim); transform: translateY(-5px); }
+.info-icon { font-size: 40px; margin-bottom: 15px; }
+.info-title { font-size: 18px; color: var(--gold); font-weight: 800; margin-bottom: 10px; text-transform: uppercase; }
+.info-desc { font-size: 13px; color: var(--gray); line-height: 1.6; }
+.booking-section { background: var(--bg-card); padding: 50px 20px; border-top: 1px solid var(--border); }
+.booking-form { max-width: 500px; margin: 0 auto; background: #0a110d; padding: 40px; border-radius: 24px; border: 1px solid var(--gold-dim); box-shadow: 0 15px 40px rgba(0,0,0,0.5); }
+.guest-footer { text-align: center; padding: 40px 20px; color: var(--gray); font-size: 12px; border-top: 1px solid var(--border); }
+.btn-back { position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.5); border: 1px solid var(--gold-dim); color: var(--gold); padding: 10px 15px; border-radius: 10px; cursor: pointer; font-weight: bold; }
