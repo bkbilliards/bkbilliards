@@ -35,7 +35,6 @@ function toArr(data) {
     return Object.values(data);
 }
 
-// ЗАЩИТА ДАННЫХ: Бронежилет от скрытых массивов Firebase
 dbRef.on('value', snap => {
     if (snap.exists() && snap.val()) {
         let data = snap.val();
@@ -68,7 +67,7 @@ window.onload = () => {
                 renderTableBill();
             }
         } else {
-            render(); // Гарантированно отрисовываем выпадающий список
+            render(); 
         }
     }, 1000); 
 };
@@ -213,9 +212,15 @@ function resetDatabase() { if(confirm("ОБНОВИТЬ БАЗУ?")) { cloudStat
 function formatTime(ms) { if(ms<0) ms=0; let s = Math.floor(ms / 1000), h = String(Math.floor(s / 3600)).padStart(2, '0'), m = String(Math.floor((s % 3600) / 60)).padStart(2, '0'); return `${h}:${m}:${String(s % 60).padStart(2, '0')}`; }
 function calcCost(start) { if(!start) return 0; let diff = Date.now() - start; if(diff<0) diff=0; let h = new Date(start).getHours(); let rate = (h >= 11 && h < 18) ? 2000 : 3000; return Math.ceil(((diff / 60000) * (rate / 60)) / 50) * 50; }
 
-function startTable(id) { let t = toArr(cloudState.tables).find(x => x.id === id); if(t) { t.active = true; t.start = Date.now(); t.bar = []; saveToCloud(); } }
-function stopTable(id) { let t = toArr(cloudState.tables).find(x => x.id === id); const name = prompt("Имя гостя:"); if (!name) return; createOrMergeCheck(name, id, calcCost(t.start), toArr(t.bar)); t.active = false; t.start = null; t.bar = []; saveToCloud(); }
-function commTable(id) { let t = toArr(cloudState.tables).find(x => x.id === id); const name = prompt("Коммерция. Кто проиграл?"); if (!name) return; createOrMergeCheck(name, id, calcCost(t.start), toArr(t.bar)); t.start = Date.now(); t.bar = []; saveToCloud(); }
+function startTable(id) { cloudState.tables = toArr(cloudState.tables); let t = cloudState.tables.find(x => x.id === id); if(t) { t.active = true; t.start = Date.now(); t.bar = []; saveToCloud(); } }
+function stopTable(id) { cloudState.tables = toArr(cloudState.tables); let t = cloudState.tables.find(x => x.id === id); const name = prompt("Имя гостя:"); if (!name) return; createOrMergeCheck(name, id, calcCost(t.start), toArr(t.bar)); t.active = false; t.start = null; t.bar = []; saveToCloud(); }
+function commTable(id) { cloudState.tables = toArr(cloudState.tables); let t = cloudState.tables.find(x => x.id === id); const name = prompt("Коммерция. Кто проиграл?"); if (!name) return; createOrMergeCheck(name, id, calcCost(t.start), toArr(t.bar)); t.start = Date.now(); t.bar = []; saveToCloud(); }
+
+// Функции для брони столов
+function addRes(id) { cloudState.tables = toArr(cloudState.tables); let t = cloudState.tables.find(x => x.id === id); let r = prompt("Бронь (Имя, Время):"); if(r) { t.res = toArr(t.res); t.res.push(r); saveToCloud(); } }
+function editRes(tId, rIdx) { cloudState.tables = toArr(cloudState.tables); let t = cloudState.tables.find(x => x.id === tId); t.res = toArr(t.res); let n = prompt("Изменить бронь:", t.res[rIdx]); if(n) { t.res[rIdx] = n; saveToCloud(); } }
+function delRes(tId, rIdx) { cloudState.tables = toArr(cloudState.tables); let t = cloudState.tables.find(x => x.id === tId); t.res = toArr(t.res); t.res.splice(rIdx,1); saveToCloud(); }
+
 
 let barContext = null; 
 function openBarModal(context) { barContext = context; document.getElementById('bar-modal').style.display = 'flex'; document.getElementById('bar-search').value = ''; renderBarSearch(); }
@@ -231,7 +236,8 @@ function renderBarSearch() {
 }
 
 function selectBarItem(itemName) {
-    let item = toArr(cloudState.inventory).find(x => x.name === itemName);
+    cloudState.inventory = toArr(cloudState.inventory);
+    let item = cloudState.inventory.find(x => x.name === itemName);
     if(item.qty <= 0) return alert("Товар закончился!");
     let qtyStr = prompt(`Сколько добавить?\n${item.name} (Остаток: ${item.qty} шт.)`, "1");
     if (!qtyStr) return; let qty = parseInt(qtyStr);
@@ -242,7 +248,8 @@ function selectBarItem(itemName) {
         const name = prompt("Имя гостя для бара:"); 
         if(name) createOrMergeCheck(name, "Бар", 0, itemsToAdd); else { item.qty += qty; return; }
     } else { 
-        let t = toArr(cloudState.tables).find(x => x.id === barContext); 
+        cloudState.tables = toArr(cloudState.tables);
+        let t = cloudState.tables.find(x => x.id === barContext); 
         t.bar = toArr(t.bar).concat(itemsToAdd); 
     }
     document.getElementById('bar-modal').style.display = 'none'; saveToCloud();
@@ -256,10 +263,11 @@ function openEditTableBar(id) {
     document.getElementById('edit-table-bar-modal').style.display = 'flex';
 }
 function removeTableBarItem(idx) {
-    let t = toArr(cloudState.tables).find(x => x.id === editTableId); 
+    if(!confirm("Убрать товар? Он вернется на склад.")) return; 
+    cloudState.tables = toArr(cloudState.tables);
+    let t = cloudState.tables.find(x => x.id === editTableId); 
     t.bar = toArr(t.bar); let item = t.bar.splice(idx, 1)[0];
-    let invItem = toArr(cloudState.inventory).find(x => x.name === item.name); if(invItem) invItem.qty += 1;
-    saveToCloud(); openEditTableBar(editTableId);
+    cloudState.inventory = toArr(cloudState.inventory); let invItem = cloudState.inventory.find(x => x.name === item.name); if(invItem) invItem.qty += 1; saveToCloud(); renderTableBill(); 
 }
 
 function createOrMergeCheck(name, tableId, timeCost, barItems) {
@@ -284,6 +292,24 @@ function createOrMergeCheck(name, tableId, timeCost, barItems) {
     }
 }
 
+// === ИСПРАВЛЕНИЕ УДАЛЕНИЯ АКТИВНОГО ЧЕКА ===
+function deleteCheck(idx) {
+    if(confirm("Вы точно хотите безвозвратно УДАЛИТЬ этот чек?\nВсе товары бара из него будут возвращены на склад.")) {
+        cloudState.checks = toArr(cloudState.checks);
+        cloudState.inventory = toArr(cloudState.inventory);
+        let c = cloudState.checks[idx];
+        if(c.bar && toArr(c.bar).length > 0) { 
+            toArr(c.bar).forEach(bItem => { 
+                let invItem = cloudState.inventory.find(x => x.name === bItem.name); 
+                if(invItem) invItem.qty += 1; 
+                else cloudState.inventory.push({name: bItem.name, price: bItem.price, qty: 1}); 
+            }); 
+        }
+        cloudState.checks.splice(idx, 1); 
+        saveToCloud();
+    }
+}
+
 let editingCheckIdx = null;
 function openEditCheckModal(idx) { editingCheckIdx = idx; let c = toArr(cloudState.checks)[idx]; document.getElementById('edit-check-name').value = c.name; document.getElementById('edit-check-time').value = c.timeCost; renderEditCheckBarItems(); document.getElementById('edit-check-modal').style.display = 'flex'; }
 function renderEditCheckBarItems() {
@@ -293,9 +319,10 @@ function renderEditCheckBarItems() {
 }
 function removeBarItemFromCheck(itemIdx) {
     if(!confirm("Убрать товар из чека? Он вернется на склад.")) return;
-    let c = toArr(cloudState.checks)[editingCheckIdx]; c.bar = toArr(c.bar); let item = c.bar.splice(itemIdx, 1)[0];
+    cloudState.checks = toArr(cloudState.checks);
+    let c = cloudState.checks[editingCheckIdx]; c.bar = toArr(c.bar); let item = c.bar.splice(itemIdx, 1)[0];
     c.barCost -= item.price; let baseTotal = c.timeCost + c.barCost; c.total = c.discount ? Math.round(baseTotal * (1 - c.discount/100)) : baseTotal;
-    let invItem = toArr(cloudState.inventory).find(x => x.name === item.name); if(invItem) invItem.qty += 1;
+    cloudState.inventory = toArr(cloudState.inventory); let invItem = cloudState.inventory.find(x => x.name === item.name); if(invItem) invItem.qty += 1;
     saveToCloud(); renderEditCheckBarItems();
 }
 function saveCheckEdit() {
@@ -327,7 +354,7 @@ function openPayModal(idx) {
     document.getElementById('pay-main-buttons').style.display = 'flex'; document.getElementById('mix-pay-section').style.display = 'none'; document.getElementById('pay-modal').style.display = 'flex'; 
 }
 
-function applyDiscount(pct) { let c = toArr(cloudState.checks)[currentCheckIndex]; c.discount = pct; let origTotal = c.timeCost + c.barCost; if(pct === 0) { c.total = origTotal; document.getElementById('pay-total').innerText = c.total + " ₸"; document.getElementById('pay-info').innerText = `${c.name} | ${c.details}`; } else { c.total = Math.round(origTotal * (1 - pct / 100)); document.getElementById('pay-total').innerHTML = `<span style="text-decoration:line-through; font-size:20px; color:var(--gray);">${origTotal} ₸</span><br>${c.total} ₸`; document.getElementById('pay-info').innerText = `${c.name} | ${c.details} (Скидка ${pct}%)`; } if (document.getElementById('mix-pay-section').style.display === 'block') { calcMixQr(); } saveToCloud(); }
+function applyDiscount(pct) { cloudState.checks = toArr(cloudState.checks); let c = cloudState.checks[currentCheckIndex]; c.discount = pct; let origTotal = c.timeCost + c.barCost; if(pct === 0) { c.total = origTotal; document.getElementById('pay-total').innerText = c.total + " ₸"; document.getElementById('pay-info').innerText = `${c.name} | ${c.details}`; } else { c.total = Math.round(origTotal * (1 - pct / 100)); document.getElementById('pay-total').innerHTML = `<span style="text-decoration:line-through; font-size:20px; color:var(--gray);">${origTotal} ₸</span><br>${c.total} ₸`; document.getElementById('pay-info').innerText = `${c.name} | ${c.details} (Скидка ${pct}%)`; } if (document.getElementById('mix-pay-section').style.display === 'block') { calcMixQr(); } saveToCloud(); }
 
 function processPayment(method) {
     cloudState.checks = toArr(cloudState.checks);
@@ -467,11 +494,9 @@ function openTableBill(id) { currentBillTableId = id; renderTableBill(); documen
 function renderTableBill() {
     if (!currentBillTableId) return; let t = toArr(cloudState.tables).find(x => x.id === currentBillTableId); if (!t) return;
     document.getElementById('table-bill-id').innerText = t.id;
-    let cost = 0; let timeStr = "00:00:00";
-    if(t.active) { timeStr = formatTime(Date.now() - t.start); cost = calcCost(t.start); }
-    document.getElementById('table-bill-time-val').innerText = cost.toLocaleString() + " ₸";
+    let timeCost = t.active ? calcCost(t.start) : 0; document.getElementById('table-bill-time-val').innerText = timeCost.toLocaleString() + " ₸";
     let barSum = 0; let html = toArr(t.bar).map((b, i) => { barSum += b.price; return `<div class="edit-bar-item"><span>${b.name} (${b.price} ₸)</span> <button onclick="removeTableBarItem(${i})" class="btn-outline" style="color:var(--red); border-color:var(--red); padding:3px 8px; font-size:10px;">❌</button></div>`; }).join('');
-    document.getElementById('table-bill-bar-list').innerHTML = html || '<span style="color:var(--gray); font-size:12px;">Пусто</span>'; document.getElementById('table-bill-bar-sum').innerText = barSum.toLocaleString(); document.getElementById('table-bill-total').innerText = (cost + barSum).toLocaleString();
+    document.getElementById('table-bill-bar-list').innerHTML = html || '<span style="color:var(--gray); font-size:12px;">Пусто</span>'; document.getElementById('table-bill-bar-sum').innerText = barSum.toLocaleString(); document.getElementById('table-bill-total').innerText = (timeCost + barSum).toLocaleString();
 }
 function removeTableBarItem(idx) {
     if(!confirm("Убрать товар? Он вернется на склад.")) return; let t = toArr(cloudState.tables).find(x => x.id === currentBillTableId); t.bar = toArr(t.bar); let item = t.bar.splice(idx, 1)[0];
@@ -481,15 +506,15 @@ function removeTableBarItem(idx) {
 function renderTables() {
     if(!document.getElementById('tables-grid')) return;
     document.getElementById('tables-grid').innerHTML = toArr(cloudState.tables).map(t => {
-        let timeStr = "00:00:00", cost = 0;
-        if(t.active) { timeStr = formatTime(Date.now() - t.start); cost = calcCost(t.start); }
+        let timeStr = "00:00:00", costStr = "0";
+        if(t.active) { timeStr = formatTime(Date.now() - t.start); costStr = calcCost(t.start).toLocaleString(); }
         let barSum = 0; let barHtml = '';
         let bArr = toArr(t.bar);
         if(t.active && bArr.length > 0) {
             let grouped = {}; bArr.forEach(i => { grouped[i.name] = grouped[i.name] || {q:0, p:i.price}; grouped[i.name].q++; });
             barHtml = `<div class="mini-bar-list">` + Object.keys(grouped).map(k => { barSum += grouped[k].q*grouped[k].p; return `<div class="mini-bar-item"><span>${k} x${grouped[k].q}</span><span>${grouped[k].q*grouped[k].p}</span></div>`; }).join('') + `<div style="text-align:right; font-weight:bold; margin-top:5px; color:var(--gold);">Сумма: ${barSum} ₸ <button onclick="openEditTableBar(${t.id})" style="background:none; border:none; font-size:14px; margin-left:5px; cursor:pointer;">⚙️</button></div></div>`;
         }
-        let totalDisplay = cost + barSum;
+        let totalDisplay = costStr !== "0" ? (calcCost(t.start) + barSum) : barSum;
         let resHtml = toArr(t.res).map((r, i) => `<div class="res-item"><span>📅 ${r}</span> <div><span onclick="editRes(${t.id},${i})" style="cursor:pointer; margin-right:10px;">✏️</span><span onclick="delRes(${t.id},${i})" style="color:var(--red); cursor:pointer;">❌</span></div></div>`).join('');
         return `<div class="table-card ${t.active ? 'active' : ''}"><div style="font-size:22px; font-weight:800; color:var(--gold);">СТОЛ ${t.id}</div><div class="timer">${timeStr}</div><div style="font-size:28px; font-weight:800; color:var(--white); margin-bottom:15px;">${totalDisplay.toLocaleString()} ₸</div>${barHtml}${!t.active ? `<button onclick="startTable(${t.id})" class="btn-gold btn-large shadow-gold" style="margin-top:auto;">▶ ПУСК СТОЛА</button>` : `<button onclick="stopTable(${t.id})" class="btn-red" style="margin-bottom:10px;">⏹ СТОП В ЧЕК</button><div class="table-actions"><button class="btn-outline flex-1" onclick="openBarModal(${t.id})">🍸 БАР</button><button class="btn-outline flex-1" onclick="openTableBill(${t.id})">📄 СЧЕТ</button><button class="btn-outline flex-1" onclick="commTable(${t.id})">🔄 КОММЕРЦ</button></div>`}<button class="btn-outline" style="width:100%; margin-top:15px; border-color:var(--border); color:var(--gray);" onclick="addRes(${t.id})">+ ДОБАВИТЬ БРОНЬ</button>${resHtml}</div>`;
     }).join('');
@@ -506,10 +531,12 @@ function openFullCheck(idx) {
 }
 
 function render() {
+    let selectElem = document.getElementById('staff-select');
+    
     if (!localAuth.isAuth) { 
         let html = '<option value="0">Султан</option><option value="1">Дидар</option><option value="owner">Хозяин</option>';
         toArr(cloudState.customAdmins).forEach((a, i) => { html += `<option value="custom_${a.id}">${a.name}</option>`; });
-        let selectElem = document.getElementById('staff-select');
+        
         if(selectElem) { 
             let curVal = selectElem.value;
             selectElem.innerHTML = html; 
