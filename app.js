@@ -162,10 +162,14 @@ window.logout = function() { document.getElementById('z-report-modal').style.dis
 
 // === ДАННЫЕ СМЕНЫ ===
 function getCurrentShiftData() {
-    let hist = toArr(cloudState.history);
-    let lastZ = (hist && hist.length > 0) ? hist[hist.length - 1].timestamp : 0;
-    let currentChecks = toArr(cloudState.archive).filter(c => c.id > lastZ);
-    let currentExp = toArr(cloudState.expenses).filter(e => e.id > lastZ);
+    // BUGFIX: Жестко прописываем время начала работы текущего админа (20.03.2026, 14:00)
+    // Timestamp для этой даты (2026-03-20 14:00:00 в Almaty) = 1773997200000
+    const startOfCurrentShift_Bugfix = 1773997200000;
+
+    // Считаем выручку только по чекам, созданным ПОСЛЕ этого времени.
+    // Автоматический маркер lastZ из истории пока игнорируем, т.к. он сбился.
+    let currentChecks = toArr(cloudState.archive).filter(c => c.id > startOfCurrentShift_Bugfix);
+    let currentExp = toArr(cloudState.expenses).filter(e => e.id > startOfCurrentShift_Bugfix);
     
     let cash = 0, qr = 0, table = 0, bar = 0, total = 0, salaryBase = 0;
     let debtReturns = 0, debtIssued = 0, checksCount = 0;
@@ -259,8 +263,9 @@ window.saveExpense = function() {
 window.openExpenseLogModal = function() {
     let currentExp = [];
     if(accPeriod === 'today') {
-        let lastZ = (toArr(cloudState.history).length > 0) ? toArr(cloudState.history)[toArr(cloudState.history).length - 1].timestamp : 0;
-        currentExp = toArr(cloudState.expenses).filter(e => e.id > lastZ);
+        // BUGFIX: Здесь тоже жестко прописываем отсечку
+        const startOfCurrentShift_Bugfix = 1773997200000;
+        currentExp = toArr(cloudState.expenses).filter(e => e.id > startOfCurrentShift_Bugfix);
     } else {
         const nowTime = new Date().getTime();
         currentExp = toArr(cloudState.expenses).filter(e => {
@@ -908,7 +913,7 @@ function renderAccounting() {
         let diffColor = h.diff < 0 ? 'var(--red)' : (h.diff > 0 ? 'var(--green)' : 'var(--gray)');
         let zReportHtml = h.expectedCash !== undefined ? `<br><span style="font-size:10px; color:${diffColor};">Нал: ${h.physicalCash} (Разница: ${h.diff})</span>` : '';
         let expStr = h.expTotal > 0 ? `<br><span style="color:var(--red); font-size:10px;">Расход: -${h.expTotal}</span>` : '';
-        return `<tr><td><b>${h.admin}</b></td><td><span style="font-size:11px; color:var(--gray);">${h.start} - ${h.end}</span></td><td><span style="font-size:11px; color:var(--gray);">Нал: ${h.cashRev||0}<br>QR: ${h.qrRev||0}</span></td><td><b class="gold-text">${h.total} ₸</b>${zReportHtml}${expStr}</td><td><b style="color:var(--green);">${h.sal} ₸</b></td><td><button onclick="deleteHistory(${h.timestamp})" class="btn-red" style="padding:6px 10px; font-size:12px; width:auto;">🗑️</button></td></tr>`;
+        return `<tr><td><b>${h.admin}</b></td><td><span style="font-size:11px; color:var(--gray);">${h.start} - ${h.end}</span></td><td><span style="font-size:11px; color:var(--gray);">Нал: ${h.cashRev||0}<br>QR: ${h.qrRev||0}</span></td><td><b class="gold-text">${h.total} ₸</b>${zReportHtml}${expStr}</td><td><b style="color:var(--green);">${h.sal} ₸</b></td><td><button onclick="deleteHistory(${h.timestamp})" class="btn-red" style="padding:6px 10px; font-size:12px; width:auto; margin-left:10px;">🗑️</button></td></tr>`;
     }).join('');
 }
 
