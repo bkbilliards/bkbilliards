@@ -12,8 +12,9 @@ try { if (!firebase.apps.length) firebase.initializeApp(firebaseConfig); } catch
 const db = firebase.database();
 const dbRef = db.ref('sensei_erp_pro');
 
-// ВРЕМЯ НАЧАЛА РАБОТЫ АДМИНА ДЛЯ ИСПРАВЛЕНИЯ БАГА: 20 марта 2026, 14:00ч
-const BUG_FIX_START_TIME = 1773997200000; // ms с эпохи
+// ЖЕСТКАЯ ФИКСАЦИЯ ВРЕМЕНИ ДЛЯ РАСЧЕТА СМЕНЫ: 20 марта 2026, 14:00:00 (Almaty Time)
+// Все чеки ДО этого времени игнорируются в текущей выручке
+const SHIFT_START_BUGFIX_TIMESTAMP = 1773997200000; 
 
 const STAFF_HARDCODED = [
     { id: "0", name: "Султан", pin: "1111", role: "admin" }, 
@@ -73,7 +74,7 @@ window.onload = () => {
     setInterval(() => { if(localAuth.isAuth) renderTables(); }, 1000); 
 };
 
-// === ГОСТЕВОЙ САЙТ ===
+// === GUEST ===
 window.showGuestPage = function() {
     document.getElementById('auth-screen').style.display = 'none';
     if(document.getElementById('app')) document.getElementById('app').style.display = 'none';
@@ -86,10 +87,7 @@ window.renderGuestTables = function() {
     let html = '';
     toArr(cloudState.tables).forEach(t => {
         let status = t.active ? '<span style="color:var(--red);">🔴 ЗАНЯТ</span>' : '<span style="color:var(--green);">🟢 СВОБОДЕН</span>';
-        html += `<div class="guest-table-card">
-            <h3>СТОЛ ${t.id}</h3>
-            ${status}
-        </div>`;
+        html += `<div class="guest-table-card"><h3>СТОЛ ${t.id}</h3>${status}</div>`;
     });
     document.getElementById('guest-tables-list').innerHTML = html;
 }
@@ -119,10 +117,11 @@ window.login = function() {
 }
 window.logout = function() { document.getElementById('z-report-modal').style.display = 'flex'; }
 
-// === ИСПРАВЛЕННАЯ ЛОГИКА РАСЧЕТА ВЫРУЧКИ СМЕНЫ ===
+// === ИСПРАВЛЕННАЯ ЛОГИКА СМЕНЫ (УБРАН КЭШБЕК, ФИКС ВРЕМЕНИ) ===
 function getCurrentShiftData() {
-    let currentChecks = toArr(cloudState.archive).filter(c => c.id > BUG_FIX_START_TIME);
-    let currentExp = toArr(cloudState.expenses).filter(e => e.id > BUG_FIX_START_TIME);
+    // Фильтруем архив: только чеки ПОСЛЕ 20.03.2026, 14:00ч
+    let currentChecks = toArr(cloudState.archive).filter(c => c.id > SHIFT_START_BUGFIX_TIMESTAMP);
+    let currentExp = toArr(cloudState.expenses).filter(e => e.id > SHIFT_START_BUGFIX_TIMESTAMP);
     
     let total = currentChecks.reduce((s, c) => (c.payMethod !== 'Долг' && !c.isDebtPayment) ? s + c.total : s, 0);
     let shiftZp = Math.round(total * 0.08 + 6000);
@@ -138,6 +137,7 @@ window.confirmZReport = function() {
 
 window.saveExpense = function() {
     let sum = parseInt(document.getElementById('exp-sum').value); let desc = document.getElementById('exp-desc').value;
+    if(!sum || !desc) return alert("Заполните поля!");
     cloudState.expenses = toArr(cloudState.expenses);
     cloudState.expenses.push({ id: Date.now(), sum: sum, desc: desc, admin: localAuth.user.name });
     document.getElementById('expense-modal').style.display='none'; saveToCloud();
@@ -181,14 +181,12 @@ window.selectBarItem = function(itemName) {
 function createCheck(name, table, timeCost, bar) {
     cloudState.checks = toArr(cloudState.checks);
     let check = { id: Date.now(), name, table, timeCost, barCost: toArr(bar).reduce((s,i)=>s+i.price,0), bar: toArr(bar), discount: 0 };
-    // VIP Авто-скидка
     let vip = toArr(cloudState.vips).find(v => v.name.toLowerCase() === name.toLowerCase());
     if(vip) check.discount = vip.discount;
     check.total = Math.round((check.timeCost + check.barCost) * (1 - check.discount/100));
     cloudState.checks.push(check);
 }
 
-// === ОПЛАТА (Без кэшбека) ===
 let currentCheckIndex = null;
 window.openPayModal = function(idx) { 
     currentCheckIndex = idx; let c = toArr(cloudState.checks)[idx]; 
@@ -209,28 +207,30 @@ window.processPayment = function(method) {
     document.getElementById('pay-modal').style.display = 'none'; saveToCloud();
 }
 
-// === СКЛАД ===
+// === STOCK ===
 window.saveNewItem = function() { 
-    const name = document.getElementById('new-item-name').value; 
-    const price = parseInt(document.getElementById('new-item-price').value); 
-    const qty = parseInt(document.getElementById('new-item-qty').value); 
+    const name = document.getElementById('new-item-name').value; const price = parseInt(document.getElementById('new-item-price').value); const qty = parseInt(document.getElementById('new-item-qty').value); 
+    if(!name || isNaN(price) || isNaN(qty)) return alert("Заполните поля!");
     cloudState.inventory = toArr(cloudState.inventory); cloudState.inventory.push({name, price, qty}); 
     document.getElementById('add-item-modal').style.display = 'none'; saveToCloud(); 
 }
 
-// === ОУНЕР ===
+// === OWNER ===
 window.addVipGuest = function() {
     let name = prompt("Имя VIP:"); let disc = prompt("Скидка (%):");
+    if(!name || !disc) return;
     cloudState.vips = toArr(cloudState.vips); cloudState.vips.push({id: Date.now(), name, discount: parseInt(disc)});
     saveToCloud();
 }
 window.resetDatabase = function() { if(confirm("База будет очищена!")) { cloudState = { tables: Array.from({length: 6}, (_, i) => ({ id: i + 1, active: false, start: null, res: [], bar:[] })), checks: [], archive: [], inventory: [], debts: [], history: [], ownerAcc: {}, customAdmins: [], expenses:[], vips: [] }; saveToCloud(); location.reload(); } }
 
-// === РЕНДЕР ===
+// === RENDER ===
 function showTab(id, btn) { document.querySelectorAll('.tab-pane').forEach(x => x.style.display = 'none'); document.querySelectorAll('.nav-link').forEach(x => x.classList.remove('active')); document.getElementById('tab-'+id).style.display = 'block'; btn.classList.add('active'); }
 
 function renderTables() {
-    document.getElementById('tables-grid').innerHTML = toArr(cloudState.tables).map(t => {
+    let tablesArr = toArr(cloudState.tables);
+    if(tablesArr.length === 0) return;
+    document.getElementById('tables-grid').innerHTML = tablesArr.map(t => {
         let timeStr = "00:00", cost = 0; if(t.active) { timeStr = formatTime(Date.now() - t.start); cost = calcCost(t.start); }
         let barSum = toArr(t.bar).reduce((s,i)=>s+i.price,0);
         return `<div class="table-card ${t.active ? 'active' : ''}"><div>СТОЛ ${t.id}</div><div class="timer">${timeStr}</div><div style="font-size:28px;">${(cost + barSum)} ₸</div>${!t.active ? `<button onclick="startTable(${t.id})" class="btn-gold btn-large">▶ ПУСК</button>` : `<button onclick="stopTable(${t.id})" class="btn-red">⏹ СТОП</button><div class="table-actions"><button class="btn-outline flex-1" onclick="openBarModal(${t.id})">🍸 БАР</button></div>`}</div>`;
@@ -238,31 +238,37 @@ function renderTables() {
 }
 
 function render() {
+    let staffSelect = document.getElementById('staff-select');
+    if(staffSelect && staffSelect.innerHTML === "") {
+        let html = '<option value="0">Султан</option><option value="1">Дидар</option><option value="owner">Хозяин</option>';
+        staffSelect.innerHTML = html;
+    }
+
     if (!localAuth.isAuth) { document.getElementById('auth-screen').style.display='flex'; document.getElementById('app').style.display='none'; return; }
     document.getElementById('auth-screen').style.display='none'; document.getElementById('app').style.display='block';
     document.getElementById('user-display').innerText = localAuth.user.name;
     let isOwner = localAuth.user.role === 'owner';
-    document.getElementById('owner-tab').style.display = isOwner ? 'block' : 'none';
     document.getElementById('acc-tab').style.display = isOwner ? 'block' : 'none';
+    document.getElementById('owner-tab').style.display = isOwner ? 'block' : 'none';
 
     renderTables();
     let shift = getCurrentShiftData();
-    document.getElementById('global-rev').innerText = shift.total + " ₸";
-    document.getElementById('global-shift-zp').innerText = shift.shiftZp + " ₸";
-    document.getElementById('global-total-zp').innerText = shift.shiftZp + " ₸";
+    document.getElementById('global-rev').innerText = shift.total.toLocaleString() + " ₸";
+    document.getElementById('global-shift-zp').innerText = shift.shiftZp.toLocaleString() + " ₸";
+    document.getElementById('global-total-zp').innerText = shift.shiftZp.toLocaleString() + " ₸";
 
     document.getElementById('active-checks').innerHTML = toArr(cloudState.checks).map((c, i) => `
-        <div class="check-row"><div style="flex:1;"><b>${c.name}</b> (${c.total} ₸)</div><button onclick="openPayModal(${i})" class="btn-gold">ОПЛАТА</button></div>
+        <div class="check-row"><div style="flex:1;"><b>${c.name}</b> (${c.total} ₸) [Стол ${c.table}]</div><button onclick="openPayModal(${i})" class="btn-gold">ОПЛАТА</button></div>
     `).join('');
     
-    document.getElementById('archive-list').innerHTML = toArr(cloudState.archive).slice().reverse().map(a => `<tr><td>${new Date(a.id).toLocaleTimeString()}</td><td>${a.name}</td><td>${a.details}</td><td>${a.total}</td><td>${a.payMethod}</td><td>---</td></tr>`).join('');
-    document.getElementById('stock-list').innerHTML = toArr(cloudState.inventory).map((i) => `<tr><td>${i.name}</td><td>${i.qty}</td><td>${i.price}</td><td>---</td></tr>`).join('');
-    document.getElementById('debts-list').innerHTML = toArr(cloudState.debts).map((d) => `<tr><td>${d.name}</td><td>${d.total}</td><td>${toArr(d.history).join(', ')}</td><td>---</td></tr>`).join('');
+    document.getElementById('archive-list').innerHTML = toArr(cloudState.archive).slice().reverse().map(a => `<tr><td>${new Date(a.id).toLocaleTimeString().slice(0,5)}</td><td>${a.name}</td><td>Стол ${a.table}</td><td>${a.total} ₸</td><td>${a.payMethod}</td></tr>`).join('');
+    document.getElementById('stock-list').innerHTML = toArr(cloudState.inventory).map((i) => `<tr><td>${i.name}</td><td>${i.qty} шт</td><td>${i.price} ₸</td></tr>`).join('');
+    document.getElementById('debts-list').innerHTML = toArr(cloudState.debts).map((d) => `<tr><td>${d.name}</td><td>${d.total} ₸</td><td>${toArr(d.history).join(', ')}</td></tr>`).join('');
     
     if(isOwner) {
-        document.getElementById('acc-trev').innerText = shift.total;
-        document.getElementById('acc-sal').innerText = shift.shiftZp + shift.expTotal;
-        document.getElementById('acc-net').innerText = shift.total - shift.shiftZp - shift.expTotal;
+        document.getElementById('acc-trev').innerText = shift.total.toLocaleString();
+        document.getElementById('acc-sal').innerText = (shift.shiftZp + shift.expTotal).toLocaleString();
+        document.getElementById('acc-net').innerText = (shift.total - shift.shiftZp - shift.expTotal).toLocaleString();
         document.getElementById('vip-guests-list').innerHTML = toArr(cloudState.vips).map((v) => `<span class="btn-outline">${v.name} (-${v.discount}%)</span>`).join('');
     }
 }
