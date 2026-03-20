@@ -83,7 +83,6 @@ input:focus, select:focus { border-color: var(--gold); background: rgba(0,0,0,0.
 .btn-pay:active { transform: scale(0.97); }
 .cash { background: linear-gradient(135deg, #ffffff, #e0e0e0); color: #000; box-shadow: 0 10px 25px rgba(255,255,255,0.15);}
 .qr { background: linear-gradient(135deg, #ff4c4c, #c0392b); color: #fff; box-shadow: 0 10px 25px rgba(255, 76, 76, 0.3);}
-.mix { background: linear-gradient(135deg, #9b59b6, #8e44ad); color: #fff; box-shadow: 0 10px 25px rgba(155, 89, 182, 0.3);}
 .debt { background: transparent; border: 2px solid var(--red); color: var(--red); }
 
 .card { background: var(--bg-card); backdrop-filter: blur(15px); border-radius: 28px; padding: 35px; margin: 30px; border: 1px solid rgba(255,255,255,0.05); overflow-x: auto;}
@@ -102,9 +101,6 @@ input:focus, select:focus { border-color: var(--gold); background: rgba(0,0,0,0.
 .stock-ok { color: var(--green); font-weight: 800; }
 .stock-empty { color: var(--red); opacity: 0.8; font-weight: 800;}
 .vip-badge { background: linear-gradient(135deg, var(--gold), #e5c058); color: #000; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 900; margin-left: 10px; vertical-align: middle;}
-.top-bar-scroll { display:flex; gap:12px; overflow-x:auto; padding-bottom:15px; margin-bottom:20px; border-bottom:1px dashed rgba(255,255,255,0.1); }
-.top-bar-scroll::-webkit-scrollbar { display: none; }
-.top-bar-btn { background: rgba(212,175,55,0.08); border: 1px solid rgba(212,175,55,0.3); color: var(--gold); padding: 12px 24px; border-radius: 14px; font-size: 14px; font-weight: 700; white-space: nowrap; cursor: pointer; transition: 0.3s; }
 
 /* GUEST SITE SPECIFIC */
 #guest-app { background: var(--bg-main); min-height: 100vh; overflow-y: auto; padding-bottom: 50px; }
