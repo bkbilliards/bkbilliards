@@ -98,7 +98,7 @@ window.onload = () => {
     }, 1000); 
 };
 
-// === ЛОГИКА САЙТА ГОСТЕЙ ===
+// === ГОСТЕВОЙ САЙТ ===
 window.showGuestPage = function() {
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('app').style.display = 'none';
@@ -107,11 +107,7 @@ window.showGuestPage = function() {
     document.getElementById('guest-date').value = today;
     renderGuestTables();
 }
-
-window.hideGuestPage = function() {
-    window.location.href = window.location.pathname; 
-}
-
+window.hideGuestPage = function() { window.location.href = window.location.pathname; }
 window.renderGuestTables = function() {
     if(!cloudState.tables) return;
     let html = '';
@@ -138,40 +134,33 @@ window.submitGuestReservation = function() {
     let date = document.getElementById('guest-date').value;
     let time = document.getElementById('guest-time').value;
     let tableId = parseInt(document.getElementById('guest-table-num').value);
-
     if(!name || !phone || !date || !time) return alert("Пожалуйста, заполните все поля!");
-
     let dParts = date.split('-');
     let shortDate = `${dParts[2]}.${dParts[1]}`;
     let resString = `${shortDate}, ${time} | ${name} (${phone})`;
-
     cloudState.tables = toArr(cloudState.tables);
     let t = cloudState.tables.find(x => x.id === tableId);
     if(t) {
-        t.res = toArr(t.res);
-        t.res.push(resString);
-        saveToCloud();
+        t.res = toArr(t.res); t.res.push(resString); saveToCloud();
         alert("Успешно! Ваша бронь отправлена администратору.");
-        document.getElementById('guest-name').value = '';
-        document.getElementById('guest-phone').value = '';
-        document.getElementById('guest-time').value = '';
+        document.getElementById('guest-name').value = ''; document.getElementById('guest-phone').value = ''; document.getElementById('guest-time').value = '';
         renderGuestTables();
     }
 }
-// =============================
 
+// === АВТОРИЗАЦИЯ ===
 window.login = function() {
     const val = document.getElementById('staff-select').value;
     const pin = document.getElementById('pass-input').value;
     let user = STAFF_HARDCODED.find(s => s.id === val) || toArr(cloudState.customAdmins).find(a => "custom_"+a.id === val);
-
     if (user && user.pin === pin) {
         localAuth = { isAuth: true, user: user, shiftStart: new Date().toLocaleString() };
         saveLocalAuth(); document.getElementById('pass-input').value = ""; document.getElementById('auth-error').style.display = 'none'; render();
     } else { document.getElementById('auth-error').style.display = 'block'; }
 }
+window.logout = function() { document.getElementById('z-report-modal').style.display = 'flex'; }
 
-// НОВАЯ ЛОГИКА РАСЧЕТА 1С (Выручка и Долги раздельно)
+// === ДАННЫЕ СМЕНЫ ===
 function getCurrentShiftData() {
     let hist = toArr(cloudState.history);
     let lastZ = (hist && hist.length > 0) ? hist[hist.length - 1].timestamp : 0;
@@ -180,22 +169,17 @@ function getCurrentShiftData() {
     
     let cash = 0, qr = 0, table = 0, bar = 0, total = 0, salaryBase = 0;
     let debtReturns = 0, debtIssued = 0, checksCount = 0;
+    let barCostTotal = 0; // Себестоимость проданного
     
     currentChecks.forEach(c => {
-        if (c.payMethod === 'Долг') {
-            debtIssued += c.total;
-            return; // В выручку смены не идет
-        } 
-        
+        if (c.payMethod === 'Долг') { debtIssued += c.total; return; } 
         if (c.isDebtPayment) {
-            // ЭТО ВОЗВРАТ СТАРОГО ДОЛГА. ИДЕТ В КАССУ, НО НЕ В ЗАРПЛАТУ
             debtReturns += c.total;
             if (c.payMethod === 'Наличные') cash += c.total;
             else if (c.payMethod === 'QR') qr += c.total;
             return; 
         }
 
-        // ОБЫЧНЫЕ ЧЕКИ
         checksCount++;
         let cTot = c.total || 0;
         total += cTot; 
@@ -210,14 +194,22 @@ function getCurrentShiftData() {
         
         let discRatio = 1 - (c.discount || 0)/100;
         table += Math.round((c.timeCost || 0) * discRatio);
-        bar += cTot - Math.round((c.timeCost || 0) * discRatio);
+        
+        let cBarSell = cTot - Math.round((c.timeCost || 0) * discRatio);
+        bar += cBarSell;
+        
+        // Считаем себестоимость бара из чека
+        if(c.bar && toArr(c.bar).length > 0) {
+            toArr(c.bar).forEach(bItem => {
+                let bCost = bItem.cost || 0;
+                barCostTotal += Math.round(bCost * discRatio); // Себестоимость тоже со скидкой, если чек был со скидкой
+            });
+        }
     });
     
     let expTotal = currentExp.reduce((s, e) => s + e.sum, 0);
-    return { cash, qr, table, bar, total, salaryBase, expTotal, expectedCash: cash - expTotal, debtReturns, debtIssued, checksCount };
+    return { cash, qr, table, bar, total, salaryBase, expTotal, expectedCash: cash - expTotal, debtReturns, debtIssued, checksCount, barCostTotal };
 }
-
-window.logout = function() { document.getElementById('z-report-modal').style.display = 'flex'; }
 
 window.confirmZReport = function() {
     let physicalCash = parseInt(document.getElementById('z-cash-input').value) || 0;
@@ -241,7 +233,8 @@ window.confirmZReport = function() {
         admin: localAuth.user.name, start: localAuth.shiftStart, end: new Date().toLocaleString(), timestamp: Date.now(), 
         barRev: shift.bar, tableRev: shift.table, total: shift.total, sal: salary,
         expectedCash: shift.expectedCash, physicalCash: physicalCash, diff: diff, cashRev: shift.cash, qrRev: shift.qr, 
-        expTotal: shift.expTotal, debtReturns: shift.debtReturns, debtIssued: shift.debtIssued, checksCount: shift.checksCount
+        expTotal: shift.expTotal, debtReturns: shift.debtReturns, debtIssued: shift.debtIssued, checksCount: shift.checksCount,
+        barCostTotal: shift.barCostTotal
     });
     
     if(localAuth.user.role !== 'owner') {
@@ -316,8 +309,7 @@ function reverseCheckStats(c) {
         let d = debtsArr.find(x => x.name.toLowerCase() === c.name.toLowerCase());
         if(d) {
             d.total -= c.total; 
-            d.history = toArr(d.history);
-            d.history.push(`Отмена чека: -${c.total}₸`);
+            d.history = toArr(d.history); d.history.push(`Отмена чека: -${c.total}₸`);
             if(d.total <= 0) cloudState.debts = debtsArr.filter(x => x.name.toLowerCase() !== c.name.toLowerCase());
             else cloudState.debts = debtsArr;
         }
@@ -342,11 +334,12 @@ window.restoreArchiveCheck = function(id) {
     }
 }
 
-// Возврат чека прямо из меню долгов
 window.restoreDebtCheck = function(name) {
     let arch = toArr(cloudState.archive);
-    let cArr = arch.filter(x => x.name.toLowerCase() === name.toLowerCase() && x.payMethod === 'Долг');
-    if(cArr.length === 0) return alert("Исходный чек не найден в архиве!");
+    let hist = toArr(cloudState.history);
+    let lastZ = (hist.length > 0) ? hist[hist.length - 1].timestamp : 0;
+    let cArr = arch.filter(x => x.name.toLowerCase() === name.toLowerCase() && x.payMethod === 'Долг' && x.id > lastZ);
+    if(cArr.length === 0) return alert("Исходный чек не найден в текущей смене!");
     let c = cArr[cArr.length - 1]; 
     window.restoreArchiveCheck(c.id);
 }
@@ -361,7 +354,7 @@ window.deleteArchiveCheck = function(ts) {
             cloudState.inventory = toArr(cloudState.inventory); 
             toArr(c.bar).forEach(bItem => { 
                 let invItem = cloudState.inventory.find(x => x.name === bItem.name); 
-                if(invItem) invItem.qty += 1; else cloudState.inventory.push({name: bItem.name, price: bItem.price, qty: 1}); 
+                if(invItem) invItem.qty += 1; else cloudState.inventory.push({name: bItem.name, cost: bItem.cost||0, price: bItem.price, qty: 1}); 
                 logStock('Возврат из Архива', bItem.name, 1);
             }); 
         }
@@ -391,7 +384,7 @@ function applyVipLogic(check) {
 
 function formatTime(ms) { if(ms<0) ms=0; let s = Math.floor(ms / 1000), h = String(Math.floor(s / 3600)).padStart(2, '0'), m = String(Math.floor((s % 3600) / 60)).padStart(2, '0'); return `${h}:${m}:${String(s % 60).padStart(2, '0')}`; }
 
-// === УМНЫЙ ПОМИНУТНЫЙ ТАРИФ (Исправленный) ===
+// === ИДЕАЛЬНЫЙ ТАРИФ (Поминутный расчет с учетом плавающего времени) ===
 function calcCost(start) { 
     if(!start) return 0; 
     let startTime = new Date(start).getTime();
@@ -401,16 +394,14 @@ function calcCost(start) {
     let totalCost = 0;
     let currentMs = startTime;
     
-    // Считаем каждую минуту, проверяя тариф в эту конкретную минуту
     while (currentMs < endTime) {
-        let d = new Date(currentMs);
-        let h = d.getHours();
+        let h = new Date(currentMs).getHours();
         let ratePerHour = (h >= 11 && h < 18) ? 2000 : 3000;
-        totalCost += ratePerHour / 60; // Прибавляем стоимость 1 минуты
-        currentMs += 60000; // Шаг в 1 минуту
+        totalCost += ratePerHour / 60; 
+        currentMs += 60000; 
     }
     
-    return Math.ceil(totalCost / 50) * 50; // Округляем до 50 тнг
+    return Math.ceil(totalCost / 50) * 50; 
 }
 
 window.startTable = function(id) { cloudState.tables = toArr(cloudState.tables); let t = cloudState.tables.find(x => x.id === id); if(t) { t.active = true; t.start = Date.now(); t.bar = []; saveToCloud(); } }
@@ -481,7 +472,7 @@ window.selectBarItem = function(itemName) {
 
     logStock('Продажа', item.name, -qty);
     
-    let itemsToAdd = []; for(let i = 0; i < qty; i++) itemsToAdd.push({name: item.name, price: item.price});
+    let itemsToAdd = []; for(let i = 0; i < qty; i++) itemsToAdd.push({name: item.name, cost: item.cost||0, price: item.price});
     if(barContext === 'standalone') { 
         const name = prompt("Имя гостя для бара:"); 
         if(name) {
@@ -546,7 +537,7 @@ window.deleteCheck = function(idx) {
             toArr(c.bar).forEach(bItem => { 
                 let invItem = cloudState.inventory.find(x => x.name === bItem.name); 
                 if(invItem) invItem.qty += 1; 
-                else cloudState.inventory.push({name: bItem.name, price: bItem.price, qty: 1}); 
+                else cloudState.inventory.push({name: bItem.name, cost: bItem.cost||0, price: bItem.price, qty: 1}); 
                 logStock('Удаление чека', bItem.name, 1);
             }); 
         }
@@ -597,7 +588,7 @@ window.saveCheckEdit = function() {
 let currentCheckIndex = null;
 window.openPayModal = function(idx) { 
     currentCheckIndex = idx; let c = toArr(cloudState.checks)[idx]; let origTotal = c.timeCost + c.barCost;
-    document.getElementById('split-info').style.display = 'none'; // Сброс разделения счета
+    document.getElementById('split-info').style.display = 'none'; 
     if(c.discount && c.discount > 0) { document.getElementById('pay-total').innerHTML = `<span style="text-decoration:line-through; font-size:24px; color:var(--gray);">${origTotal} ₸</span><br>${c.total} ₸`; document.getElementById('pay-info').innerText = `${c.name} | ${c.details} (Скидка ${c.discount}%)`; } 
     else { document.getElementById('pay-total').innerText = c.total + " ₸"; document.getElementById('pay-info').innerText = `${c.name} | ${c.details}`; }
     document.getElementById('pay-main-buttons').style.display = 'flex'; document.getElementById('mix-pay-section').style.display = 'none'; document.getElementById('pay-modal').style.display = 'flex'; 
@@ -609,9 +600,7 @@ window.applyDiscount = function(pct) {
     c.discount = pct; 
     
     if (pct === 100) {
-        c.timeCost = 0;
-        c.barCost = 0;
-        c.total = 0;
+        c.timeCost = 0; c.barCost = 0; c.total = 0;
         c.details += " [СВОИ/ХОЗЯИН]";
         document.getElementById('pay-total').innerText = "0 ₸"; 
         document.getElementById('pay-info').innerText = `${c.name} | ${c.details} (100%)`;
@@ -644,7 +633,7 @@ window.processPayment = function(method) {
             d.total += c.total; 
             d.history = toArr(d.history); d.history.push(histStr); 
             d.timestamp = Date.now();
-            if(!d.admin) d.admin = localAuth.user.name; // Сохраняем имя админа
+            if(!d.admin) d.admin = localAuth.user.name; 
         } else { 
             cloudState.debts.push({ name: c.name, total: c.total, history: [histStr], timestamp: Date.now(), admin: localAuth.user.name }); 
         } 
@@ -664,17 +653,13 @@ window.fillMix = function(type) {
     let discRatio = 1 - (c.discount || 0) / 100;
     let tCost = Math.round(c.timeCost * discRatio);
     let bCost = c.total - tCost;
-    if(type === 'timeCash') {
-        document.getElementById('mix-cash-input').value = tCost;
-    } else if (type === 'barCash') {
-        document.getElementById('mix-cash-input').value = bCost;
-    }
+    if(type === 'timeCash') { document.getElementById('mix-cash-input').value = tCost; } 
+    else if (type === 'barCash') { document.getElementById('mix-cash-input').value = bCost; }
     calcMixQr();
 }
 
 window.confirmMixPay = function() { let t = toArr(cloudState.checks)[currentCheckIndex].total; let c = parseInt(document.getElementById('mix-cash-input').value) || 0; let q = t - c; if (c < 0 || q < 0) return alert("Некорректная сумма наличных!"); processPayment(`Нал: ${c}₸ / QR: ${q}₸`); }
 
-// --- НОВАЯ ФУНКЦИЯ РАЗДЕЛЕНИЯ СЧЕТА ---
 window.splitPayment = function(n) {
     let t = toArr(cloudState.checks)[currentCheckIndex].total;
     let perPerson = Math.ceil(t / n);
@@ -714,9 +699,17 @@ window.payDebt = function(idx) {
     });
 
     if(d.total <= 0) {
-        alert("Долг оплачен. Ждет проверки Хозяина.");
+        d.needsConfirmation = true;
+        alert("Долг оплачен. Ждет подтверждения Хозяина.");
     } 
     saveToCloud(); 
+}
+
+window.confirmDebtReturn = function(idx) {
+    cloudState.debts = toArr(cloudState.debts);
+    if(confirm("Вы забрали деньги из кассы? Подтвердить и удалить долг навсегда?")) {
+        cloudState.debts.splice(idx, 1); saveToCloud();
+    }
 }
 
 window.deductDebtFromAdmin = function(idx) {
@@ -736,12 +729,108 @@ window.deductDebtFromAdmin = function(idx) {
 
 window.delDebt = function(idx) { if(confirm("Хозяин, удалить этот долг навсегда?")) { cloudState.debts = toArr(cloudState.debts); cloudState.debts.splice(idx,1); saveToCloud(); } }
 
-window.openAddItemModal = function() { document.getElementById('add-item-modal').style.display = 'flex'; document.getElementById('new-item-name').value = ''; document.getElementById('new-item-price').value = ''; document.getElementById('new-item-qty').value = ''; }
-window.saveNewItem = function() { const name = document.getElementById('new-item-name').value.trim(); const price = parseInt(document.getElementById('new-item-price').value); const qty = parseInt(document.getElementById('new-item-qty').value); if(!name || isNaN(price) || isNaN(qty)) { alert("Заполните все поля корректно!"); return; } cloudState.inventory = toArr(cloudState.inventory); cloudState.inventory.push({name: name, price: price, qty: qty}); logStock('Новый товар', name, qty); document.getElementById('add-item-modal').style.display = 'none'; saveToCloud(); }
+window.openAddItemModal = function() { document.getElementById('add-item-modal').style.display = 'flex'; document.getElementById('new-item-name').value = ''; document.getElementById('new-item-cost').value = ''; document.getElementById('new-item-price').value = ''; document.getElementById('new-item-qty').value = ''; }
+window.saveNewItem = function() { 
+    const name = document.getElementById('new-item-name').value.trim(); 
+    const cost = parseInt(document.getElementById('new-item-cost').value) || 0; 
+    const price = parseInt(document.getElementById('new-item-price').value); 
+    const qty = parseInt(document.getElementById('new-item-qty').value); 
+    if(!name || isNaN(price) || isNaN(qty)) { alert("Заполните все поля корректно!"); return; } 
+    cloudState.inventory = toArr(cloudState.inventory); 
+    cloudState.inventory.push({name: name, cost: cost, price: price, qty: qty}); 
+    logStock('Новый товар', name, qty); 
+    document.getElementById('add-item-modal').style.display = 'none'; 
+    saveToCloud(); 
+}
 window.editItemQty = function(idx) { cloudState.inventory = toArr(cloudState.inventory); let oldQty = cloudState.inventory[idx].qty; let q = prompt("Новый остаток товара:", oldQty); if(q !== null && q !== "") { let newQty = parseInt(q); cloudState.inventory[idx].qty = newQty; logStock('Изменение остатка', cloudState.inventory[idx].name, newQty - oldQty); saveToCloud(); } }
 window.renameItem = function(idx) { cloudState.inventory = toArr(cloudState.inventory); let n = prompt("Новое название товара:", cloudState.inventory[idx].name); if(n) { cloudState.inventory[idx].name = n; saveToCloud(); } }
-window.editItemPrice = function(idx) { cloudState.inventory = toArr(cloudState.inventory); let p = prompt("Новая цена продажи:", cloudState.inventory[idx].price); if(p !== null && p !== "") { cloudState.inventory[idx].price = parseInt(p); saveToCloud(); } }
+window.editItemPrice = function(idx) { cloudState.inventory = toArr(cloudState.inventory); let c = prompt("Новая себестоимость (Закуп):", cloudState.inventory[idx].cost || 0); let p = prompt("Новая цена продажи:", cloudState.inventory[idx].price); if(p !== null && p !== "") { cloudState.inventory[idx].cost = parseInt(c)||0; cloudState.inventory[idx].price = parseInt(p); saveToCloud(); } }
 window.delItem = function(idx) { if(confirm(`Удалить товар?`)) { cloudState.inventory = toArr(cloudState.inventory); let item = cloudState.inventory[idx]; logStock('Удаление товара', item.name, -item.qty); cloudState.inventory.splice(idx,1); saveToCloud(); } }
+
+// === РЕВИЗИЯ ===
+window.openRevisionModal = function() {
+    let invArr = toArr(cloudState.inventory);
+    if(invArr.length === 0) return alert("Склад пуст!");
+    let html = invArr.map((item, idx) => `
+        <div class="rev-row">
+            <div><b style="color:var(--gold); font-size:16px;">${item.name}</b><br><span style="color:var(--gray); font-size:12px;">По базе: ${item.qty} шт. | Цена: ${item.price} ₸</span></div>
+            <input type="number" id="rev-qty-${idx}" class="rev-input" value="${item.qty}">
+        </div>
+    `).join('');
+    document.getElementById('revision-list').innerHTML = html;
+    document.getElementById('revision-result').style.display = 'none';
+    document.getElementById('btn-calc-revision').style.display = 'block';
+    document.getElementById('btn-apply-revision').style.display = 'none';
+    document.getElementById('revision-modal').style.display = 'flex';
+}
+
+window.calculateRevision = function() {
+    let invArr = toArr(cloudState.inventory);
+    let totalShortageSum = 0;
+    window.pendingRevisionLogs = [];
+    window.pendingRevisionUpdates = [];
+    
+    let resultHtml = '';
+    
+    invArr.forEach((item, idx) => {
+        let actual = parseInt(document.getElementById(`rev-qty-${idx}`).value);
+        if(isNaN(actual)) actual = 0;
+        
+        window.pendingRevisionUpdates.push({idx: idx, newQty: actual});
+        
+        if (actual < item.qty) {
+            let diff = item.qty - actual;
+            let sum = diff * item.price;
+            totalShortageSum += sum;
+            resultHtml += `<div style="color:var(--red); font-size:13px; margin-bottom:5px;">❌ ${item.name}: Не хватает ${diff} шт. (-${sum} ₸)</div>`;
+            window.pendingRevisionLogs.push({item: item.name, diff: -diff});
+        } else if (actual > item.qty) {
+            let diff = actual - item.qty;
+            resultHtml += `<div style="color:var(--green); font-size:13px; margin-bottom:5px;">✅ ${item.name}: Излишек ${diff} шт.</div>`;
+            window.pendingRevisionLogs.push({item: item.name, diff: diff});
+        }
+    });
+
+    let resDiv = document.getElementById('revision-result');
+    if (totalShortageSum > 0) {
+        resDiv.innerHTML = resultHtml + `<div style="margin-top:15px; border-top:1px solid var(--red); padding-top:10px; color:var(--red); font-size:18px;">Общая недостача: ${totalShortageSum.toLocaleString()} ₸</div>`;
+        resDiv.style.display = 'block';
+        window.pendingShortageSum = totalShortageSum;
+        document.getElementById('btn-calc-revision').style.display = 'none';
+        document.getElementById('btn-apply-revision').style.display = 'block';
+    } else {
+        resDiv.innerHTML = resultHtml + `<div style="margin-top:15px; color:var(--green); font-size:18px;">Недостачи нет. Склад в идеале!</div>`;
+        resDiv.style.display = 'block';
+        window.pendingShortageSum = 0;
+        document.getElementById('btn-calc-revision').style.display = 'none';
+        document.getElementById('btn-apply-revision').style.display = 'block';
+        document.getElementById('btn-apply-revision').innerText = 'ПРОСТО ОБНОВИТЬ ОСТАТКИ';
+    }
+}
+
+window.applyRevision = function() {
+    if (window.pendingShortageSum > 0) {
+        let adminName = prompt(`Сумма недостачи: ${window.pendingShortageSum} ₸.\nВведите имя администратора для удержания (или оставьте пустым, чтобы просто списать):`);
+        if (adminName) {
+            if(!cloudState.ownerAcc) cloudState.ownerAcc = {};
+            let currentBal = cloudState.ownerAcc[adminName] || 0;
+            cloudState.ownerAcc[adminName] = currentBal - window.pendingShortageSum;
+            alert(`Удержано ${window.pendingShortageSum} ₸ с баланса ${adminName}.`);
+        }
+    }
+    
+    window.pendingRevisionUpdates.forEach(update => {
+        cloudState.inventory[update.idx].qty = update.newQty;
+    });
+    
+    window.pendingRevisionLogs.forEach(log => {
+        logStock('Ревизия', log.item, log.diff);
+    });
+    
+    document.getElementById('revision-modal').style.display = 'none';
+    saveToCloud();
+    alert("Ревизия завершена. Осатки обновлены!");
+}
 
 window.showTab = function(id, btn) { document.querySelectorAll('.tab-pane').forEach(x => x.style.display = 'none'); document.querySelectorAll('.nav-link').forEach(x => x.classList.remove('active')); document.getElementById('tab-'+id).style.display = 'block'; btn.classList.add('active'); }
 
@@ -777,28 +866,45 @@ function renderAccounting() {
     });
 
     let tRev = 0, bRev = 0, tblRev = 0, sal = 0, expTotal = 0;
-    let debtRet = 0, debtIss = 0, checksCount = 0;
+    let debtRet = 0, debtIss = 0, checksCount = 0, barCostTot = 0;
+    let adminStats = {};
 
     currentFilteredHistory.forEach(h => { 
         tRev += (h.total || 0); bRev += (h.barRev || 0); tblRev += (h.tableRev || 0); 
         sal += (h.sal || 0); expTotal += (h.expTotal || 0); 
         debtRet += (h.debtReturns || 0); debtIss += (h.debtIssued || 0);
-        checksCount += (h.checksCount || 0);
+        checksCount += (h.checksCount || 0); barCostTot += (h.barCostTotal || 0);
+        
+        if(!adminStats[h.admin]) adminStats[h.admin] = 0;
+        adminStats[h.admin] += (h.total || 0);
     });
 
     document.getElementById('acc-trev').innerText = tRev.toLocaleString() + " ₸"; 
     document.getElementById('acc-details').innerText = `Бар: ${bRev} ₸ | Столы: ${tblRev} ₸`;
+    document.getElementById('acc-bar-cost').innerText = barCostTot.toLocaleString() + " ₸"; 
     document.getElementById('acc-sal').innerText = (sal + expTotal).toLocaleString() + " ₸"; 
-    document.getElementById('acc-net').innerText = (tRev - sal - expTotal).toLocaleString() + " ₸";
+    
+    // ИСТИННАЯ ПРИБЫЛЬ: Выручка - Зарплата - Изъятия - Себестоимость Бара
+    let netProfit = tRev - sal - expTotal - barCostTot;
+    document.getElementById('acc-net').innerText = netProfit.toLocaleString() + " ₸";
 
-    // АНАЛИТИКА
     let avgCheck = checksCount > 0 ? Math.round(tRev / checksCount) : 0;
+    let barPct = tRev > 0 ? Math.round((bRev / tRev) * 100) : 0;
+    let tblPct = tRev > 0 ? Math.round((tblRev / tRev) * 100) : 0;
+    
+    let topAdmin = "---"; let maxRev = 0;
+    for(let a in adminStats) { if(adminStats[a] > maxRev) { maxRev = adminStats[a]; topAdmin = a; } }
+
     document.getElementById('acc-avg-check').innerText = avgCheck.toLocaleString() + " ₸";
     document.getElementById('acc-debt-ret').innerText = debtRet.toLocaleString() + " ₸";
     document.getElementById('acc-debt-iss').innerText = debtIss.toLocaleString() + " ₸";
     document.getElementById('acc-checks-count').innerText = checksCount;
     
-    document.getElementById('history-list').innerHTML = currentFilteredHistory.map(h => {
+    document.getElementById('acc-bar-pct').innerText = barPct + "%";
+    document.getElementById('acc-tbl-pct').innerText = tblPct + "%";
+    document.getElementById('acc-top-admin').innerText = topAdmin;
+
+    document.getElementById('history-list').innerHTML = currentFilteredHistory.slice().reverse().map(h => {
         let diffColor = h.diff < 0 ? 'var(--red)' : (h.diff > 0 ? 'var(--green)' : 'var(--gray)');
         let zReportHtml = h.expectedCash !== undefined ? `<br><span style="font-size:10px; color:${diffColor};">Нал: ${h.physicalCash} (Разница: ${h.diff})</span>` : '';
         let expStr = h.expTotal > 0 ? `<br><span style="color:var(--red); font-size:10px;">Расход: -${h.expTotal}</span>` : '';
@@ -876,6 +982,7 @@ function render() {
     document.getElementById('owner-tab').style.display = isOwner ? 'block' : 'none';
     document.getElementById('acc-tab').style.display = isOwner ? 'block' : 'none';
     document.getElementById('btn-open-add-item').style.display = isOwner ? 'block' : 'none';
+    document.getElementById('btn-open-revision').style.display = isOwner ? 'block' : 'none';
     document.getElementById('btn-stock-log').style.display = isOwner ? 'block' : 'none';
 
     renderTables();
@@ -931,7 +1038,7 @@ function render() {
     document.getElementById('stock-list').innerHTML = toArr(cloudState.inventory).map((i, idx) => {
         let colorClass = i.qty > 0 ? "var(--white)" : "var(--red)";
         let stockBtns = isOwner ? `<button onclick="editItemQty(${idx})" class="btn-outline" style="padding:8px 12px; font-size:11px;">✏️ КОЛ-ВО</button><button onclick="renameItem(${idx})" class="btn-outline" style="padding:8px 12px; font-size:11px;">✏️ ИМЯ</button><button onclick="editItemPrice(${idx})" class="btn-outline" style="padding:8px 12px; font-size:11px;">✏️ ЦЕНА</button><button onclick="delItem(${idx})" class="btn-outline" style="padding:8px 12px; font-size:11px; width:auto; margin-top:0; border-color:rgba(255,76,76,0.5); color:var(--red);">❌</button>` : '';
-        return `<tr><td><b style="color:${colorClass}; font-size:16px;">${i.name}</b></td><td><b style="font-size:18px; color:${colorClass};">${i.qty} шт</b></td><td class="gold-text"><b style="font-size:18px;">${i.price} ₸</b></td><td style="display:flex; gap:8px; flex-wrap:wrap;">${stockBtns}</td></tr>`;
+        return `<tr><td><b style="color:${colorClass}; font-size:16px;">${i.name}</b></td><td><b style="font-size:18px; color:${colorClass};">${i.qty} шт</b></td><td style="color:var(--gray); font-size:12px;">Закуп: ${i.cost||0} ₸</td><td class="gold-text"><b style="font-size:18px;">${i.price} ₸</b></td><td style="display:flex; gap:8px; flex-wrap:wrap;">${stockBtns}</td></tr>`;
     }).join('');
     
     let debtsArr = toArr(cloudState.debts);
@@ -947,7 +1054,9 @@ function render() {
         let warningHtml = '';
         let penaltyBtn = '';
         
-        if (diff < 0 && d.total > 0) {
+        if (d.needsConfirmation) {
+            if (isOwner) penaltyBtn = `<button onclick="confirmDebtReturn(${i})" class="btn-gold shadow-gold" style="width:100%; margin-top:8px; font-size:12px;">✅ ПОДТВЕРДИТЬ</button>`;
+        } else if (diff < 0 && d.total > 0) {
             let daysOver = Math.floor(Math.abs(diff) / (1000 * 60 * 60 * 24));
             warningHtml = `<br><span style="display:inline-block; margin-top:5px; background:rgba(255,76,76,0.1); color:var(--red); padding:4px 8px; border-radius:6px; font-size:11px; font-weight:800;">⚠️ ПРОСРОЧЕНО: ${daysOver} дн.</span>`;
             if(isOwner) penaltyBtn = `<button onclick="deductDebtFromAdmin(${i})" class="btn-outline" style="border-color:var(--red); color:var(--red); margin-top:8px; width:100%; font-size:11px;">УДЕРЖАТЬ С АДМИНА</button>`;
@@ -958,7 +1067,17 @@ function render() {
         }
 
         let delBtn = isOwner ? `<button onclick="delDebt(${i})" class="btn-outline" style="border-color:rgba(255,76,76,0.5); color:var(--red); width:100%; margin-top:8px; font-size:11px;">УДАЛИТЬ ДОЛГ</button>` : '';
-        let payBtn = d.total > 0 ? `<button onclick="payDebt(${i})" class="btn-outline" style="border-color:var(--green); color:var(--green); width:100%; font-size:13px;">ВНЕСТИ РАСЧЕТ</button>` : `<span style="display:block; text-align:center; background:rgba(46,204,113,0.1); border:1px solid var(--green); color:var(--green); padding:10px; border-radius:10px; font-size:12px; font-weight:800;">✅ ОПЛАЧЕНО<br><span style="font-size:10px; font-weight:500;">Ждет проверки Хозяина</span></span>`;
+        
+        let payBtn = '';
+        if (d.needsConfirmation) {
+            payBtn = `<span style="display:block; text-align:center; background:rgba(46,204,113,0.1); border:1px solid var(--green); color:var(--green); padding:10px; border-radius:10px; font-size:12px; font-weight:800;">✅ ОПЛАЧЕНО<br><span style="font-size:10px; font-weight:500;">Ждет проверки Хозяина</span></span>`;
+        } else if (d.total > 0) {
+            payBtn = `<button onclick="payDebt(${i})" class="btn-outline" style="border-color:var(--green); color:var(--green); width:100%; font-size:13px;">ВНЕСТИ РАСЧЕТ</button>`;
+        }
+        
+        let histArr = toArr(cloudState.history);
+        let lastZ = (histArr && histArr.length > 0) ? histArr[histArr.length - 1].timestamp : 0;
+        let returnCheckBtn = (d.timestamp > lastZ && d.total > 0) ? `<button onclick="restoreDebtCheck('${d.name}')" class="btn-outline" style="border-color:var(--gold-dim); color:var(--gold); width:100%; margin-top:8px; font-size:11px;">↩️ ВЕРНУТЬ ЧЕК</button>` : '';
 
         return `<tr>
             <td><b class="gold-text" style="font-size:18px;">${d.name}</b><br><span style="font-size:11px; color:var(--gray);">Выдал: <b style="color:var(--white);">${d.admin || 'Неизвестно'}</b></span>${warningHtml}</td>
@@ -966,8 +1085,8 @@ function render() {
             <td><span style="font-size:12px; color:var(--gray); line-height:1.5;">${toArr(d.history).join('<br>')}</span></td>
             <td style="text-align:right; vertical-align:middle; width:180px;">
                 ${payBtn} 
-                <button onclick="restoreDebtCheck('${d.name}')" class="btn-outline" style="border-color:var(--gold-dim); color:var(--gold); width:100%; margin-top:8px; font-size:11px;">↩️ ВЕРНУТЬ ЧЕК</button>
                 ${penaltyBtn}
+                ${returnCheckBtn}
                 ${delBtn}
             </td>
         </tr>`;
@@ -978,7 +1097,7 @@ function render() {
     }
     document.getElementById('debts-list').innerHTML = debtsHtml;
     
-    document.getElementById('my-history-list').innerHTML = toArr(cloudState.history).filter(h => h.admin === localAuth.user.name).map(h => {
+    document.getElementById('my-history-list').innerHTML = toArr(cloudState.history).filter(h => h.admin === localAuth.user.name).slice().reverse().map(h => {
         let delMyShiftBtn = isOwner ? `<button onclick="deleteHistory(${h.timestamp})" class="btn-red" style="padding:6px 10px; font-size:12px; width:auto; margin-left:10px;">🗑️</button>` : '';
         return `<tr><td>${h.start}</td><td>${h.end}</td><td><span style="font-size:11px; color:var(--gray);">Нал: ${h.cashRev||0}<br>QR: ${h.qrRev||0}</span></td><td class="gold-text"><b>${h.total} ₸</b></td><td style="color:var(--green);"><b>${h.sal} ₸</b>${delMyShiftBtn}</td></tr>`;
     }).join('');
