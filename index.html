@@ -26,86 +26,87 @@
             <button onclick="login()" class="btn-gold btn-large shadow-gold">ОТКРЫТЬ СМЕНУ</button>
             <p id="auth-error" class="error-msg" style="display:none; color:var(--red); margin-top:15px; font-weight:700;">❌ Неверный пароль!</p>
             
-            <button onclick="showGuestPage()" class="btn-outline" style="width:100%; margin-top:30px; font-size:12px; letter-spacing:2px; border-color:var(--gray); color:var(--white);">🌐 САЙТ ДЛЯ ГОСТЕЙ</button>
+            <div style="margin-top:40px; border-top:1px dashed var(--border); padding-top:30px;">
+                <button onclick="window.location.href='?guest=true'" class="btn-outline" style="width:100%; font-size:12px; letter-spacing:2px; border-color:var(--gold-dim); color:var(--gold); font-weight:800;">🌐 ВОЙТИ КАК ГОСТЬ (САЙТ КЛУБА)</button>
+            </div>
         </div>
     </div>
 
     <div id="guest-app" style="display:none;">
-        <button class="btn-back" onclick="hideGuestPage()">⬅ НАЗАД В CRM</button>
-        
         <div class="guest-hero">
             <div class="logo-circle" style="margin: 0 auto 20px;">S</div>
             <h1 class="guest-title gold-gradient">SENSEI</h1>
-            <div class="guest-subtitle">PREMIUM BILLIARD CLUB</div>
-            <p style="color:var(--gray); max-width:600px; margin:0 auto; font-size:15px; line-height:1.6;">Атмосфера настоящего бильярда. Профессиональное оборудование, элитный бар и безупречный сервис для ценителей игры.</p>
-            <a href="#booking-form" style="display:inline-block; margin-top:30px; background:var(--gold); color:#000; padding:15px 30px; border-radius:12px; font-weight:800; text-decoration:none; text-transform:uppercase;">Забронировать стол</a>
+            <div class="guest-subtitle">ЕДИНСТВЕННЫЙ ПРЕМИУМ БИЛЬЯРД В КАСКЕЛЕНЕ</div>
+            <p style="color:var(--gray); max-width:600px; margin:0 auto; font-size:16px; line-height:1.6;">Атмосфера настоящего бильярда. Мы собрали оборудование мирового турнирного класса, чтобы вы могли наслаждаться безупречной игрой.</p>
+            <a href="#booking-section" style="display:inline-block; margin-top:40px; background:var(--gold); color:#000; padding:18px 40px; border-radius:14px; font-weight:800; font-size:16px; text-decoration:none; text-transform:uppercase; box-shadow: 0 10px 25px rgba(212, 175, 55, 0.3);">Забронировать стол</a>
         </div>
 
-        <div class="info-grid">
-            <div class="info-card">
-                <div class="info-icon">🎱</div>
-                <div class="info-title">Столы Xingjue</div>
-                <div class="info-desc">Официальные турнирные столы премиум-класса. Идеальная геометрия и отскок для профессионалов.</div>
-            </div>
-            <div class="info-card">
-                <div class="info-icon">🟢</div>
-                <div class="info-title">Сукно Iwan Simonis</div>
-                <div class="info-desc">Легендарное бельгийское сукно. Обеспечивает идеальное скольжение и контроль винта.</div>
-            </div>
-            <div class="info-card">
-                <div class="info-icon">⚪</div>
-                <div class="info-title">Шары Aramith</div>
-                <div class="info-desc">Эталонные бельгийские шары из фенол-альдегидной смолы. Идеальная балансировка и вес.</div>
-            </div>
-            <div class="info-card">
-                <div class="info-icon">💡</div>
-                <div class="info-title">Свет Pro Lighting</div>
-                <div class="info-desc">Профессиональное бестеневое освещение столов, чтобы ваши глаза не уставали во время игры.</div>
+        <div class="guest-section">
+            <h2 class="gold-text guest-section-title">СТАТУС СТОЛОВ ONLINE</h2>
+            <p style="text-align:center; color:var(--gray); margin-top:-20px; margin-bottom:30px; font-size:14px;">Живая информация о загруженности клуба</p>
+            <div id="guest-tables-list" class="guest-tables-grid"></div>
+        </div>
+
+        <div class="guest-section" style="background:#0a110d; border-top:1px solid var(--border); border-bottom:1px solid var(--border);">
+            <h2 class="gold-text guest-section-title">НАШЕ ОБОРУДОВАНИЕ</h2>
+            <div class="equip-grid">
+                <div class="equip-card">
+                    <img src="WhatsApp%20Image%202026-03-20%20at%2006.39.44%20(1).jpeg" alt="Столы Ливерпуль" class="equip-img">
+                    <div class="equip-content">
+                        <div class="equip-title">Столы «Ливерпуль» (Старт)</div>
+                        <div class="equip-desc">Официальные столы Чемпионатов Мира. Массивная конструкция, идеальная геометрия бортов и раскат для профессионалов.</div>
+                    </div>
+                </div>
+                <div class="equip-card">
+                    <img src="WhatsApp%20Image%202026-03-20%20at%2006.39.43%20(2).jpeg" alt="Шары Aramith" class="equip-img">
+                    <div class="equip-content">
+                        <div class="equip-title">Шары Super Aramith Pro-Cup</div>
+                        <div class="equip-desc">Оригинальные бельгийские шары (67 мм). Высший стандарт мирового бильярда с идеальной центровкой.</div>
+                    </div>
+                </div>
+                <div class="equip-card">
+                    <img src="WhatsApp%20Image%202026-03-20%20at%2006.39.43%20(5).jpeg" alt="Сукно Iwan Simonis" class="equip-img">
+                    <div class="equip-content">
+                        <div class="equip-title">Сукно Iwan Simonis 760</div>
+                        <div class="equip-desc">Легендарное бельгийское сукно. Гарантирует максимальную точность винта и контроль траектории шара.</div>
+                    </div>
+                </div>
+                <div class="equip-card">
+                    <img src="WhatsApp%20Image%202026-03-20%20at%2006.39.42%20(1).jpeg" alt="LED Лампы" class="equip-img">
+                    <div class="equip-content">
+                        <div class="equip-title">Бестеневые LED-Панели 900W</div>
+                        <div class="equip-desc">Профессиональное освещение столов. Никаких теней и бликов, ваши глаза не устанут даже после 10 часов игры.</div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div id="booking-form" class="booking-section">
-            <div class="booking-form">
-                <h2 class="gold-text" style="text-align:center; margin-top:0; margin-bottom:30px;">БРОНЬ СТОЛА ОНЛАЙН</h2>
-                <div class="input-group">
-                    <label>ВАШЕ ИМЯ</label>
-                    <input type="text" id="guest-name" placeholder="Например: Сержан">
-                </div>
-                <div class="input-group">
-                    <label>ТЕЛЕФОН</label>
-                    <input type="tel" id="guest-phone" placeholder="+7 (777) 000-00-00">
-                </div>
+        <div id="booking-section" class="guest-section">
+            <div class="booking-form-box">
+                <h2 class="gold-text" style="text-align:center; margin-top:0; margin-bottom:30px; font-size:24px;">ОСТАВИТЬ БРОНЬ</h2>
+                <div class="input-group"><label>ВАШЕ ИМЯ</label><input type="text" id="guest-name" placeholder="Например: Сержан"></div>
+                <div class="input-group"><label>ТЕЛЕФОН</label><input type="tel" id="guest-phone" placeholder="+7 (___) ___-__-__"></div>
                 <div style="display:flex; gap:15px;">
-                    <div class="input-group" style="flex:1;">
-                        <label>ДАТА</label>
-                        <input type="date" id="guest-date">
-                    </div>
-                    <div class="input-group" style="flex:1;">
-                        <label>ВРЕМЯ</label>
-                        <input type="time" id="guest-time">
-                    </div>
+                    <div class="input-group" style="flex:1;"><label>ДАТА</label><input type="date" id="guest-date"></div>
+                    <div class="input-group" style="flex:1;"><label>ВРЕМЯ</label><input type="time" id="guest-time"></div>
                 </div>
                 <div class="input-group">
                     <label>ВЫБЕРИТЕ СТОЛ</label>
                     <select id="guest-table-num">
-                        <option value="1">Стол №1</option>
-                        <option value="2">Стол №2</option>
-                        <option value="3">Стол №3</option>
-                        <option value="4">Стол №4</option>
-                        <option value="5">Стол №5</option>
-                        <option value="6">Стол №6</option>
+                        <option value="1">Стол №1</option><option value="2">Стол №2</option><option value="3">Стол №3</option>
+                        <option value="4">Стол №4</option><option value="5">Стол №5</option><option value="6">Стол №6</option>
                     </select>
                 </div>
-                <button onclick="submitGuestReservation()" class="btn-gold btn-large shadow-gold" style="margin-top:10px;">ОТПРАВИТЬ ЗАЯВКУ</button>
+                <button onclick="submitGuestReservation()" class="btn-gold btn-large shadow-gold" style="margin-top:15px; font-size:16px;">ОТПРАВИТЬ ЗАЯВКУ</button>
             </div>
         </div>
 
         <div class="guest-footer">
-            <h3 class="gold-text" style="margin-bottom:10px;">КОНТАКТЫ</h3>
-            <p style="font-size:16px; font-weight:bold; color:var(--white);">📞 +7 777 123 45 67</p>
-            <p>📍 г. Алматы, ул. Бильярдная, 10</p>
-            <button class="btn-outline" style="font-size:12px; padding:10px 20px; margin-top:10px;">🗺️ ОТКРЫТЬ В 2GIS</button>
-            <div style="margin-top:40px; opacity:0.5;">© 2026 SENSEI BILLIARD CLUB</div>
+            <h3 class="gold-text" style="margin-bottom:15px; font-size:20px;">КОНТАКТЫ</h3>
+            <p style="font-size:22px; font-weight:800; color:var(--white); margin:10px 0;">📞 Наш телефон (из 2GIS)</p>
+            <p style="font-size:16px;">📍 г. Каскелен</p>
+            <a href="https://2gis.kz/almaty/firm/70000001101734090" target="_blank" style="display:inline-block; border:1px solid var(--gold); color:var(--gold); padding:12px 25px; margin-top:15px; border-radius:12px; text-decoration:none; font-weight:bold;">🗺️ ОТКРЫТЬ В 2GIS</a>
+            <div style="margin-top:50px; opacity:0.3; font-size:12px;">© 2026 SENSEI PREMIUM BILLIARD CLUB</div>
         </div>
     </div>
 
@@ -278,7 +279,7 @@
             <div class="modal-close" onclick="document.getElementById('z-report-modal').style.display='none'">×</div>
             <h2 class="gold-text" style="margin-top:0;">СВЕРКА КАССЫ (Z-ОТЧЕТ)</h2>
             <p style="color:var(--gray); font-size:14px; margin-bottom:25px;">Пожалуйста, пересчитайте физические деньги в кассе.</p>
-            <div class="input-group"><label style="text-align:center; font-size:15px;">СКОЛЬКО НАЛИЧНЫХ В КАССЕ? (₸)</label><input type="number" id="z-cash-input" placeholder="0" class="large-input" style="background:#030a05;"></div>
+            <div class="input-group"><label style="text-align:center; font-size:15px;">СКОЛЬКО НАЛИЧНЫХ В КАССЕ? (₸)</label><input type="number" id="z-cash-input" placeholder="0" class="large-input"></div>
             <button onclick="confirmZReport()" class="btn-gold btn-large shadow-gold">ПОДТВЕРДИТЬ И ЗАКРЫТЬ СМЕНУ</button>
             <button onclick="document.getElementById('z-report-modal').style.display='none'" class="btn-outline" style="width:100%; margin-top:15px; border-color:var(--gray); color:var(--gray);">ОТМЕНА</button>
         </div>
