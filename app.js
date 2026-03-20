@@ -74,6 +74,8 @@ window.onload = () => {
             if(document.getElementById('table-bill-modal') && document.getElementById('table-bill-modal').style.display === 'flex') {
                 renderTableBill();
             }
+        } else {
+            render(); 
         }
     }, 1000); 
 };
@@ -82,8 +84,6 @@ window.onload = () => {
 window.showGuestPage = function() {
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('guest-app').style.display = 'block';
-    
-    // Устанавливаем текущую дату
     let today = new Date().toISOString().split('T')[0];
     document.getElementById('guest-date').value = today;
 }
@@ -102,11 +102,8 @@ window.submitGuestReservation = function() {
 
     if(!name || !phone || !date || !time) return alert("Пожалуйста, заполните все поля!");
 
-    // Форматируем дату (из 2026-03-25 в 25.03)
     let dParts = date.split('-');
     let shortDate = `${dParts[2]}.${dParts[1]}`;
-    
-    // Формируем красивую строку для CRM
     let resString = `${shortDate}, ${time} | ${name} (${phone})`;
 
     cloudState.tables = toArr(cloudState.tables);
@@ -116,8 +113,6 @@ window.submitGuestReservation = function() {
         t.res.push(resString);
         saveToCloud();
         alert("Успешно! Ваша бронь отправлена администратору.");
-        
-        // Очищаем форму
         document.getElementById('guest-name').value = '';
         document.getElementById('guest-phone').value = '';
         document.getElementById('guest-time').value = '';
@@ -125,7 +120,7 @@ window.submitGuestReservation = function() {
 }
 // =============================
 
-function login() {
+window.login = function() {
     const val = document.getElementById('staff-select').value;
     const pin = document.getElementById('pass-input').value;
     let user = STAFF_HARDCODED.find(s => s.id === val) || toArr(cloudState.customAdmins).find(a => "custom_"+a.id === val);
@@ -170,9 +165,9 @@ function getCurrentShiftData() {
     return { cash, qr, table, bar, total, salaryBase, expTotal, expectedCash: cash - expTotal };
 }
 
-function logout() { document.getElementById('z-report-modal').style.display = 'flex'; }
+window.logout = function() { document.getElementById('z-report-modal').style.display = 'flex'; }
 
-function confirmZReport() {
+window.confirmZReport = function() {
     let physicalCash = parseInt(document.getElementById('z-cash-input').value) || 0;
     let shift = getCurrentShiftData();
     let diff = physicalCash - shift.expectedCash;
@@ -207,7 +202,7 @@ function confirmZReport() {
     location.reload();
 }
 
-function saveExpense() {
+window.saveExpense = function() {
     let sum = parseInt(document.getElementById('exp-sum').value); let desc = document.getElementById('exp-desc').value;
     if(!sum || !desc) return alert("Заполните все поля!");
     cloudState.expenses = toArr(cloudState.expenses);
@@ -215,7 +210,7 @@ function saveExpense() {
     document.getElementById('expense-modal').style.display='none'; saveToCloud(); alert("Расход записан!");
 }
 
-function openExpenseLogModal() {
+window.openExpenseLogModal = function() {
     let currentExp = [];
     if(accPeriod === 'today') {
         let lastZ = (toArr(cloudState.history).length > 0) ? toArr(cloudState.history)[toArr(cloudState.history).length - 1].timestamp : 0;
@@ -243,7 +238,7 @@ function openExpenseLogModal() {
     document.getElementById('expense-log-modal').style.display='flex';
 }
 
-function openStockLogModal() {
+window.openStockLogModal = function() {
     let slogs = toArr(cloudState.stockLog).slice().reverse();
     if(slogs.length === 0) {
         document.getElementById('stock-log-list').innerHTML = '<span style="color:var(--gray);">История пуста.</span>';
@@ -312,10 +307,10 @@ window.deleteArchiveCheck = function(ts) {
     }
 }
 
-function addCustomAdmin() { let name = prompt("Имя администратора:"); if(!name) return; let pin = prompt(`PIN-код:`); if(name && pin) { cloudState.customAdmins = toArr(cloudState.customAdmins); cloudState.customAdmins.push({id: Date.now(), name: name, pin: pin, role: "admin"}); saveToCloud(); } }
-function resetDatabase() { if(confirm("ОБНОВИТЬ БАЗУ?")) { cloudState = { tables: Array.from({length: 6}, (_, i) => ({ id: i + 1, active: false, start: null, res: [], bar:[] })), checks: [], archive: [], inventory: [], debts: [], history: [], ownerAcc: {}, customAdmins: [], expenses:[], vips: [], stockLog: [] }; saveToCloud(); location.reload(); } }
+window.addCustomAdmin = function() { let name = prompt("Имя администратора:"); if(!name) return; let pin = prompt(`PIN-код:`); if(name && pin) { cloudState.customAdmins = toArr(cloudState.customAdmins); cloudState.customAdmins.push({id: Date.now(), name: name, pin: pin, role: "admin"}); saveToCloud(); } }
+window.resetDatabase = function() { if(confirm("ОБНОВИТЬ БАЗУ?")) { cloudState = { tables: Array.from({length: 6}, (_, i) => ({ id: i + 1, active: false, start: null, res: [], bar:[] })), checks: [], archive: [], inventory: [], debts: [], history: [], ownerAcc: {}, customAdmins: [], expenses:[], vips: [], stockLog: [] }; saveToCloud(); location.reload(); } }
 
-function addVipGuest() {
+window.addVipGuest = function() {
     let name = prompt("Имя VIP гостя:"); if(!name) return;
     let discStr = prompt(`Размер скидки для "${name}" (в %, например 20):`, "20");
     if(!discStr) return; let disc = parseInt(discStr); if(isNaN(disc) || disc < 0 || disc > 100) return alert("Неверная скидка");
@@ -325,6 +320,7 @@ function addVipGuest() {
     saveToCloud(); alert(`VIP гость ${name} добавлен со скидкой ${disc}%!`);
 }
 window.delVipGuest = function(id) { if(confirm("Удалить VIP гостя?")) { cloudState.vips = toArr(cloudState.vips).filter(v => v.id !== id); saveToCloud(); } }
+
 function applyVipLogic(check) {
     let vips = toArr(cloudState.vips); let vip = vips.find(v => v.name.toLowerCase() === check.name.toLowerCase());
     if (vip) { check.discount = vip.discount; check.isVip = true; } else { check.isVip = false; }
@@ -371,7 +367,7 @@ window.openBarModal = function(context) {
     renderBarSearch(); 
 }
 
-function renderBarSearch() {
+window.renderBarSearch = function() {
     let invArr = toArr(cloudState.inventory);
     if(invArr.length === 0) return;
     let sortedInv = [...invArr].sort((a,b) => { if(a.qty>0 && b.qty===0) return -1; if(a.qty===0 && b.qty>0) return 1; return 0; });
@@ -665,6 +661,11 @@ window.exportToExcel = function() {
     let a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv); a.download = `Бухгалтерия_SENSEI_${accPeriod}.csv`; a.click();
 }
 
+window.payAdminAdvance = function(name) { let currentDebt = (cloudState.ownerAcc && cloudState.ownerAcc[name]) ? cloudState.ownerAcc[name] : 0; let s = prompt(`К выплате ${name}: ${currentDebt}₸.\nСумма аванса/выплаты:`); if(s && !isNaN(s)) { if(!cloudState.ownerAcc) cloudState.ownerAcc = {}; cloudState.ownerAcc[name] = currentDebt - parseInt(s); saveToCloud(); } }
+window.fullPayAdmin = function(name) { if(confirm(`Выдать полный расчет администратору ${name} и обнулить его баланс?`)) { if(!cloudState.ownerAcc) cloudState.ownerAcc = {}; cloudState.ownerAcc[name] = 0; saveToCloud(); } }
+window.editAdminSalary = function(name) { let currentDebt = (cloudState.ownerAcc && cloudState.ownerAcc[name]) ? cloudState.ownerAcc[name] : 0; let s = prompt(`Ввести новую точную сумму баланса для ${name}:`, currentDebt); if(s !== null && !isNaN(s)) { if(!cloudState.ownerAcc) cloudState.ownerAcc = {}; cloudState.ownerAcc[name] = parseInt(s); saveToCloud(); } }
+window.fineAdmin = function(name) { let currentDebt = (cloudState.ownerAcc && cloudState.ownerAcc[name]) ? cloudState.ownerAcc[name] : 0; let s = prompt(`Сумма штрафа для ${name} (отнимется от ЗП):`); if(s && !isNaN(s)) { if(!cloudState.ownerAcc) cloudState.ownerAcc = {}; cloudState.ownerAcc[name] = currentDebt - parseInt(s); saveToCloud(); } }
+
 function renderAccounting() {
     let histArr = toArr(cloudState.history);
     if(histArr.length === 0) return;
@@ -741,18 +742,18 @@ function render() {
     let selectElem = document.getElementById('staff-select');
     
     if (!localAuth.isAuth) { 
-        let html = '<option value="0">Султан</option><option value="1">Дидар</option><option value="owner">Хозяин</option>';
-        toArr(cloudState.customAdmins).forEach((a, i) => { html += `<option value="custom_${a.id}">${a.name}</option>`; });
-        
-        if(selectElem && selectElem.innerHTML !== html) { 
+        let adminsArr = toArr(cloudState.customAdmins);
+        let expectedCount = 3 + adminsArr.length;
+
+        if (selectElem && selectElem.options.length !== expectedCount) {
+            let html = '<option value="0">Султан</option><option value="1">Дидар</option><option value="owner">Хозяин</option>';
+            adminsArr.forEach((a) => { html += `<option value="custom_${a.id}">${a.name}</option>`; });
             let curVal = selectElem.value;
             selectElem.innerHTML = html; 
-            if (curVal && selectElem.querySelector(`option[value="${curVal}"]`)) {
-                selectElem.value = curVal;
-            }
+            if (curVal) selectElem.value = curVal;
         }
-        // Если открыт сайт гостей, не показываем экран авторизации
-        if (document.getElementById('guest-app').style.display !== 'block') {
+
+        if (document.getElementById('guest-app') && document.getElementById('guest-app').style.display !== 'block') {
             document.getElementById('auth-screen').style.display='flex'; 
         }
         document.getElementById('app').style.display='none'; 
@@ -760,7 +761,7 @@ function render() {
     }
     
     document.getElementById('auth-screen').style.display='none'; 
-    document.getElementById('guest-app').style.display='none';
+    if(document.getElementById('guest-app')) document.getElementById('guest-app').style.display='none';
     document.getElementById('app').style.display='block';
     
     document.getElementById('user-display').innerText = localAuth.user.name;
@@ -805,4 +806,87 @@ function render() {
         let adminButtons = `<button onclick="openEditCheckModal(${i})" class="btn-outline" style="border-color:#555; color:#aaa; font-size:11px;">⚙️ РЕДАКТИРОВАТЬ</button>`;
         if (isOwner) adminButtons += `<button onclick="deleteCheck(${i})" class="btn-outline" style="border-color:rgba(255,76,76,0.5); color:var(--red); font-size:11px;">🗑️ УДАЛИТЬ ЧЕК</button>`;
 
-        return `<div class="check-row"><div style="flex:1;"><div><b style="font-size:22px; color:var(--gold);">${c.name}</b> ${vipBadge} <span style="font-size:12px;color:var(--gray);margin-left:10px;">${c.date}</span></div><div style="font-size:14px;color:var(--gray);margin-top:10px; line-height:1.4;">${c.details} (${c.timeCost} ₸) ${timeInfo} ${bHtml?`<br><span style="color:var(--white
+        return `<div class="check-row"><div style="flex:1;"><div><b style="font-size:22px; color:var(--gold);">${c.name}</b> ${vipBadge} <span style="font-size:12px;color:var(--gray);margin-left:10px;">${c.date}</span></div><div style="font-size:14px;color:var(--gray);margin-top:10px; line-height:1.4;">${c.details} (${c.timeCost} ₸) ${timeInfo} ${bHtml?`<br><span style="color:var(--white);">🍸 Бар: ${bHtml} (${c.barCost} ₸)</span>`:''}</div><div style="font-size:28px;font-weight:800;margin-top:15px; color:var(--white);">${c.total} ₸ ${discountHtml}</div></div><div style="display:flex; flex-direction:column; gap:8px;"><button onclick="openPayModal(${i})" class="btn-gold shadow-gold" style="padding:15px; border-radius:14px;">ОПЛАТА</button><button onclick="openFullCheck(${i})" class="btn-outline">📄 ЧЕК</button>${adminButtons}</div></div>`; 
+    }).join('');
+    
+    document.getElementById('archive-list').innerHTML = toArr(cloudState.archive).slice().reverse().map(a => {
+        let barInfo = ''; let bArr = toArr(a.bar); if(bArr.length>0) { let gr = {}; bArr.forEach(i=>{gr[i.name]=gr[i.name]||{q:0}; gr[i.name].q++;}); barInfo = Object.keys(gr).map(k=>`${k} x${gr[k].q}`).join(', '); }
+        let timeInfo = a.startTime ? `🕒 ${a.startTime}-${a.endTime} (${a.duration})` : '';
+        
+        let histArr = toArr(cloudState.history);
+        let lastZ = (histArr && histArr.length > 0) ? histArr[histArr.length - 1].timestamp : 0;
+        let restoreBtn = (a.id > lastZ || isOwner) ? `<button onclick="restoreArchiveCheck(${a.id})" class="btn-outline" style="padding:6px 10px; font-size:11px; margin-right:8px; border-color:var(--gold-dim); color:var(--gold);">↩️ ВЕРНУТЬ</button>` : '';
+        let delBtn = isOwner ? `<button onclick="deleteArchiveCheck(${a.id})" class="btn-red" style="padding:6px 10px; font-size:11px;">🗑️</button>` : '';
+        
+        return `<tr><td style="color:var(--gray); font-size:12px;">${a.date} ${a.endTime||''}</td><td><b style="color:var(--white); font-size:15px;">${a.name}</b></td><td style="font-size:12px; line-height:1.4;">${a.details}<br><span style="color:var(--gray);">${timeInfo}</span><br><span style="color:var(--gold);">${barInfo}</span></td><td>Столы: ${a.timeCost}₸<br>Бар: ${a.barCost}₸<br><b class="gold-text" style="font-size:18px;">${a.total} ₸</b></td><td><span style="background:#16261c; color:var(--green); padding:6px 10px; border-radius:8px; font-size:11px; font-weight:800;">${a.payMethod}</span></td><td style="font-weight:600;">${a.admin}</td><td><div style="display:flex;">${restoreBtn}${delBtn}</div></td></tr>`;
+    }).join('');
+    
+    document.getElementById('stock-list').innerHTML = toArr(cloudState.inventory).map((i, idx) => {
+        let colorClass = i.qty > 0 ? "var(--white)" : "var(--red)";
+        let stockBtns = isOwner ? `<button onclick="editItemQty(${idx})" class="btn-outline" style="padding:8px 12px; font-size:11px;">✏️ КОЛ-ВО</button><button onclick="renameItem(${idx})" class="btn-outline" style="padding:8px 12px; font-size:11px;">✏️ ИМЯ</button><button onclick="editItemPrice(${idx})" class="btn-outline" style="padding:8px 12px; font-size:11px;">✏️ ЦЕНА</button><button onclick="delItem(${idx})" class="btn-outline" style="padding:8px 12px; font-size:11px; width:auto; margin-top:0; border-color:rgba(255,76,76,0.5); color:var(--red);">❌</button>` : '';
+        return `<tr><td><b style="color:${colorClass}; font-size:16px;">${i.name}</b></td><td><b style="font-size:18px; color:${colorClass};">${i.qty} шт</b></td><td class="gold-text"><b style="font-size:18px;">${i.price} ₸</b></td><td style="display:flex; gap:8px; flex-wrap:wrap;">${stockBtns}</td></tr>`;
+    }).join('');
+    
+    let debtsArr = toArr(cloudState.debts);
+    let totalDebtsSum = 0;
+    
+    let debtsHtml = debtsArr.map((d, i) => {
+        totalDebtsSum += d.total;
+        
+        let ts = d.timestamp || Date.now();
+        let deadline = ts + (15 * 24 * 60 * 60 * 1000);
+        let diff = deadline - Date.now();
+        
+        let warningHtml = '';
+        let penaltyBtn = '';
+        
+        if (diff < 0 && d.total > 0) {
+            let daysOver = Math.floor(Math.abs(diff) / (1000 * 60 * 60 * 24));
+            warningHtml = `<br><span style="display:inline-block; margin-top:5px; background:rgba(255,76,76,0.1); color:var(--red); padding:4px 8px; border-radius:6px; font-size:11px; font-weight:800;">⚠️ ПРОСРОЧЕНО: ${daysOver} дн.</span>`;
+            if(isOwner) penaltyBtn = `<button onclick="deductDebtFromAdmin(${i})" class="btn-outline" style="border-color:var(--red); color:var(--red); margin-top:8px; width:100%; font-size:11px;">УДЕРЖАТЬ С АДМИНА</button>`;
+        } else if (d.total > 0) {
+            let dLeft = Math.floor(diff / (1000 * 60 * 60 * 24));
+            let hLeft = Math.floor((diff / (1000 * 60 * 60)) % 24);
+            warningHtml = `<br><span style="display:inline-block; margin-top:5px; background:rgba(212,175,55,0.1); color:var(--gold); padding:4px 8px; border-radius:6px; font-size:11px; font-weight:700;">⏳ До расчета: ${dLeft} дн. ${hLeft} ч.</span>`;
+        }
+
+        let delBtn = isOwner ? `<button onclick="delDebt(${i})" class="btn-outline" style="border-color:rgba(255,76,76,0.5); color:var(--red); width:100%; margin-top:8px; font-size:11px;">УДАЛИТЬ ДОЛГ</button>` : '';
+        let payBtn = d.total > 0 ? `<button onclick="payDebt(${i})" class="btn-outline" style="border-color:var(--green); color:var(--green); width:100%; font-size:13px;">ВНЕСТИ РАСЧЕТ</button>` : `<span style="display:block; text-align:center; background:rgba(46,204,113,0.1); border:1px solid var(--green); color:var(--green); padding:10px; border-radius:10px; font-size:12px; font-weight:800;">✅ ОПЛАЧЕНО<br><span style="font-size:10px; font-weight:500;">Ждет проверки Хозяина</span></span>`;
+
+        return `<tr>
+            <td><b class="gold-text" style="font-size:18px;">${d.name}</b><br><span style="font-size:11px; color:var(--gray);">Выдал: <b style="color:var(--white);">${d.admin || '---'}</b></span>${warningHtml}</td>
+            <td style="color:var(--red); font-weight:800; font-size:24px;">${d.total.toLocaleString()} ₸</td>
+            <td><span style="font-size:12px; color:var(--gray); line-height:1.5;">${toArr(d.history).join('<br>')}</span></td>
+            <td style="text-align:right; vertical-align:middle; width:180px;">
+                ${payBtn} 
+                ${penaltyBtn}
+                ${delBtn}
+            </td>
+        </tr>`;
+    }).join('');
+    
+    if(debtsArr.length > 0) {
+        debtsHtml += `<tr><td colspan="3" style="text-align:right; font-size:14px; color:var(--gray);"><b>ОБЩАЯ СУММА ДОЛГОВ КЛУБА:</b></td><td style="color:var(--red); font-size:28px; font-weight:900;">${totalDebtsSum.toLocaleString()} ₸</td></tr>`;
+    }
+    document.getElementById('debts-list').innerHTML = debtsHtml;
+    
+    document.getElementById('my-history-list').innerHTML = toArr(cloudState.history).filter(h => h.admin === localAuth.user.name).map(h => {
+        let delMyShiftBtn = isOwner ? `<button onclick="deleteHistory(${h.timestamp})" class="btn-red" style="padding:6px 10px; font-size:12px; width:auto; margin-left:10px;">🗑️</button>` : '';
+        return `<tr><td>${h.start}</td><td>${h.end}</td><td><span style="font-size:11px; color:var(--gray);">Нал: ${h.cashRev||0}<br>QR: ${h.qrRev||0}</span></td><td class="gold-text"><b>${h.total} ₸</b></td><td style="color:var(--green);"><b>${h.sal} ₸</b>${delMyShiftBtn}</td></tr>`;
+    }).join('');
+    
+    if(isOwner) {
+        renderAccounting();
+        
+        document.getElementById('vip-guests-list').innerHTML = toArr(cloudState.vips).map((v) => `<span style="background:rgba(212,175,55,0.1); border:1px solid var(--gold); padding:8px 15px; border-radius:8px; display:inline-flex; align-items:center; gap:10px; color:var(--gold); font-weight:700;">${v.name} <span class="vip-badge">-${v.discount}%</span> <span onclick="delVipGuest(${v.id})" style="color:var(--red); cursor:pointer; font-weight:bold; font-size:18px;">×</span></span>`).join('');
+        
+        document.getElementById('custom-admins-list').innerHTML = toArr(cloudState.customAdmins).map((a, i) => `<span style="background:#16261c; border:1px solid var(--border); padding:10px 18px; border-radius:12px; display:inline-flex; align-items:center; gap:12px; font-weight:600;">${a.name} <span onclick="delCustomAdmin(${i})" style="color:var(--red); cursor:pointer; font-weight:bold; font-size:18px;">×</span></span>`).join('');
+        
+        if(cloudState.ownerAcc) {
+            document.getElementById('admin-salaries-list').innerHTML = Object.keys(cloudState.ownerAcc).map(name => {
+                let debt = cloudState.ownerAcc[name];
+                return `<div class="check-row"><div><b style="font-size:20px; color:var(--white);">${name}</b><br><span style="font-size:12px; color:var(--gray);">ДОЛГ К ВЫПЛАТЕ:</span> <b style="color:var(--green); font-size:28px; display:block; margin-top:8px;">${debt.toLocaleString()} ₸</b></div><div style="display:flex; flex-direction:column; gap:8px;"><button onclick="payAdminAdvance('${name}')" class="btn-outline" style="border-color:var(--green); color:var(--green); font-size:12px;">АВАНС</button><button onclick="fullPayAdmin('${name}')" class="btn-gold" style="padding:12px; font-size:12px;">ПОЛНЫЙ РАСЧЕТ</button><button onclick="editAdminSalary('${name}')" class="btn-outline" style="font-size:12px;">ИЗМЕНИТЬ ЦИФРУ</button><button onclick="fineAdmin('${name}')" class="btn-outline" style="border-color:var(--red); color:var(--red); font-size:12px;">ШТРАФ</button></div></div>`;
+            }).join('');
+        }
+    }
+}
