@@ -70,7 +70,10 @@
                 <div id="tables-grid" class="grid"></div>
                 <div class="section-header">
                     <h3 class="gold-text">ОЖИДАЮТ ОПЛАТЫ</h3>
-                    <button onclick="openBarModal('standalone')" class="btn-outline">+ ПРОДАЖА БАР</button>
+                    <div style="display:flex; gap:10px;">
+                        <button onclick="openBarModal('owner')" class="btn-outline" style="border-color:var(--gold); color:var(--gold);">👑 ХОЗЯИН</button>
+                        <button onclick="openBarModal('standalone')" class="btn-outline">+ ПРОДАЖА БАР</button>
+                    </div>
                 </div>
                 <div id="active-checks" class="checks-container"></div>
             </div>
@@ -154,7 +157,7 @@
     <div id="stock-log-modal" class="overlay" style="display:none; z-index:100000;">
         <div class="modal-card" style="max-width:500px;">
             <div class="modal-close" onclick="document.getElementById('stock-log-modal').style.display='none'">×</div>
-            <h2 class="gold-text" style="margin-top:0;">ИСТОРИЯ СКЛАДА (ПОСЛЕДНИЕ 100 ДЕЙСТВИЙ)</h2>
+            <h2 class="gold-text" style="margin-top:0;">ИСТОРИЯ СКЛАДА</h2>
             <div id="stock-log-list" style="background:#030a05; border:1px solid var(--border); border-radius:12px; padding:10px; max-height:400px; overflow-y:auto; margin-bottom:20px; font-size:12px;"></div>
             <button onclick="document.getElementById('stock-log-modal').style.display='none'" class="btn-gold btn-large">ЗАКРЫТЬ</button>
         </div>
@@ -173,7 +176,6 @@
         <div class="modal-card">
             <div class="modal-close" onclick="document.getElementById('expense-modal').style.display='none'">×</div>
             <h2 class="gold-text" style="margin-top:0;">ИЗЪЯТИЕ ИЗ КАССЫ</h2>
-            <p style="color:var(--gray); font-size:12px; margin-bottom:20px;">Эта сумма вычтется из ожидаемых наличных в Z-отчете.</p>
             <div class="input-group"><label>СУММА (₸)</label><input type="number" id="exp-sum" placeholder="Например: 2000"></div>
             <div class="input-group"><label>НА ЧТО ПОТРАЧЕНО?</label><input type="text" id="exp-desc" placeholder="Вода, такси, уборщица..."></div>
             <button onclick="saveExpense()" class="btn-red btn-large">СОХРАНИТЬ РАСХОД</button>
@@ -191,11 +193,11 @@
 
     <div id="z-report-modal" class="overlay" style="display:none; z-index:100000;">
         <div class="modal-card" style="text-align:center;">
-            <div class="modal-close" onclick="document.getElementById('z-report-modal').style.display='none'">×</div>
             <h2 class="gold-text" style="margin-top:0;">СВЕРКА КАССЫ (Z-ОТЧЕТ)</h2>
             <p style="color:var(--gray); font-size:13px; margin-bottom:20px;">Пожалуйста, пересчитайте физические деньги в кассе.</p>
             <div class="input-group"><label style="text-align:center; font-size:14px;">СКОЛЬКО НАЛИЧНЫХ В КАССЕ? (₸)</label><input type="number" id="z-cash-input" placeholder="0" class="large-input" style="background:#030a05;"></div>
             <button onclick="confirmZReport()" class="btn-gold btn-large shadow-gold">ПОДТВЕРДИТЬ И ЗАКРЫТЬ СМЕНУ</button>
+            <button onclick="document.getElementById('z-report-modal').style.display='none'" class="btn-outline" style="width:100%; margin-top:10px; border-color:var(--gray); color:var(--gray);">ОТМЕНА</button>
         </div>
     </div>
 
@@ -213,8 +215,9 @@
     <div id="bar-modal" class="overlay" style="display:none;">
         <div class="modal-card">
             <div class="modal-close" onclick="document.getElementById('bar-modal').style.display='none'">×</div>
-            <h2 class="gold-text">МЕНЮ БАРА</h2>
-            <div id="top-bar-items" class="top-bar-scroll"></div> <input type="text" id="bar-search" placeholder="Поиск напитка/закуски..." oninput="renderBarSearch()" class="search-input">
+            <h2 class="gold-text" id="bar-modal-title">МЕНЮ БАРА</h2>
+            <div id="top-bar-items" class="top-bar-scroll"></div>
+            <input type="text" id="bar-search" placeholder="Поиск напитка/закуски..." oninput="renderBarSearch()" class="search-input">
             <div id="bar-items-list" class="scroll-list"></div>
         </div>
     </div>
@@ -241,7 +244,7 @@
             <p id="pay-info" class="pay-info"></p>
             
             <div id="discount-section" style="margin-bottom: 20px; background: rgba(212, 175, 55, 0.05); padding: 15px; border-radius: 12px; border: 1px dashed var(--gold-dim);">
-                <p style="font-size:11px; color:var(--gold); margin-bottom:10px; text-align:center; font-weight:bold;">ПРИМЕНИТЬ СКИДКУ (VIP применяется автоматически):</p>
+                <p style="font-size:11px; color:var(--gold); margin-bottom:10px; text-align:center; font-weight:bold;">ПРИМЕНИТЬ СКИДКУ:</p>
                 <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
                     <button onclick="applyDiscount(10)" class="btn-outline" style="padding:8px 12px; font-size:14px; flex:1;">10%</button>
                     <button onclick="applyDiscount(15)" class="btn-outline" style="padding:8px 12px; font-size:14px; flex:1;">15%</button>
@@ -250,6 +253,7 @@
                 <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:8px;">
                     <button onclick="applyDiscount(50)" class="btn-outline" style="padding:8px 12px; font-size:14px; flex:1;">50%</button>
                     <button onclick="applyDiscount(0)" class="btn-outline" style="padding:8px 12px; font-size:14px; flex:1; border-color:var(--red); color:var(--red);">❌ 0%</button>
+                    <button onclick="applyDiscount(100)" class="btn-outline" style="padding:8px 12px; font-size:12px; flex:1; border-color:var(--gold); color:var(--gold);">👑 100% (СВОИ)</button>
                 </div>
             </div>
 
