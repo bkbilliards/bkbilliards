@@ -407,6 +407,25 @@ function createOrMergeCheck(name, tableId, timeCost, barItems) {
     }
 }
 
+// === ИСПРАВЛЕНИЕ КНОПКИ УДАЛИТЬ ЧЕК ===
+window.deleteCheck = function(idx) {
+    if(confirm("Вы точно хотите безвозвратно УДАЛИТЬ этот чек?\nВсе товары бара из него будут возвращены на склад.")) {
+        cloudState.checks = toArr(cloudState.checks);
+        cloudState.inventory = toArr(cloudState.inventory);
+        let c = cloudState.checks[idx];
+        if(c.bar && toArr(c.bar).length > 0) { 
+            toArr(c.bar).forEach(bItem => { 
+                let invItem = cloudState.inventory.find(x => x.name === bItem.name); 
+                if(invItem) invItem.qty += 1; 
+                else cloudState.inventory.push({name: bItem.name, price: bItem.price, qty: 1}); 
+                logStock('Удаление чека', bItem.name, 1);
+            }); 
+        }
+        cloudState.checks.splice(idx, 1); 
+        saveToCloud();
+    }
+}
+
 let editingCheckIdx = null;
 function openEditCheckModal(idx) { editingCheckIdx = idx; let c = toArr(cloudState.checks)[idx]; document.getElementById('edit-check-name').value = c.name; document.getElementById('edit-check-time').value = c.timeCost; renderEditCheckBarItems(); document.getElementById('edit-check-modal').style.display = 'flex'; }
 function renderEditCheckBarItems() {
@@ -509,7 +528,6 @@ function showMixPay() { document.getElementById('pay-main-buttons').style.displa
 function hideMixPay() { document.getElementById('pay-main-buttons').style.display = 'flex'; document.getElementById('mix-pay-section').style.display = 'none'; }
 function calcMixQr() { let t = toArr(cloudState.checks)[currentCheckIndex].total; let c = parseInt(document.getElementById('mix-cash-input').value) || 0; let q = t - c; document.getElementById('mix-qr-val').innerText = q < 0 ? 0 : q; }
 
-// --- УМНАЯ РАЗДЕЛЬНАЯ ОПЛАТА ---
 window.fillMix = function(type) {
     let c = toArr(cloudState.checks)[currentCheckIndex];
     let discRatio = 1 - (c.discount || 0) / 100;
@@ -641,15 +659,6 @@ function renderTableBill() {
     let barSum = 0; let html = toArr(t.bar).map((b, i) => { barSum += b.price; return `<div class="edit-bar-item"><span>${b.name} (${b.price} ₸)</span> <button onclick="removeTableBarItem(${i})" class="btn-outline" style="color:var(--red); border-color:var(--red); padding:3px 8px; font-size:10px;">❌</button></div>`; }).join('');
     document.getElementById('table-bill-bar-list').innerHTML = html || '<span style="color:var(--gray); font-size:12px;">Пусто</span>'; document.getElementById('table-bill-bar-sum').innerText = barSum.toLocaleString(); document.getElementById('table-bill-total').innerText = (cost + barSum).toLocaleString();
 }
-function removeTableBarItem(idx) {
-    if(!confirm("Убрать товар? Он вернется на склад.")) return; 
-    cloudState.tables = toArr(cloudState.tables);
-    let t = cloudState.tables.find(x => x.id === currentBillTableId); t.bar = toArr(t.bar); let item = t.bar.splice(idx, 1)[0];
-    cloudState.inventory = toArr(cloudState.inventory); let invItem = cloudState.inventory.find(x => x.name === item.name); 
-    if(invItem) invItem.qty += 1; 
-    logStock('Возврат (Счет Стола)', item.name, 1);
-    saveToCloud(); renderTableBill(); 
-}
 
 function renderTables() {
     if(!document.getElementById('tables-grid')) return;
@@ -749,7 +758,7 @@ function render() {
         let histArr = toArr(cloudState.history);
         let lastZ = (histArr && histArr.length > 0) ? histArr[histArr.length - 1].timestamp : 0;
         let restoreBtn = (a.id > lastZ) ? `<button onclick="restoreArchiveCheck(${a.id})" class="btn-outline" style="padding:6px 10px; font-size:11px; margin-right:8px; border-color:var(--gold-dim); color:var(--gold);">↩️ ВЕРНУТЬ</button>` : '';
-        let delBtn = isOwner ? `<button onclick="deleteArchiveCheck(${a.id})" class="btn-outline" style="padding:6px 10px; font-size:11px; border-color:rgba(255,76,76,0.5); color:var(--red);">🗑️ УДАЛИТЬ</button>` : '';
+        let delBtn = isOwner ? `<button onclick="deleteArchiveCheck(${a.id})" class="btn-red" style="padding:6px 10px; font-size:11px;">🗑️</button>` : '';
         
         return `<tr><td style="color:var(--gray); font-size:12px;">${a.date} ${a.endTime||''}</td><td><b style="color:var(--white); font-size:15px;">${a.name}</b></td><td style="font-size:12px; line-height:1.4;">${a.details}<br><span style="color:var(--gray);">${timeInfo}</span><br><span style="color:var(--gold);">${barInfo}</span></td><td>Столы: ${a.timeCost}₸<br>Бар: ${a.barCost}₸<br><b class="gold-text" style="font-size:18px;">${a.total} ₸</b></td><td><span style="background:#16261c; color:var(--green); padding:6px 10px; border-radius:8px; font-size:11px; font-weight:800;">${a.payMethod}</span></td><td style="font-weight:600;">${a.admin}</td><td><div style="display:flex;">${restoreBtn}${delBtn}</div></td></tr>`;
     }).join('');
