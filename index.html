@@ -15,17 +15,10 @@
             <div class="logo-circle">S</div>
             <h1 class="brand-title gold-gradient">SENSEI</h1>
             <p class="tagline">BILLIARD CLUB</p>
-            <div class="input-group">
-                <label>ВЫБЕРИТЕ СОТРУДНИКА</label>
-                <select id="staff-select"></select>
-            </div>
-            <div class="input-group">
-                <label>ПАРОЛЬ (PIN)</label>
-                <input type="password" id="pass-input" placeholder="••••">
-            </div>
+            <div class="input-group"><label>ВЫБЕРИТЕ СОТРУДНИКА</label><select id="staff-select"></select></div>
+            <div class="input-group"><label>ПАРОЛЬ (PIN)</label><input type="password" id="pass-input" placeholder="••••"></div>
             <button onclick="login()" class="btn-gold btn-large shadow-gold">ОТКРЫТЬ СМЕНУ</button>
             <p id="auth-error" class="error-msg" style="display:none; color:var(--red); margin-top:15px; font-weight:700;">❌ Неверный пароль!</p>
-            
             <div style="margin-top:40px; border-top:1px dashed var(--border); padding-top:30px;">
                 <button onclick="window.location.href='?guest=true'" class="btn-outline" style="width:100%; font-size:12px; border-color:var(--gold-dim); color:var(--gold); font-weight:800;">🌐 ВОЙТИ КАК ГОСТЬ</button>
             </div>
@@ -34,7 +27,6 @@
 
     <div id="guest-app" style="display:none;">
         <button class="btn-gold shadow-gold" style="position: fixed; bottom: 30px; right: 30px; padding: 20px; border-radius: 50%; font-size: 24px; z-index: 9000; width: 70px; height: 70px; display: flex; align-items: center; justify-content: center; border: 2px solid #fff;" onclick="document.getElementById('guest-call-modal').style.display='flex'">🛎️</button>
-
         <div class="guest-hero">
             <div class="logo-circle" style="margin: 0 auto 20px;">S</div>
             <h1 class="guest-title gold-gradient">SENSEI</h1>
@@ -42,60 +34,25 @@
             <p style="color:var(--gray); max-width:600px; margin:0 auto; font-size:16px; line-height:1.6;">Атмосфера настоящего бильярда. Турнирное оборудование мирового класса, профессиональный свет и безупречный сервис.</p>
             <a href="#booking-section" style="display:inline-block; margin-top:40px; background:linear-gradient(135deg, var(--gold-light), var(--gold)); color:#000; padding:20px 45px; border-radius:16px; font-weight:900; font-size:16px; text-decoration:none; text-transform:uppercase; box-shadow: 0 15px 35px rgba(212, 175, 55, 0.3);">Забронировать стол</a>
         </div>
-
-        <div class="guest-section">
-            <h2 class="gold-text guest-section-title">СТАТУС СТОЛОВ ONLINE</h2>
-            <div id="guest-tables-list" class="guest-tables-grid"></div>
-        </div>
-
+        <div class="guest-section"><h2 class="gold-text guest-section-title">СТАТУС СТОЛОВ ONLINE</h2><div id="guest-tables-list" class="guest-tables-grid"></div></div>
         <div class="guest-section" style="background:rgba(10,17,13,0.5); border-top:1px solid rgba(255,255,255,0.05);">
             <h2 class="gold-text guest-section-title">НАШЕ ОБОРУДОВАНИЕ</h2>
             <div class="equip-grid">
-                <div class="equip-card">
-                    <img src="WhatsApp%20Image%202026-03-20%20at%2006.39.44%20(1).jpeg" class="equip-img">
-                    <div class="equip-content"><div class="equip-title">Столы «Ливерпуль»</div><div class="equip-desc">Официальные столы Чемпионатов Мира. Массивная конструкция, идеальная геометрия бортов и раскат для профессионалов.</div></div>
-                </div>
-                <div class="equip-card">
-                    <img src="WhatsApp%20Image%202026-03-20%20at%2006.39.45%20(3).jpeg" class="equip-img">
-                    <div class="equip-content"><div class="equip-title">Шары Super Aramith Pro-Cup</div><div class="equip-desc">Оригинальные бельгийские шары (67 мм). Высший стандарт мирового бильярда с идеальной центровкой.</div></div>
-                </div>
-                <div class="equip-card">
-                    <img src="WhatsApp%20Image%202026-03-20%20at%2006.39.43%20(5).jpeg" class="equip-img">
-                    <div class="equip-content"><div class="equip-title">Сукно Iwan Simonis 760</div><div class="equip-desc">Максимальная точность винта и контроль траектории шара. Гарантированный раскат.</div></div>
-                </div>
-                <div class="equip-card">
-                    <img src="WhatsApp%20Image%202026-03-20%20at%2006.39.43%20(3).jpeg" class="equip-img">
-                    <div class="equip-content"><div class="equip-title">Профессиональный свет 900W</div><div class="equip-desc">Никаких теней и бликов, ваши глаза не устанут даже после 10 часов игры.</div></div>
-                </div>
+                <div class="equip-card"><img src="WhatsApp%20Image%202026-03-20%20at%2006.39.44%20(1).jpeg" class="equip-img"><div class="equip-content"><div class="equip-title">Столы «Ливерпуль»</div><div class="equip-desc">Официальные столы Чемпионатов Мира.</div></div></div>
+                <div class="equip-card"><img src="WhatsApp%20Image%202026-03-20%20at%2006.39.45%20(3).jpeg" class="equip-img"><div class="equip-content"><div class="equip-title">Шары Aramith Pro-Cup</div><div class="equip-desc">Оригинальные бельгийские шары (67 мм).</div></div></div>
+                <div class="equip-card"><img src="WhatsApp%20Image%202026-03-20%20at%2006.39.43%20(5).jpeg" class="equip-img"><div class="equip-content"><div class="equip-title">Сукно Simonis 760</div><div class="equip-desc">Максимальная точность винта и контроль траектории шара.</div></div></div>
+                <div class="equip-card"><img src="WhatsApp%20Image%202026-03-20%20at%2006.39.43%20(3).jpeg" class="equip-img"><div class="equip-content"><div class="equip-title">Профессиональный свет</div><div class="equip-desc">Никаких теней и бликов, ваши глаза не устанут.</div></div></div>
             </div>
         </div>
-
         <div id="booking-section" class="guest-section">
             <div class="booking-form-box">
                 <h2 class="gold-text" style="text-align:center; margin:0 0 35px; font-weight:900;">ОСТАВИТЬ БРОНЬ</h2>
                 <div class="input-group"><label>ВАШЕ ИМЯ</label><input type="text" id="guest-name" placeholder="Например: Сержан"></div>
                 <div class="input-group"><label>ТЕЛЕФОН</label><input type="tel" id="guest-phone" placeholder="8747XXXXXXX"></div>
-                <div style="display:flex; gap:20px;">
-                    <div class="input-group" style="flex:1;"><label>ДАТА</label><input type="date" id="guest-date"></div>
-                    <div class="input-group" style="flex:1;"><label>ВРЕМЯ</label><input type="time" id="guest-time"></div>
-                </div>
-                <div class="input-group">
-                    <label>ВЫБЕРИТЕ СТОЛ</label>
-                    <select id="guest-table-num">
-                        <option value="1">Стол №1</option><option value="2">Стол №2</option><option value="3">Стол №3</option>
-                        <option value="4">Стол №4</option><option value="5">Стол №5</option><option value="6">Стол №6</option>
-                    </select>
-                </div>
+                <div style="display:flex; gap:20px;"><div class="input-group" style="flex:1;"><label>ДАТА</label><input type="date" id="guest-date"></div><div class="input-group" style="flex:1;"><label>ВРЕМЯ</label><input type="time" id="guest-time"></div></div>
+                <div class="input-group"><label>ВЫБЕРИТЕ СТОЛ</label><select id="guest-table-num"><option value="1">Стол №1</option><option value="2">Стол №2</option><option value="3">Стол №3</option><option value="4">Стол №4</option><option value="5">Стол №5</option><option value="6">Стол №6</option></select></div>
                 <button onclick="submitGuestReservation()" class="btn-gold btn-large shadow-gold" style="margin-top:20px;">ОТПРАВИТЬ ЗАЯВКУ</button>
             </div>
-        </div>
-
-        <div class="guest-footer">
-            <h3 class="gold-text" style="font-weight:900; margin-bottom:15px;">КОНТАКТЫ И АДРЕС</h3>
-            <p style="font-size:26px; font-weight:900; color:var(--white); margin:15px 0;">📞 8 747 182 10 11</p>
-            <p style="font-size:16px;">📍 г. Каскелен, ул. Каражанова, 1а</p>
-            <a href="https://2gis.kz/almaty/firm/70000001101734090" target="_blank" style="display: inline-block; border: 1px solid var(--gold-dim); color: var(--gold); padding: 12px 30px; border-radius: 12px; text-decoration: none; font-weight: 700; margin-top: 20px;">🗺️ ОТКРЫТЬ В 2GIS</a>
-            <div style="margin-top:60px; opacity:0.3; font-size:12px;">© 2026 Sensei Billiard Club</div>
         </div>
     </div>
 
@@ -106,10 +63,7 @@
             <p style="color:var(--gray); text-align:center; font-size:14px; margin-bottom:30px;">Выберите ваш стол, и администратор сразу подойдет к вам.</p>
             <div class="input-group">
                 <label>ВАШ СТОЛ</label>
-                <select id="guest-call-table">
-                    <option value="1">Стол №1</option><option value="2">Стол №2</option><option value="3">Стол №3</option>
-                    <option value="4">Стол №4</option><option value="5">Стол №5</option><option value="6">Стол №6</option>
-                </select>
+                <select id="guest-call-table"><option value="1">Стол №1</option><option value="2">Стол №2</option><option value="3">Стол №3</option><option value="4">Стол №4</option><option value="5">Стол №5</option><option value="6">Стол №6</option></select>
             </div>
             <button onclick="submitGuestCall()" class="btn-gold btn-large shadow-gold" style="margin-top:10px;">🛎️ ПОЗВАТЬ АДМИНА</button>
         </div>
@@ -217,10 +171,6 @@
                             <div style="font-size:11px; color:var(--gray); margin-bottom:8px; font-weight:700;">ДОЛЯ СТОЛОВ</div>
                             <div style="font-size:22px; font-weight:900; color:var(--white);" id="acc-tbl-pct">0%</div>
                         </div>
-                        <div style="background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.05); padding:20px; border-radius:16px; grid-column: span 2;">
-                            <div style="font-size:11px; color:var(--gray); margin-bottom:8px; font-weight:700;">ЛУЧШИЙ АДМИН (ПО ВЫРУЧКЕ)</div>
-                            <div style="font-size:20px; font-weight:900; color:var(--gold);" id="acc-top-admin">---</div>
-                        </div>
                     </div>
                     
                     <h3 class="gold-text" style="margin-top:40px;">ДЕТАЛИЗАЦИЯ СМЕН (АРХИВ)</h3>
@@ -268,7 +218,6 @@
         <div class="modal-card" style="max-width:500px;">
             <div class="modal-close" onclick="document.getElementById('supplier-modal').style.display='none'">×</div>
             <h2 class="gold-text" style="margin-top:0;">ЗАЯВКА ПОСТАВЩИКУ</h2>
-            <p style="color:var(--gray); font-size:13px; margin-bottom:20px;">Система собрала товары, которые заканчиваются (меньше 10 шт). Можете изменить текст перед копированием.</p>
             <textarea id="supplier-order-text" style="width:100%; height:250px; background:rgba(0,0,0,0.5); color:#fff; padding:15px; border-radius:12px; border:1px solid var(--border); font-family:inherit; font-size:14px; margin-bottom:20px; outline:none; resize:vertical;"></textarea>
             <button onclick="copySupplierOrder()" class="btn-outline" style="border-color:#3498db; color:#3498db; width:100%; font-weight:800; font-size:16px;">📋 СКОПИРОВАТЬ ТЕКСТ</button>
         </div>
@@ -362,6 +311,12 @@
                 <button onclick="processPayment('Наличные')" class="btn-pay cash">💵 НАЛИЧНЫЕ</button>
                 <button onclick="processPayment('QR')" class="btn-pay qr">📱 QR-КОД</button>
                 <button onclick="showMixPay()" class="btn-pay mix">☯️ РАЗДЕЛИТЬ (НАЛ + QR)</button>
+                <div style="display:flex; gap:10px; margin-top:5px;">
+                    <button onclick="splitPayment(2)" class="btn-outline flex-1">На 2х</button>
+                    <button onclick="splitPayment(3)" class="btn-outline flex-1">На 3х</button>
+                    <button onclick="splitPayment(4)" class="btn-outline flex-1">На 4х</button>
+                </div>
+                <div id="split-info" style="display:none; text-align:center; font-size:16px; margin:5px 0 10px; background:rgba(212,175,55,0.1); padding:10px; border-radius:10px; color:var(--white);"></div>
                 <button onclick="processPayment('Долг')" class="btn-pay debt">В ДОЛГ</button>
             </div>
 
