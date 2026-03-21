@@ -130,6 +130,14 @@ window.submitGuestReservation = function() {
     if(t) { t.res = toArr(t.res); t.res.push(resString); saveToCloud(); alert("Успешно! Ваша бронь отправлена."); document.getElementById('guest-name').value = ''; document.getElementById('guest-phone').value = ''; document.getElementById('guest-time').value = ''; renderGuestTables(); }
 }
 
+window.submitGuestCall = function() {
+    let tableId = document.getElementById('guest-call-table').value;
+    cloudState.notifications = toArr(cloudState.notifications);
+    cloudState.notifications.push({ id: Date.now(), table: tableId, time: new Date().toLocaleTimeString().slice(0,5) });
+    saveToCloud(); document.getElementById('guest-call-modal').style.display = 'none'; alert("Администратор уведомлен!");
+}
+window.dismissNotification = function(id) { cloudState.notifications = toArr(cloudState.notifications).filter(n => n.id !== id); saveToCloud(); }
+
 // === АВТОРИЗАЦИЯ ===
 window.login = function() {
     const val = document.getElementById('staff-select').value;
@@ -147,8 +155,6 @@ window.logout = function() { document.getElementById('z-report-modal').style.dis
 function getCurrentShiftData() {
     let hist = toArr(cloudState.history); 
     let lastZ = (hist.length > 0) ? hist[hist.length - 1].timestamp : 0;
-    
-    // ФИКС ВЫРУЧКИ (Жесткая отсечка 20 марта 2026, 14:00:00)
     const shiftFixTime = new Date(2026, 2, 20, 14, 0, 0).getTime();
     if (lastZ < shiftFixTime) { lastZ = shiftFixTime; }
 
@@ -177,7 +183,7 @@ function getCurrentShiftData() {
     return { cash, qr, table, bar, total, salaryBase, expTotal, expectedCash: cash - expTotal, debtReturns, debtIssued, checksCount, barCostTotal };
 }
 
-// === УМНАЯ ШАПКА И ЖЕЛЕЗНАЯ ЗАРПЛАТА ===
+// === УМНАЯ ШАПКА ===
 function renderGlobalStats() {
     if(!localAuth.isAuth) return;
     let shift = getCurrentShiftData();
@@ -206,7 +212,6 @@ function renderGlobalStats() {
     });
     if(adminDebtsDetails.length > 0) adminDebtsDetails = adminDebtsDetails.slice(0, -3);
 
-    // ЖЕЛЕЗНЫЙ РАСЧЕТ ЗАРПЛАТЫ АДМИНА
     let shiftZp = 0;
     if(!isOwner) {
         if(shift.salaryBase === 0) {
@@ -214,37 +219,25 @@ function renderGlobalStats() {
             let someoneElseWorked = toArr(cloudState.history).some(h => (h.timestamp ? new Date(h.timestamp).toLocaleDateString() : "") === todayStr && h.admin !== localAuth.user.name && h.total > 0);
             shiftZp = someoneElseWorked ? 0 : 6000;
         } else {
-            // Простая формула: 6000 (оклад) + 8% (от выручки)
-            shiftZp = Math.round(shift.salaryBase * 0.08) + 6000; 
+            let todayStr = new Date().toLocaleDateString();
+            let alreadyWorkedToday = toArr(cloudState.history).some(h => (h.timestamp ? new Date(h.timestamp).toLocaleDateString() : "") === todayStr && h.admin === localAuth.user.name);
+            if (alreadyWorkedToday) { shiftZp = Math.round(shift.salaryBase * 0.08); } else { shiftZp = Math.round(shift.salaryBase * 0.08 + 6000); }
         }
     }
     let accZp = (cloudState.ownerAcc && cloudState.ownerAcc[localAuth.user.name]) ? cloudState.ownerAcc[localAuth.user.name] : 0;
 
     let html = `<button onclick="document.getElementById('expense-modal').style.display='flex'" class="btn-expense">➖ РАСХОД</button>`;
     if (isOwner) {
-        html += `
-            <div class="global-stat-item"><div class="stat-label">АКТИВНЫЕ СТОЛЫ</div><div class="stat-value gold-text" style="font-size:32px;">${activeTablesCount} / 6</div><div style="font-size:11px; color:var(--gray); margin-top:5px; font-weight:bold;">На столах: ${moneyOnTables.toLocaleString()} ₸</div></div>
-            <div class="global-stat-item"><div class="stat-label">ВЫРУЧКА СМЕНЫ</div><div class="stat-value">${shift.total.toLocaleString()} ₸</div><div style="font-size:11px; color:var(--gray); margin-top:5px; font-weight:bold;">Нал: ${shift.cash.toLocaleString()} | QR: ${shift.qr.toLocaleString()}</div></div>
-            <div class="global-stat-item"><div class="stat-label" style="color:var(--red);">ДОЛГИ КЛУБУ</div><div class="stat-value" style="color:var(--red);">${totalDebts.toLocaleString()} ₸</div></div>
-            <div class="global-stat-item" style="border-right: none;"><div class="stat-label" style="color:var(--gold);">ДОЛГ ПО ЗП АДМИНАМ</div><div class="stat-value" style="color:var(--gold);">${totalAdminOwed.toLocaleString()} ₸</div><div style="font-size:10px; color:var(--gray); margin-top:5px;">${adminDebtsDetails || 'Долгов нет'}</div></div>
-        `;
+        html += `<div class="global-stat-item"><div class="stat-label">АКТИВНЫЕ СТОЛЫ</div><div class="stat-value gold-text" style="font-size:32px;">${activeTablesCount} / 6</div><div style="font-size:11px; color:var(--gray); margin-top:5px; font-weight:bold;">На столах: ${moneyOnTables.toLocaleString()} ₸</div></div><div class="global-stat-item"><div class="stat-label">ВЫРУЧКА СМЕНЫ</div><div class="stat-value">${shift.total.toLocaleString()} ₸</div><div style="font-size:11px; color:var(--gray); margin-top:5px; font-weight:bold;">Нал: ${shift.cash.toLocaleString()} | QR: ${shift.qr.toLocaleString()}</div></div><div class="global-stat-item"><div class="stat-label" style="color:var(--red);">ДОЛГИ КЛУБУ</div><div class="stat-value" style="color:var(--red);">${totalDebts.toLocaleString()} ₸</div></div><div class="global-stat-item" style="border-right: none;"><div class="stat-label" style="color:var(--gold);">ДОЛГ ПО ЗП АДМИНАМ</div><div class="stat-value" style="color:var(--gold);">${totalAdminOwed.toLocaleString()} ₸</div><div style="font-size:10px; color:var(--gray); margin-top:5px;">${adminDebtsDetails || 'Долгов нет'}</div></div>`;
     } else {
-        html += `
-            <div class="global-stat-item"><div class="stat-label">ВЫРУЧКА СМЕНЫ</div><div class="stat-value gold-text">${shift.total.toLocaleString()} ₸</div><div style="font-size:11px; color:var(--gray); margin-top:5px; font-weight:bold;">Нал: ${shift.cash.toLocaleString()} | QR: ${shift.qr.toLocaleString()}</div></div>
-            <div class="global-stat-item"><div class="stat-label">ДЕНЬГИ НА СТОЛАХ</div><div class="stat-value">${moneyOnTables.toLocaleString()} ₸</div><div style="font-size:11px; color:var(--gray); margin-top:5px; font-weight:bold;">Ожидается оплата</div></div>
-            <div class="global-stat-item"><div class="stat-label">МОЯ ЗП СМЕНЫ</div><div class="stat-value">${shiftZp.toLocaleString()} ₸</div></div>
-            <div class="global-stat-item" style="border-right: none;"><div class="stat-label" style="color:var(--green);">МОЙ БАЛАНС (К ВЫПЛАТЕ)</div><div class="stat-value" style="color:var(--green);">${(accZp + shiftZp).toLocaleString()} ₸</div></div>
-        `;
+        html += `<div class="global-stat-item"><div class="stat-label">ВЫРУЧКА СМЕНЫ</div><div class="stat-value gold-text">${shift.total.toLocaleString()} ₸</div><div style="font-size:11px; color:var(--gray); margin-top:5px; font-weight:bold;">Нал: ${shift.cash.toLocaleString()} | QR: ${shift.qr.toLocaleString()}</div></div><div class="global-stat-item"><div class="stat-label">ДЕНЬГИ НА СТОЛАХ</div><div class="stat-value">${moneyOnTables.toLocaleString()} ₸</div><div style="font-size:11px; color:var(--gray); margin-top:5px; font-weight:bold;">Ожидается оплата</div></div><div class="global-stat-item"><div class="stat-label">МОЯ ЗП СМЕНЫ</div><div class="stat-value">${shiftZp.toLocaleString()} ₸</div></div><div class="global-stat-item" style="border-right: none;"><div class="stat-label" style="color:var(--green);">МОЙ БАЛАНС (К ВЫПЛАТЕ)</div><div class="stat-value" style="color:var(--green);">${(accZp + shiftZp).toLocaleString()} ₸</div></div>`;
     }
-
-    let statsBar = document.getElementById('dynamic-global-stats');
-    if(statsBar) statsBar.innerHTML = html;
+    let statsBar = document.getElementById('dynamic-global-stats'); if(statsBar) statsBar.innerHTML = html;
 }
 
 window.confirmZReport = function() {
     let physicalCash = parseInt(document.getElementById('z-cash-input').value) || 0;
-    let shift = getCurrentShiftData();
-    let diff = physicalCash - shift.expectedCash;
+    let shift = getCurrentShiftData(); let diff = physicalCash - shift.expectedCash;
     
     let salary = 0;
     if (localAuth.user.role !== 'owner') {
@@ -253,8 +246,9 @@ window.confirmZReport = function() {
             let someoneElseWorked = toArr(cloudState.history).some(h => (h.timestamp ? new Date(h.timestamp).toLocaleDateString() : "") === todayStr && h.admin !== localAuth.user.name && h.total > 0);
             salary = someoneElseWorked ? 0 : 6000;
         } else {
-            // Простая формула 6000 + 8%
-            salary = Math.round(shift.salaryBase * 0.08) + 6000; 
+            let todayStr = new Date().toLocaleDateString();
+            let alreadyWorkedToday = toArr(cloudState.history).some(h => (h.timestamp ? new Date(h.timestamp).toLocaleDateString() : "") === todayStr && h.admin === localAuth.user.name);
+            if (alreadyWorkedToday) { salary = Math.round(shift.salaryBase * 0.08); } else { salary = Math.round(shift.salaryBase * 0.08 + 6000); }
         }
     }
     
@@ -281,7 +275,6 @@ window.saveExpense = function() {
     let desc = document.getElementById('exp-desc').value;
     let catEl = document.getElementById('exp-category');
     let cat = catEl ? catEl.value : 'Расход';
-    
     if(!sum || !desc) return alert("Заполните все поля!");
     
     let fullDesc = `[${cat}] ${desc}`; 
@@ -294,34 +287,24 @@ function reverseCheckStats(c) {
     if(c.payMethod === 'Долг' && cloudState.debts) {
         let debtsArr = toArr(cloudState.debts);
         let d = debtsArr.find(x => x.name.toLowerCase() === c.name.toLowerCase());
-        if(d) {
-            d.total -= c.total; 
-            d.history = toArr(d.history); d.history.push(`Отмена чека: -${c.total}₸`);
-            if(d.total <= 0) cloudState.debts = debtsArr.filter(x => x.name.toLowerCase() !== c.name.toLowerCase());
-            else cloudState.debts = debtsArr;
-        }
+        if(d) { d.total -= c.total; d.history = toArr(d.history); d.history.push(`Отмена чека: -${c.total}₸`); if(d.total <= 0) cloudState.debts = debtsArr.filter(x => x.name.toLowerCase() !== c.name.toLowerCase()); else cloudState.debts = debtsArr; }
     }
 }
 
 window.restoreArchiveCheck = function(id) {
     let hist = toArr(cloudState.history); let lastZ = (hist && hist.length > 0) ? hist[hist.length - 1].timestamp : 0;
-    const shiftFixTime = new Date(2026, 2, 20, 14, 0, 0).getTime();
-    if(lastZ < shiftFixTime) lastZ = shiftFixTime;
+    const shiftFixTime = new Date(2026, 2, 20, 14, 0, 0).getTime(); if(lastZ < shiftFixTime) lastZ = shiftFixTime;
 
     cloudState.archive = toArr(cloudState.archive); let cIdx = cloudState.archive.findIndex(x => x.id === id);
     if(cIdx === -1) return; let c = cloudState.archive[cIdx];
     
     if(!localAuth.user || localAuth.user.role !== 'owner') { if(c.id < lastZ) return alert("Этот чек из прошлой смены! Вернуть нельзя."); }
-    if(confirm(`Вернуть чек "${c.name}" в неоплаченные?`)) {
-        reverseCheckStats(c); delete c.payMethod; delete c.admin; delete c.isDebtPayment;
-        cloudState.checks = toArr(cloudState.checks); cloudState.checks.push(c); cloudState.archive.splice(cIdx, 1); saveToCloud();
-    }
+    if(confirm(`Вернуть чек "${c.name}" в неоплаченные?`)) { reverseCheckStats(c); delete c.payMethod; delete c.admin; delete c.isDebtPayment; cloudState.checks = toArr(cloudState.checks); cloudState.checks.push(c); cloudState.archive.splice(cIdx, 1); saveToCloud(); }
 }
 
 window.restoreDebtCheck = function(name) {
     let arch = toArr(cloudState.archive); let hist = toArr(cloudState.history); let lastZ = (hist.length > 0) ? hist[hist.length - 1].timestamp : 0;
-    const shiftFixTime = new Date(2026, 2, 20, 14, 0, 0).getTime();
-    if (lastZ < shiftFixTime) lastZ = shiftFixTime;
+    const shiftFixTime = new Date(2026, 2, 20, 14, 0, 0).getTime(); if (lastZ < shiftFixTime) lastZ = shiftFixTime;
 
     let cArr = arch.filter(x => x.name.toLowerCase() === name.toLowerCase() && x.payMethod === 'Долг' && x.id > lastZ);
     if(cArr.length === 0) return alert("Исходный чек не найден в текущей смене!");
@@ -333,10 +316,7 @@ window.deleteArchiveCheck = function(ts) {
         cloudState.archive = toArr(cloudState.archive); let cIdx = cloudState.archive.findIndex(x => x.id === ts);
         if(cIdx === -1) return; let c = cloudState.archive[cIdx];
         reverseCheckStats(c); 
-        if(c.bar && toArr(c.bar).length > 0) { 
-            cloudState.inventory = toArr(cloudState.inventory); 
-            toArr(c.bar).forEach(bItem => { let invItem = cloudState.inventory.find(x => x.name === bItem.name); if(invItem) invItem.qty += 1; else cloudState.inventory.push({name: bItem.name, cost: bItem.cost||0, price: bItem.price, qty: 1}); }); 
-        }
+        if(c.bar && toArr(c.bar).length > 0) { cloudState.inventory = toArr(cloudState.inventory); toArr(c.bar).forEach(bItem => { let invItem = cloudState.inventory.find(x => x.name === bItem.name); if(invItem) invItem.qty += 1; else cloudState.inventory.push({name: bItem.name, cost: bItem.cost||0, price: bItem.price, qty: 1}); }); }
         cloudState.archive.splice(cIdx, 1); saveToCloud();
     }
 }
@@ -344,8 +324,7 @@ window.deleteArchiveCheck = function(ts) {
 // === УМНАЯ СИСТЕМА ТАРИФОВ И ПАУЗА ===
 function calcCost(start) { 
     if(!start) return 0; 
-    let startTime = Number(start); let endTime = Date.now();
-    if(endTime < startTime) return 0;
+    let startTime = Number(start); let endTime = Date.now(); if(endTime < startTime) return 0;
     let totalCost = 0; let currentMs = startTime;
     while (currentMs < endTime) { let h = new Date(currentMs).getHours(); let ratePerHour = (h >= 11 && h < 18) ? 2000 : 3000; totalCost += ratePerHour / 60; currentMs += 60000; }
     return Math.ceil(totalCost / 50) * 50; 
@@ -361,14 +340,8 @@ function formatTime(ms) {
 }
 
 window.startTable = function(id) { cloudState.tables = toArr(cloudState.tables); let t = cloudState.tables.find(x => x.id === id); if(t) { t.active = true; t.start = Date.now(); t.bar = []; t.paused = false; t.accCost = 0; t.accTime = 0; saveToCloud(); } }
-window.pauseTable = function(id) {
-    cloudState.tables = toArr(cloudState.tables); let t = cloudState.tables.find(x => x.id === id); 
-    if(t && t.active && !t.paused) { t.paused = true; t.accCost = (t.accCost || 0) + calcCost(t.start); t.accTime = (t.accTime || 0) + (Date.now() - Number(t.start)); t.start = null; saveToCloud(); }
-}
-window.resumeTable = function(id) {
-    cloudState.tables = toArr(cloudState.tables); let t = cloudState.tables.find(x => x.id === id); 
-    if(t && t.active && t.paused) { t.paused = false; t.start = Date.now(); saveToCloud(); }
-}
+window.pauseTable = function(id) { cloudState.tables = toArr(cloudState.tables); let t = cloudState.tables.find(x => x.id === id); if(t && t.active && !t.paused) { t.paused = true; t.accCost = (t.accCost || 0) + calcCost(t.start); t.accTime = (t.accTime || 0) + (Date.now() - Number(t.start)); t.start = null; saveToCloud(); } }
+window.resumeTable = function(id) { cloudState.tables = toArr(cloudState.tables); let t = cloudState.tables.find(x => x.id === id); if(t && t.active && t.paused) { t.paused = false; t.start = Date.now(); saveToCloud(); } }
 
 let stoppingTableId = null;
 window.openStopTableModal = function(id) { 
@@ -642,10 +615,36 @@ function renderAccounting() {
     }).join('');
 }
 
-window.payAdminAdvance = function(name) { let currentDebt = (cloudState.ownerAcc && cloudState.ownerAcc[name]) ? cloudState.ownerAcc[name] : 0; let s = prompt(`К выплате ${name}: ${currentDebt}₸.\nСумма аванса/выплаты:`); if(s && !isNaN(s)) { if(!cloudState.ownerAcc) cloudState.ownerAcc = {}; cloudState.ownerAcc[name] = currentDebt - parseInt(s); saveToCloud(); render(); } }
-window.fullPayAdmin = function(name) { if(confirm(`Выдать полный расчет администратору ${name} и обнулить его баланс?`)) { if(!cloudState.ownerAcc) cloudState.ownerAcc = {}; cloudState.ownerAcc[name] = 0; saveToCloud(); render(); } }
-window.editAdminSalary = function(name) { let currentDebt = (cloudState.ownerAcc && cloudState.ownerAcc[name]) ? cloudState.ownerAcc[name] : 0; let s = prompt(`Ввести новую точную сумму баланса для ${name}:`, currentDebt); if(s !== null && !isNaN(s)) { if(!cloudState.ownerAcc) cloudState.ownerAcc = {}; cloudState.ownerAcc[name] = parseInt(s); saveToCloud(); render(); } }
-window.fineAdmin = function(name) { let currentDebt = (cloudState.ownerAcc && cloudState.ownerAcc[name]) ? cloudState.ownerAcc[name] : 0; let s = prompt(`Сумма штрафа для ${name} (отнимется от ЗП):`); if(s && !isNaN(s)) { if(!cloudState.ownerAcc) cloudState.ownerAcc = {}; cloudState.ownerAcc[name] = currentDebt - parseInt(s); saveToCloud(); render(); } }
+// === ДЕТАЛЬНЫЕ ЧЕКИ (ФУНКЦИИ СЧЕТА И ЧЕКА) ===
+let currentBillTableId = null;
+window.openTableBill = function(id) { 
+    currentBillTableId = id; 
+    let modal = document.getElementById('table-bill-modal');
+    if(!modal) return alert("ОШИБКА: Окно счета не найдено в HTML. Обновите файл index.html!");
+    renderTableBill(); 
+    modal.style.display = 'flex'; 
+}
+
+function renderTableBill() {
+    if (!currentBillTableId) return; let t = toArr(cloudState.tables).find(x => x.id === currentBillTableId); if (!t) return;
+    
+    try {
+        document.getElementById('table-bill-id').innerText = t.id;
+        let cost = t.paused ? (t.accCost || 0) : ((t.accCost || 0) + calcCost(t.start)); 
+        document.getElementById('table-bill-time-val').innerText = cost.toLocaleString() + " ₸";
+        let barSum = 0; 
+        let html = toArr(t.bar).map((b, i) => { barSum += b.price; return `<div class="edit-bar-item"><span>${b.name} (${b.price} ₸)</span> <button onclick="removeTableBarItemFromBill(${i})" class="btn-outline" style="color:var(--red); border-color:var(--red); padding:3px 8px; font-size:10px;">❌</button></div>`; }).join('');
+        document.getElementById('table-bill-bar-list').innerHTML = html || '<span style="color:var(--gray); font-size:12px;">Пусто</span>'; 
+        document.getElementById('table-bill-bar-sum').innerText = barSum.toLocaleString(); 
+        document.getElementById('table-bill-total').innerText = (cost + barSum).toLocaleString();
+    } catch(e) { console.error("Ошибка открытия счета стола:", e); }
+}
+
+window.removeTableBarItemFromBill = function(idx) {
+    if(!confirm("Убрать товар? Он вернется на склад.")) return; 
+    cloudState.tables = toArr(cloudState.tables); let t = cloudState.tables.find(x => x.id === currentBillTableId); t.bar = toArr(t.bar); let item = t.bar.splice(idx, 1)[0];
+    cloudState.inventory = toArr(cloudState.inventory); let invItem = cloudState.inventory.find(x => x.name === item.name); if(invItem) invItem.qty += 1; saveToCloud(); renderTableBill(); 
+}
 
 function renderOnlineAdmins() {
     let onlineHtml = ''; let now = Date.now();
@@ -660,6 +659,44 @@ function renderOnlineAdmins() {
         onlineHtml += `<span style="font-size:13px; color:var(--white); margin-right:15px; font-weight:700;"><span style="color:${color}; font-size:16px; vertical-align:middle;">●</span> ${admin} - ${statusText}</span>`;
     });
     let indicator = document.getElementById('online-admins-indicator'); if(indicator) indicator.innerHTML = onlineHtml;
+}
+
+window.openFullCheck = function(idx) {
+    let checks = toArr(cloudState.checks); if(!checks || !checks[idx]) return; let c = checks[idx]; openFullCheckObj(c);
+}
+window.openArchiveFullCheck = function(id) {
+    let c = toArr(cloudState.archive).find(x => x.id === id); if(c) openFullCheckObj(c);
+}
+
+window.openFullCheckObj = function(c) {
+    if(!c) return;
+    let modal = document.getElementById('full-check-modal');
+    if(!modal) return alert("ОШИБКА: Окно чека не найдено в HTML. Обновите файл index.html!");
+    
+    try {
+        document.getElementById('bill-date').innerText = c.date + " " + (c.endTime || ''); 
+        document.getElementById('bill-guest').innerText = c.name || 'Гость'; 
+        document.getElementById('bill-table-num').innerText = c.table || ''; 
+        document.getElementById('bill-start').innerText = c.startTime || '--:--'; 
+        document.getElementById('bill-end').innerText = c.endTime || '--:--'; 
+        document.getElementById('bill-duration').innerText = c.duration || '--ч --м';
+        
+        let grouped = {}; 
+        toArr(c.bar).forEach(i => { grouped[i.name] = grouped[i.name] || {q:0, p:i.price}; grouped[i.name].q++; });
+        
+        document.getElementById('bill-items-body').innerHTML = Object.keys(grouped).map(k => `<tr><td style="padding:10px 0;">${k}</td><td style="padding:10px 0;">${grouped[k].q}</td><td style="padding:10px 0;">${grouped[k].p}</td><td style="padding:10px 0;">${grouped[k].q*grouped[k].p}</td></tr>`).join('');
+        
+        document.getElementById('bill-time-sum').innerText = c.timeCost || 0; 
+        document.getElementById('bill-bar-sum').innerText = c.barCost || 0; 
+        document.getElementById('bill-total').innerText = c.total || 0;
+        
+        let discountRow = document.getElementById('bill-discount-row');
+        if(discountRow) {
+            if(c.discount > 0) { discountRow.style.display='block'; document.getElementById('bill-discount-val').innerText = c.discount; } 
+            else { discountRow.style.display='none'; }
+        }
+        modal.style.display='flex';
+    } catch(e) { console.error("Ошибка отрисовки чека:", e); }
 }
 
 function renderTables() {
@@ -699,6 +736,15 @@ function renderTables() {
 
 function render() {
     let selectElem = document.getElementById('staff-select');
+    
+    let notifs = toArr(cloudState.notifications);
+    let nContainer = document.getElementById('crm-notifications');
+    if(nContainer) {
+        if(notifs.length > 0 && localAuth.isAuth) {
+            nContainer.innerHTML = notifs.map(n => `<div class="admin-alert" style="background: #ff4c4c; color: #fff; padding: 40px 20px; text-align: center; font-size: 32px; font-weight: 900; letter-spacing: 2px; box-shadow: 0 10px 30px rgba(255,0,0,0.5); display: flex; flex-direction: column; gap: 20px; align-items: center; justify-content: center; position: fixed; inset: 0; z-index: 999999; animation: pulse 1s infinite alternate;">🚨 СТОЛ ${n.table} ПРОСИТ ПОДОЙТИ! (Вызов в ${n.time})<button onclick="dismissNotification(${n.id})" style="background: #fff; color: #000; border: none; padding: 20px 40px; border-radius: 16px; font-weight: 900; font-size: 20px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">✅ ПОНЯЛ, ИДУ</button></div>`).join('');
+        } else { nContainer.innerHTML = ''; }
+    }
+
     if (!localAuth.isAuth) { 
         let html = '<option value="0">Султан</option><option value="1">Дидар</option><option value="owner">Хозяин</option>';
         toArr(cloudState.customAdmins).forEach((a, i) => { html += `<option value="custom_${a.id}">${a.name}</option>`; });
@@ -732,6 +778,30 @@ function render() {
         let salariesListEl = document.getElementById('admin-salaries-list');
         if (salariesListEl) salariesListEl.innerHTML = adminSalariesHtml;
     }
+
+    let shift = getCurrentShiftData();
+    let shiftZp = 0;
+    if(!isOwner) {
+        if(shift.salaryBase === 0) {
+            let todayStr = new Date().toLocaleDateString();
+            let someoneElseWorked = toArr(cloudState.history).some(h => (h.timestamp ? new Date(h.timestamp).toLocaleDateString() : "") === todayStr && h.admin !== localAuth.user.name && h.total > 0);
+            shiftZp = someoneElseWorked ? 0 : 6000;
+        } else {
+            let todayStr = new Date().toLocaleDateString();
+            let alreadyWorkedToday = toArr(cloudState.history).some(h => (h.timestamp ? new Date(h.timestamp).toLocaleDateString() : "") === todayStr && h.admin === localAuth.user.name);
+            if (alreadyWorkedToday) { shiftZp = Math.round(shift.salaryBase * 0.08); } else { shiftZp = Math.round(shift.salaryBase * 0.08 + 6000); }
+        }
+    }
+    let accZp = (cloudState.ownerAcc && cloudState.ownerAcc[localAuth.user.name]) ? cloudState.ownerAcc[localAuth.user.name] : 0;
+
+    let globalRevEl = document.getElementById('global-rev');
+    if(globalRevEl) globalRevEl.innerHTML = shift.total.toLocaleString() + " ₸<br><span style='font-size:11px; color:var(--gray); font-weight:700; letter-spacing:1px;'>НАЛ: " + shift.cash.toLocaleString() + " | QR: " + shift.qr.toLocaleString() + "</span>";
+    
+    let globalShiftZpEl = document.getElementById('global-shift-zp');
+    if(globalShiftZpEl) globalShiftZpEl.innerText = shiftZp.toLocaleString() + " ₸";
+    
+    let globalTotalZpEl = document.getElementById('global-total-zp');
+    if(globalTotalZpEl) globalTotalZpEl.innerText = isOwner ? "---" : (accZp + shiftZp).toLocaleString() + " ₸";
 
     let lowStockCount = toArr(cloudState.inventory).filter(i => i.qty < 5).length;
     let sBadge = document.getElementById('stock-badge');
@@ -780,10 +850,4 @@ function render() {
 
         return `<tr><td><b class="gold-text" style="font-size:18px;">${d.name}</b><br><span style="font-size:11px; color:var(--gray);">Выдал: <b style="color:var(--white);">${d.admin || 'Неизвестно'}</b></span>${warningHtml}</td><td style="color:var(--red); font-weight:800; font-size:24px;">${d.total.toLocaleString()} ₸</td><td><span style="font-size:12px; color:var(--gray); line-height:1.5;">${toArr(d.history).join('<br>')}</span></td><td style="text-align:right; vertical-align:middle; width:180px;">${payBtn}${penaltyBtn}${returnCheckBtn}${delBtn}</td></tr>`;
     }).join('');
-    
-    if(isOwner) {
-        document.getElementById('vip-guests-list').innerHTML = toArr(cloudState.vips).map((v) => `<span style="background:rgba(212,175,55,0.1); border:1px solid var(--gold); padding:8px 15px; border-radius:8px; display:inline-flex; align-items:center; gap:10px; color:var(--gold); font-weight:700;">${v.name} <span class="vip-badge">-${v.discount}%</span> <span onclick="delVipGuest(${v.id})" style="color:var(--red); cursor:pointer; font-weight:bold; font-size:18px;">×</span></span>`).join('');
-        document.getElementById('custom-admins-list').innerHTML = toArr(cloudState.customAdmins).map((a, i) => `<span style="background:#16261c; border:1px solid var(--border); padding:10px 18px; border-radius:12px; display:inline-flex; align-items:center; gap:12px; font-weight:600;">${a.name} <span onclick="delCustomAdmin(${i})" style="color:var(--red); cursor:pointer; font-weight:bold; font-size:18px;">×</span></span>`).join('');
-        document.getElementById('blacklist-guests-list').innerHTML = toArr(cloudState.blacklist).map((b) => `<span style="background:rgba(255,76,76,0.1); border:1px solid var(--red); padding:8px 15px; border-radius:8px; display:inline-flex; align-items:center; gap:10px; color:var(--red); font-weight:700;">${b.name} <span style="color:#fff; font-size:11px; font-weight:normal;">(${b.reason})</span> <span onclick="delBlacklist(${b.id})" style="color:var(--white); cursor:pointer; font-weight:bold; font-size:18px;">×</span></span>`).join('');
-    }
 }
