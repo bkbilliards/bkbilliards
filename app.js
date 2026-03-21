@@ -148,7 +148,7 @@ function getCurrentShiftData() {
     let hist = toArr(cloudState.history); 
     let lastZ = (hist.length > 0) ? hist[hist.length - 1].timestamp : 0;
     
-    // ФИКС ДЛЯ СМЕНЫ (Жесткая отсечка 20 марта 2026, 14:00:00)
+    // ФИКС ВЫРУЧКИ (Жесткая отсечка 20 марта 2026, 14:00:00)
     const shiftFixTime = new Date(2026, 2, 20, 14, 0, 0).getTime();
     if (lastZ < shiftFixTime) { lastZ = shiftFixTime; }
 
@@ -177,7 +177,7 @@ function getCurrentShiftData() {
     return { cash, qr, table, bar, total, salaryBase, expTotal, expectedCash: cash - expTotal, debtReturns, debtIssued, checksCount, barCostTotal };
 }
 
-// === УМНАЯ ШАПКА ===
+// === УМНАЯ ШАПКА И ЖЕЛЕЗНАЯ ЗАРПЛАТА ===
 function renderGlobalStats() {
     if(!localAuth.isAuth) return;
     let shift = getCurrentShiftData();
@@ -196,7 +196,6 @@ function renderGlobalStats() {
     let totalDebts = toArr(cloudState.debts).reduce((s, d) => s + d.total, 0);
     let totalAdminOwed = 0; let adminDebtsDetails = '';
     
-    // Подсчитываем долги всем админам
     let allAdminsList = STAFF_HARDCODED.filter(s => s.role === 'admin').map(s => s.name);
     toArr(cloudState.customAdmins).forEach(a => allAdminsList.push(a.name));
     
@@ -207,6 +206,7 @@ function renderGlobalStats() {
     });
     if(adminDebtsDetails.length > 0) adminDebtsDetails = adminDebtsDetails.slice(0, -3);
 
+    // ЖЕЛЕЗНЫЙ РАСЧЕТ ЗАРПЛАТЫ АДМИНА
     let shiftZp = 0;
     if(!isOwner) {
         if(shift.salaryBase === 0) {
@@ -214,9 +214,8 @@ function renderGlobalStats() {
             let someoneElseWorked = toArr(cloudState.history).some(h => (h.timestamp ? new Date(h.timestamp).toLocaleDateString() : "") === todayStr && h.admin !== localAuth.user.name && h.total > 0);
             shiftZp = someoneElseWorked ? 0 : 6000;
         } else {
-            let todayStr = new Date().toLocaleDateString();
-            let alreadyWorkedToday = toArr(cloudState.history).some(h => (h.timestamp ? new Date(h.timestamp).toLocaleDateString() : "") === todayStr && h.admin === localAuth.user.name);
-            if (alreadyWorkedToday) { shiftZp = Math.round(shift.salaryBase * 0.08); } else { shiftZp = Math.round(shift.salaryBase * 0.08 + 6000); }
+            // Простая формула: 6000 (оклад) + 8% (от выручки)
+            shiftZp = Math.round(shift.salaryBase * 0.08) + 6000; 
         }
     }
     let accZp = (cloudState.ownerAcc && cloudState.ownerAcc[localAuth.user.name]) ? cloudState.ownerAcc[localAuth.user.name] : 0;
@@ -254,9 +253,8 @@ window.confirmZReport = function() {
             let someoneElseWorked = toArr(cloudState.history).some(h => (h.timestamp ? new Date(h.timestamp).toLocaleDateString() : "") === todayStr && h.admin !== localAuth.user.name && h.total > 0);
             salary = someoneElseWorked ? 0 : 6000;
         } else {
-            let todayStr = new Date().toLocaleDateString();
-            let alreadyWorkedToday = toArr(cloudState.history).some(h => (h.timestamp ? new Date(h.timestamp).toLocaleDateString() : "") === todayStr && h.admin === localAuth.user.name);
-            if (alreadyWorkedToday) { salary = Math.round(shift.salaryBase * 0.08); } else { salary = Math.round(shift.salaryBase * 0.08 + 6000); }
+            // Простая формула 6000 + 8%
+            salary = Math.round(shift.salaryBase * 0.08) + 6000; 
         }
     }
     
@@ -649,31 +647,6 @@ window.fullPayAdmin = function(name) { if(confirm(`Выдать полный р�
 window.editAdminSalary = function(name) { let currentDebt = (cloudState.ownerAcc && cloudState.ownerAcc[name]) ? cloudState.ownerAcc[name] : 0; let s = prompt(`Ввести новую точную сумму баланса для ${name}:`, currentDebt); if(s !== null && !isNaN(s)) { if(!cloudState.ownerAcc) cloudState.ownerAcc = {}; cloudState.ownerAcc[name] = parseInt(s); saveToCloud(); render(); } }
 window.fineAdmin = function(name) { let currentDebt = (cloudState.ownerAcc && cloudState.ownerAcc[name]) ? cloudState.ownerAcc[name] : 0; let s = prompt(`Сумма штрафа для ${name} (отнимется от ЗП):`); if(s && !isNaN(s)) { if(!cloudState.ownerAcc) cloudState.ownerAcc = {}; cloudState.ownerAcc[name] = currentDebt - parseInt(s); saveToCloud(); render(); } }
 
-// === ДЕТАЛЬНЫЙ СЧЕТ СТОЛА ===
-let currentBillTableId = null;
-window.openTableBill = function(id) { 
-    currentBillTableId = id; renderTableBill(); document.getElementById('table-bill-modal').style.display = 'flex'; 
-}
-
-function renderTableBill() {
-    if (!currentBillTableId) return; let t = toArr(cloudState.tables).find(x => x.id === currentBillTableId); if (!t) return;
-    document.getElementById('table-bill-id').innerText = t.id;
-    let cost = t.paused ? (t.accCost || 0) : ((t.accCost || 0) + calcCost(t.start)); 
-    document.getElementById('table-bill-time-val').innerText = cost.toLocaleString() + " ₸";
-    let barSum = 0; 
-    let html = toArr(t.bar).map((b, i) => { barSum += b.price; return `<div class="edit-bar-item"><span>${b.name} (${b.price} ₸)</span> <button onclick="removeTableBarItemFromBill(${i})" class="btn-outline" style="color:var(--red); border-color:var(--red); padding:3px 8px; font-size:10px;">❌</button></div>`; }).join('');
-    document.getElementById('table-bill-bar-list').innerHTML = html || '<span style="color:var(--gray); font-size:12px;">Пусто</span>'; 
-    document.getElementById('table-bill-bar-sum').innerText = barSum.toLocaleString(); 
-    document.getElementById('table-bill-total').innerText = (cost + barSum).toLocaleString();
-}
-
-window.removeTableBarItemFromBill = function(idx) {
-    if(!confirm("Убрать товар? Он вернется на склад.")) return; 
-    cloudState.tables = toArr(cloudState.tables); let t = cloudState.tables.find(x => x.id === currentBillTableId); t.bar = toArr(t.bar); let item = t.bar.splice(idx, 1)[0];
-    cloudState.inventory = toArr(cloudState.inventory); let invItem = cloudState.inventory.find(x => x.name === item.name); if(invItem) invItem.qty += 1; saveToCloud(); renderTableBill(); 
-}
-
-// === ОНЛАЙН РАДАР ===
 function renderOnlineAdmins() {
     let onlineHtml = ''; let now = Date.now();
     let allAdminsList = STAFF_HARDCODED.filter(s => s.role === 'admin').map(s => s.name);
@@ -687,30 +660,6 @@ function renderOnlineAdmins() {
         onlineHtml += `<span style="font-size:13px; color:var(--white); margin-right:15px; font-weight:700;"><span style="color:${color}; font-size:16px; vertical-align:middle;">●</span> ${admin} - ${statusText}</span>`;
     });
     let indicator = document.getElementById('online-admins-indicator'); if(indicator) indicator.innerHTML = onlineHtml;
-}
-
-// === ПОЛНЫЙ ЧЕК ===
-window.openFullCheck = function(idx) {
-    let checks = toArr(cloudState.checks); if(!checks || !checks[idx]) return; let c = checks[idx]; openFullCheckObj(c);
-}
-window.openArchiveFullCheck = function(id) {
-    let c = toArr(cloudState.archive).find(x => x.id === id); if(c) openFullCheckObj(c);
-}
-window.openFullCheckObj = function(c) {
-    if(!c) return;
-    document.getElementById('bill-date').innerText = c.date + " " + (c.endTime || ''); 
-    document.getElementById('bill-guest').innerText = c.name; 
-    document.getElementById('bill-table-num').innerText = c.table; 
-    document.getElementById('bill-start').innerText = c.startTime || '--:--'; 
-    document.getElementById('bill-end').innerText = c.endTime || '--:--'; 
-    document.getElementById('bill-duration').innerText = c.duration || '--ч --м';
-    let grouped = {}; toArr(c.bar).forEach(i => { grouped[i.name] = grouped[i.name] || {q:0, p:i.price}; grouped[i.name].q++; });
-    document.getElementById('bill-items-body').innerHTML = Object.keys(grouped).map(k => `<tr><td style="padding:10px 0;">${k}</td><td style="padding:10px 0;">${grouped[k].q}</td><td style="padding:10px 0;">${grouped[k].p}</td><td style="padding:10px 0;">${grouped[k].q*grouped[k].p}</td></tr>`).join('');
-    document.getElementById('bill-time-sum').innerText = c.timeCost; 
-    document.getElementById('bill-bar-sum').innerText = c.barCost; 
-    document.getElementById('bill-total').innerText = c.total;
-    if(c.discount > 0) { document.getElementById('bill-discount-row').style.display='block'; document.getElementById('bill-discount-val').innerText = c.discount; } else document.getElementById('bill-discount-row').style.display='none';
-    document.getElementById('full-check-modal').style.display='flex';
 }
 
 function renderTables() {
@@ -767,7 +716,9 @@ function render() {
     document.getElementById('owner-tab').style.display = isOwner ? 'block' : 'none';
     document.getElementById('acc-tab').style.display = isOwner ? 'block' : 'none';
 
-    // РИСУЕМ КАРТОЧКИ АДМИНОВ
+    renderTables();
+    renderGlobalStats();
+
     if(isOwner) {
         let allAdminsList = STAFF_HARDCODED.filter(s => s.role === 'admin').map(s => s.name);
         toArr(cloudState.customAdmins).forEach(a => allAdminsList.push(a.name));
@@ -781,30 +732,6 @@ function render() {
         let salariesListEl = document.getElementById('admin-salaries-list');
         if (salariesListEl) salariesListEl.innerHTML = adminSalariesHtml;
     }
-
-    let shift = getCurrentShiftData();
-    let shiftZp = 0;
-    if(!isOwner) {
-        if(shift.salaryBase === 0) {
-            let todayStr = new Date().toLocaleDateString();
-            let someoneElseWorked = toArr(cloudState.history).some(h => (h.timestamp ? new Date(h.timestamp).toLocaleDateString() : "") === todayStr && h.admin !== localAuth.user.name && h.total > 0);
-            shiftZp = someoneElseWorked ? 0 : 6000;
-        } else {
-            let todayStr = new Date().toLocaleDateString();
-            let alreadyWorkedToday = toArr(cloudState.history).some(h => (h.timestamp ? new Date(h.timestamp).toLocaleDateString() : "") === todayStr && h.admin === localAuth.user.name);
-            if (alreadyWorkedToday) { shiftZp = Math.round(shift.salaryBase * 0.08); } else { shiftZp = Math.round(shift.salaryBase * 0.08 + 6000); }
-        }
-    }
-    let accZp = (cloudState.ownerAcc && cloudState.ownerAcc[localAuth.user.name]) ? cloudState.ownerAcc[localAuth.user.name] : 0;
-
-    let globalRevEl = document.getElementById('global-rev');
-    if(globalRevEl) globalRevEl.innerHTML = shift.total.toLocaleString() + " ₸<br><span style='font-size:11px; color:var(--gray); font-weight:700; letter-spacing:1px;'>НАЛ: " + shift.cash.toLocaleString() + " | QR: " + shift.qr.toLocaleString() + "</span>";
-    
-    let globalShiftZpEl = document.getElementById('global-shift-zp');
-    if(globalShiftZpEl) globalShiftZpEl.innerText = shiftZp.toLocaleString() + " ₸";
-    
-    let globalTotalZpEl = document.getElementById('global-total-zp');
-    if(globalTotalZpEl) globalTotalZpEl.innerText = isOwner ? "---" : (accZp + shiftZp).toLocaleString() + " ₸";
 
     let lowStockCount = toArr(cloudState.inventory).filter(i => i.qty < 5).length;
     let sBadge = document.getElementById('stock-badge');
@@ -853,4 +780,10 @@ function render() {
 
         return `<tr><td><b class="gold-text" style="font-size:18px;">${d.name}</b><br><span style="font-size:11px; color:var(--gray);">Выдал: <b style="color:var(--white);">${d.admin || 'Неизвестно'}</b></span>${warningHtml}</td><td style="color:var(--red); font-weight:800; font-size:24px;">${d.total.toLocaleString()} ₸</td><td><span style="font-size:12px; color:var(--gray); line-height:1.5;">${toArr(d.history).join('<br>')}</span></td><td style="text-align:right; vertical-align:middle; width:180px;">${payBtn}${penaltyBtn}${returnCheckBtn}${delBtn}</td></tr>`;
     }).join('');
+    
+    if(isOwner) {
+        document.getElementById('vip-guests-list').innerHTML = toArr(cloudState.vips).map((v) => `<span style="background:rgba(212,175,55,0.1); border:1px solid var(--gold); padding:8px 15px; border-radius:8px; display:inline-flex; align-items:center; gap:10px; color:var(--gold); font-weight:700;">${v.name} <span class="vip-badge">-${v.discount}%</span> <span onclick="delVipGuest(${v.id})" style="color:var(--red); cursor:pointer; font-weight:bold; font-size:18px;">×</span></span>`).join('');
+        document.getElementById('custom-admins-list').innerHTML = toArr(cloudState.customAdmins).map((a, i) => `<span style="background:#16261c; border:1px solid var(--border); padding:10px 18px; border-radius:12px; display:inline-flex; align-items:center; gap:12px; font-weight:600;">${a.name} <span onclick="delCustomAdmin(${i})" style="color:var(--red); cursor:pointer; font-weight:bold; font-size:18px;">×</span></span>`).join('');
+        document.getElementById('blacklist-guests-list').innerHTML = toArr(cloudState.blacklist).map((b) => `<span style="background:rgba(255,76,76,0.1); border:1px solid var(--red); padding:8px 15px; border-radius:8px; display:inline-flex; align-items:center; gap:10px; color:var(--red); font-weight:700;">${b.name} <span style="color:#fff; font-size:11px; font-weight:normal;">(${b.reason})</span> <span onclick="delBlacklist(${b.id})" style="color:var(--white); cursor:pointer; font-weight:bold; font-size:18px;">×</span></span>`).join('');
+    }
 }
