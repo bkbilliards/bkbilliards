@@ -22,7 +22,7 @@ let localAuth = JSON.parse(localStorage.getItem('sensei_auth_pro')) || { isAuth:
 
 let cloudState = { 
     tables: Array.from({length: 6}, (_, i) => ({ id: i + 1, active: false, start: null, res: [], bar: [], paused: false, accCost: 0, accTime: 0 })), 
-    checks: [], archive: [], inventory: [], debts: [], history: [], ownerAcc: {}, customAdmins: [], expenses: [], vips: [], onlineAdmins: {}
+    checks: [], archive: [], inventory: [], debts: [], history: [], ownerAcc: {}, customAdmins: [], expenses: [], vips: [], onlineAdmins: {}, notifications: [], blacklist: []
 };
 
 function toArr(data) {
@@ -46,6 +46,8 @@ dbRef.on('value', snap => {
         cloudState.vips = toArr(data.vips); 
         cloudState.ownerAcc = data.ownerAcc || {};
         cloudState.onlineAdmins = data.onlineAdmins || {};
+        cloudState.notifications = toArr(data.notifications);
+        cloudState.blacklist = toArr(data.blacklist);
     } else {
         saveToCloud();
     }
@@ -76,6 +78,7 @@ window.onload = () => {
         if(localAuth.isAuth) {
             renderTables();
             renderOnlineAdmins();
+            renderGlobalStats(); // НОВАЯ УМНАЯ ШАПКА ОБНОВЛЯЕТСЯ РАЗ В СЕКУНДУ
             if(document.getElementById('table-bill-modal') && document.getElementById('table-bill-modal').style.display === 'flex') {
                 renderTableBill();
             }
@@ -122,18 +125,22 @@ window.submitGuestReservation = function() {
     let time = document.getElementById('guest-time').value;
     let tableId = parseInt(document.getElementById('guest-table-num').value);
     if(!name || !phone || !date || !time) return alert("Пожалуйста, заполните все поля!");
-    let dParts = date.split('-');
-    let shortDate = `${dParts[2]}.${dParts[1]}`;
-    let resString = `${shortDate}, ${time} | ${name} (${phone})`;
-    cloudState.tables = toArr(cloudState.tables);
-    let t = cloudState.tables.find(x => x.id === tableId);
-    if(t) {
-        t.res = toArr(t.res); t.res.push(resString); saveToCloud();
-        alert("Успешно! Ваша бронь отправлена администратору.");
-        document.getElementById('guest-name').value = ''; document.getElementById('guest-phone').value = ''; document.getElementById('guest-time').value = '';
-        renderGuestTables();
-    }
+    let dParts = date.split('-'); let shortDate = `${dParts[2]}.${dParts[1]}`; let resString = `${shortDate}, ${time} | ${name} (${phone})`;
+    cloudState.tables = toArr(cloudState.tables); let t = cloudState.tables.find(x => x.id === tableId);
+    if(t) { t.res = toArr(t.res); t.res.push(resString); saveToCloud(); alert("Успешно! Ваша бронь отправлена."); document.getElementById('guest-name').value = ''; document.getElementById('guest-phone').value = ''; document.getElementById('guest-time').value = ''; renderGuestTables(); }
 }
+
+// ГОСТЬ ВЫЗЫВАЕТ АДМИНА
+window.submitGuestCall = function() {
+    let tableId = document.getElementById('guest-call-table').value;
+    cloudState.notifications = toArr(cloudState.notifications);
+    cloudState.notifications.push({ id: Date.now(), table: tableId, time: new Date().toLocaleTimeString().slice(0,5) });
+    saveToCloud();
+    document.getElementById('guest-call-modal').style.display = 'none';
+    alert("Администратор уведомлен и скоро подойдет к вашему столу!");
+}
+// АДМИН ЗАКРЫВАЕТ ВЫЗОВ
+window.dismissNotification = function(id) { cloudState.notifications = toArr(cloudState.notifications).filter(n => n.id !== id); saveToCloud(); }
 
 // === АВТОРИЗАЦИЯ ===
 window.login = function() {
@@ -148,12 +155,11 @@ window.login = function() {
 }
 window.logout = function() { document.getElementById('z-report-modal').style.display = 'flex'; }
 
-// === ИСТИННАЯ ДИНАМИЧЕСКАЯ ВЫРУЧКА СМЕНЫ (ФИКС БАГА С 20.03 14:00) ===
+// === ИСТИННАЯ ДИНАМИЧЕСКАЯ ВЫРУЧКА СМЕНЫ ===
 function getCurrentShiftData() {
-    let hist = toArr(cloudState.history);
-    let lastZ = (hist.length > 0) ? hist[hist.length - 1].timestamp : 0;
+    let hist = toArr(cloudState.history); let lastZ = (hist.length > 0) ? hist[hist.length - 1].timestamp : 0;
     
-    // ФИКС ДЛЯ СМЕНЫ (Жесткая отсечка 20 марта 2026, 14:00:00)
+    // ФИКС ДЛЯ СМЕНЫ СУЛТАНА (Жесткая отсечка 20 марта 2026, 14:00:00)
     const shiftFixTime = new Date(2026, 2, 20, 14, 0, 0).getTime();
     if (lastZ < shiftFixTime) { lastZ = shiftFixTime; }
 
@@ -165,36 +171,77 @@ function getCurrentShiftData() {
     
     currentChecks.forEach(c => {
         if (c.payMethod === 'Долг') { debtIssued += c.total; return; } 
-        if (c.isDebtPayment) {
-            debtReturns += c.total;
-            if (c.payMethod === 'Наличные') cash += c.total; else if (c.payMethod === 'QR') qr += c.total;
-            return; 
-        }
+        if (c.isDebtPayment) { debtReturns += c.total; if (c.payMethod === 'Наличные') cash += c.total; else if (c.payMethod === 'QR') qr += c.total; return; }
 
-        checksCount++;
-        let cTot = c.total || 0;
-        total += cTot; 
-        salaryBase += cTot; 
-        
-        if (c.payMethod === 'Наличные') cash += cTot;
-        else if (c.payMethod === 'QR') qr += cTot;
-        else if (c.payMethod && c.payMethod.startsWith('Нал:')) {
-            let mCash = c.payMethod.match(/Нал:\s*(\d+)/); let mQr = c.payMethod.match(/QR:\s*(\d+)/);
-            if(mCash) cash += parseInt(mCash[1]); if(mQr) qr += parseInt(mQr[1]);
-        }
+        checksCount++; let cTot = c.total || 0; total += cTot; salaryBase += cTot; 
+        if (c.payMethod === 'Наличные') cash += cTot; else if (c.payMethod === 'QR') qr += cTot; else if (c.payMethod && c.payMethod.startsWith('Нал:')) { let mCash = c.payMethod.match(/Нал:\s*(\d+)/); let mQr = c.payMethod.match(/QR:\s*(\d+)/); if(mCash) cash += parseInt(mCash[1]); if(mQr) qr += parseInt(mQr[1]); }
         
         let discRatio = 1 - (c.discount || 0)/100;
         table += Math.round((c.timeCost || 0) * discRatio);
         let cBarSell = cTot - Math.round((c.timeCost || 0) * discRatio);
         bar += cBarSell;
         
-        if(c.bar && toArr(c.bar).length > 0) {
-            toArr(c.bar).forEach(bItem => { let bCost = bItem.cost || 0; barCostTotal += Math.round(bCost * discRatio); });
-        }
+        if(c.bar && toArr(c.bar).length > 0) { toArr(c.bar).forEach(bItem => { let bCost = bItem.cost || 0; barCostTotal += Math.round(bCost * discRatio); }); }
     });
     
     let expTotal = currentExp.reduce((s, e) => s + e.sum, 0);
     return { cash, qr, table, bar, total, salaryBase, expTotal, expectedCash: cash - expTotal, debtReturns, debtIssued, checksCount, barCostTotal };
+}
+
+// === НОВАЯ УМНАЯ ШАПКА ДЛЯ ХОЗЯИНА И АДМИНОВ ===
+function renderGlobalStats() {
+    let shift = getCurrentShiftData();
+    let isOwner = localAuth.user.role === 'owner';
+    
+    // Считаем активные столы и деньги на них (для шапки)
+    let activeTablesCount = 0;
+    let moneyOnTables = 0;
+    toArr(cloudState.tables).forEach(t => {
+        if (t.active) {
+            activeTablesCount++;
+            let cost = t.paused ? (t.accCost || 0) : ((t.accCost || 0) + calcCost(t.start));
+            let barSum = toArr(t.bar).reduce((s,i)=>s+i.price,0);
+            moneyOnTables += (cost + barSum);
+        }
+    });
+
+    let totalDebts = toArr(cloudState.debts).reduce((s, d) => s + d.total, 0);
+    
+    let totalAdminOwed = 0;
+    if (cloudState.ownerAcc) {
+        totalAdminOwed = Object.values(cloudState.ownerAcc).reduce((s, v) => s + v, 0);
+    }
+
+    let shiftZp = 0;
+    if(!isOwner) {
+        if(shift.salaryBase === 0) {
+            let todayStr = new Date().toLocaleDateString();
+            let someoneElseWorked = toArr(cloudState.history).some(h => (h.timestamp ? new Date(h.timestamp).toLocaleDateString() : "") === todayStr && h.admin !== localAuth.user.name && h.total > 0);
+            shiftZp = someoneElseWorked ? 0 : 6000;
+        } else { shiftZp = Math.round(shift.salaryBase * 0.08 + 6000); }
+    }
+    let accZp = (cloudState.ownerAcc && cloudState.ownerAcc[localAuth.user.name]) ? cloudState.ownerAcc[localAuth.user.name] : 0;
+
+    let html = `<button onclick="document.getElementById('expense-modal').style.display='flex'" class="btn-expense">➖ РАСХОД</button>`;
+
+    if (isOwner) {
+        html += `
+            <div class="global-stat-item"><div class="stat-label">АКТИВНЫЕ СТОЛЫ</div><div class="stat-value gold-text" style="font-size:32px;">${activeTablesCount} / 6</div><div style="font-size:11px; color:var(--gray); margin-top:5px; font-weight:bold;">На столах: ${moneyOnTables.toLocaleString()} ₸</div></div>
+            <div class="global-stat-item"><div class="stat-label">ВЫРУЧКА СМЕНЫ</div><div class="stat-value">${shift.total.toLocaleString()} ₸</div><div style="font-size:11px; color:var(--gray); margin-top:5px; font-weight:bold;">Нал: ${shift.cash.toLocaleString()} | QR: ${shift.qr.toLocaleString()}</div></div>
+            <div class="global-stat-item"><div class="stat-label" style="color:var(--red);">ДОЛГИ КЛУБУ</div><div class="stat-value" style="color:var(--red);">${totalDebts.toLocaleString()} ₸</div></div>
+            <div class="global-stat-item" style="border-right: none;"><div class="stat-label" style="color:var(--gold);">ДОЛГ ПО ЗП АДМИНАМ</div><div class="stat-value" style="color:var(--gold);">${totalAdminOwed.toLocaleString()} ₸</div></div>
+        `;
+    } else {
+        html += `
+            <div class="global-stat-item"><div class="stat-label">ВЫРУЧКА СМЕНЫ</div><div class="stat-value gold-text">${shift.total.toLocaleString()} ₸</div><div style="font-size:11px; color:var(--gray); margin-top:5px; font-weight:bold;">Нал: ${shift.cash.toLocaleString()} | QR: ${shift.qr.toLocaleString()}</div></div>
+            <div class="global-stat-item"><div class="stat-label">ДЕНЬГИ НА СТОЛАХ</div><div class="stat-value">${moneyOnTables.toLocaleString()} ₸</div><div style="font-size:11px; color:var(--gray); margin-top:5px; font-weight:bold;">Ожидается оплата</div></div>
+            <div class="global-stat-item"><div class="stat-label">МОЯ ЗП СМЕНЫ</div><div class="stat-value">${shiftZp.toLocaleString()} ₸</div></div>
+            <div class="global-stat-item" style="border-right: none;"><div class="stat-label" style="color:var(--green);">МОЙ БАЛАНС (К ВЫПЛАТЕ)</div><div class="stat-value" style="color:var(--green);">${(accZp + shiftZp).toLocaleString()} ₸</div></div>
+        `;
+    }
+
+    let statsBar = document.getElementById('dynamic-global-stats');
+    if(statsBar) statsBar.innerHTML = html;
 }
 
 window.confirmZReport = function() {
@@ -230,10 +277,14 @@ window.confirmZReport = function() {
 }
 
 window.saveExpense = function() {
-    let sum = parseInt(document.getElementById('exp-sum').value); let desc = document.getElementById('exp-desc').value;
+    let sum = parseInt(document.getElementById('exp-sum').value); 
+    let desc = document.getElementById('exp-desc').value;
+    let cat = document.getElementById('exp-category').value; // НОВАЯ КАТЕГОРИЯ
     if(!sum || !desc) return alert("Заполните все поля!");
+    
+    let fullDesc = `[${cat}] ${desc}`; // Записываем категорию в лог
     cloudState.expenses = toArr(cloudState.expenses);
-    cloudState.expenses.push({ id: Date.now(), sum: sum, desc: desc, admin: localAuth.user.name, date: new Date().toLocaleString() });
+    cloudState.expenses.push({ id: Date.now(), sum: sum, desc: fullDesc, admin: localAuth.user.name, date: new Date().toLocaleString() });
     document.getElementById('expense-modal').style.display='none'; saveToCloud(); alert("Расход записан!");
 }
 
@@ -303,7 +354,7 @@ function formatTime(ms) {
     let s = Math.floor(ms / 1000); 
     let h = String(Math.floor(s / 3600)).padStart(2, '0'); 
     let m = String(Math.floor((s % 3600) / 60)).padStart(2, '0');
-    let sec = String(s % 60).padStart(2, '0'); // СЕКУНДЫ ВЕРНУЛИСЬ
+    let sec = String(s % 60).padStart(2, '0'); 
     return `${h}:${m}:${sec}`; 
 }
 
@@ -418,6 +469,13 @@ window.removeTableBarItem = function(idx) {
 
 function createOrMergeCheck(name, tableId, timeCost, barItems) {
     cloudState.checks = toArr(cloudState.checks); let bArr = toArr(barItems); let barTotal = bArr.reduce((s, i) => s + i.price, 0); 
+    
+    // ПРОВЕРКА ЧЕРНОГО СПИСКА
+    let isBlacklisted = toArr(cloudState.blacklist).find(b => b.name.toLowerCase() === name.toLowerCase());
+    if (isBlacklisted) {
+        alert(`⚠️ ВНИМАНИЕ! Гость "${name}" находится в ЧЕРНОМ СПИСКЕ!\nПричина: ${isBlacklisted.reason}`);
+    }
+
     let exist = cloudState.checks.find(c => c.name.toLowerCase() === name.toLowerCase());
     const now = new Date(); const timeStr = now.getHours().toString().padStart(2,'0') + ":" + now.getMinutes().toString().padStart(2,'0');
 
@@ -501,9 +559,20 @@ window.deductDebtFromAdmin = function(idx) { cloudState.debts = toArr(cloudState
 window.delDebt = function(idx) { if(confirm("Хозяин, удалить этот долг навсегда?")) { cloudState.debts = toArr(cloudState.debts); cloudState.debts.splice(idx,1); saveToCloud(); } }
 
 window.addCustomAdmin = function() { let name = prompt("Имя администратора:"); if(!name) return; let pin = prompt(`PIN-код:`); if(name && pin) { cloudState.customAdmins = toArr(cloudState.customAdmins); cloudState.customAdmins.push({id: Date.now(), name: name, pin: pin, role: "admin"}); saveToCloud(); } }
-window.resetDatabase = function() { if(confirm("ОЧИСТИТЬ?")) { cloudState = { tables: Array.from({length: 6}, (_, i) => ({ id: i + 1, active: false, start: null, res: [], bar:[], paused: false, accCost: 0, accTime: 0 })), checks: [], archive: [], inventory: [], debts: [], history: [], ownerAcc: {}, customAdmins: [], expenses:[], vips: [], onlineAdmins: {} }; saveToCloud(); location.reload(); } }
+window.resetDatabase = function() { if(confirm("ОЧИСТИТЬ?")) { cloudState = { tables: Array.from({length: 6}, (_, i) => ({ id: i + 1, active: false, start: null, res: [], bar:[], paused: false, accCost: 0, accTime: 0 })), checks: [], archive: [], inventory: [], debts: [], history: [], ownerAcc: {}, customAdmins: [], expenses:[], vips: [], onlineAdmins: {}, notifications: [], blacklist: [] }; saveToCloud(); location.reload(); } }
 window.addVipGuest = function() { let name = prompt("Имя VIP гостя:"); if(!name) return; let discStr = prompt(`Размер скидки для "${name}" (в %, например 20):`, "20"); if(!discStr) return; let disc = parseInt(discStr); if(isNaN(disc) || disc < 0 || disc > 100) return alert("Неверная скидка"); cloudState.vips = toArr(cloudState.vips); let exist = cloudState.vips.find(v => v.name.toLowerCase() === name.toLowerCase()); if(exist) exist.discount = disc; else cloudState.vips.push({id: Date.now(), name: name, discount: disc}); saveToCloud(); alert(`VIP гость ${name} добавлен со скидкой ${disc}%!`); }
 window.delVipGuest = function(id) { if(confirm("Удалить VIP гостя?")) { cloudState.vips = toArr(cloudState.vips).filter(v => v.id !== id); saveToCloud(); } }
+
+// ЧЕРНЫЙ СПИСОК УПРАВЛЕНИЕ
+window.addBlacklist = function() {
+    let name = prompt("Имя проблемного гостя:"); if(!name) return;
+    let reason = prompt("Причина (почему добавляем в ЧС?):"); if(!reason) return;
+    cloudState.blacklist = toArr(cloudState.blacklist);
+    cloudState.blacklist.push({id: Date.now(), name: name, reason: reason});
+    saveToCloud(); alert(`Гость ${name} добавлен в Черный список!`); render();
+}
+window.delBlacklist = function(id) { if(confirm("Удалить из черного списка?")) { cloudState.blacklist = toArr(cloudState.blacklist).filter(b => b.id !== id); saveToCloud(); render(); } }
+
 function applyVipLogic(check) { let vips = toArr(cloudState.vips); let vip = vips.find(v => v.name.toLowerCase() === check.name.toLowerCase()); if (vip) { check.discount = vip.discount; check.isVip = true; } else { check.isVip = false; } let baseTot = check.timeCost + check.barCost; check.total = check.discount ? Math.round(baseTot * (1 - check.discount/100)) : baseTot; }
 
 window.showTab = function(id, btn) { document.querySelectorAll('.tab-pane').forEach(x => x.style.display = 'none'); document.querySelectorAll('.nav-link').forEach(x => x.classList.remove('active')); document.getElementById('tab-'+id).style.display = 'block'; btn.classList.add('active'); if(id === 'stock') renderStockTab(); }
@@ -575,10 +644,10 @@ function renderAccounting() {
     }).join('');
 }
 
-window.payAdminAdvance = function(name) { let currentDebt = (cloudState.ownerAcc && cloudState.ownerAcc[name]) ? cloudState.ownerAcc[name] : 0; let s = prompt(`К выплате ${name}: ${currentDebt}₸.\nСумма аванса/выплаты:`); if(s && !isNaN(s)) { if(!cloudState.ownerAcc) cloudState.ownerAcc = {}; cloudState.ownerAcc[name] = currentDebt - parseInt(s); saveToCloud(); } }
-window.fullPayAdmin = function(name) { if(confirm(`Выдать полный расчет администратору ${name} и обнулить его баланс?`)) { if(!cloudState.ownerAcc) cloudState.ownerAcc = {}; cloudState.ownerAcc[name] = 0; saveToCloud(); } }
-window.editAdminSalary = function(name) { let currentDebt = (cloudState.ownerAcc && cloudState.ownerAcc[name]) ? cloudState.ownerAcc[name] : 0; let s = prompt(`Ввести новую точную сумму баланса для ${name}:`, currentDebt); if(s !== null && !isNaN(s)) { if(!cloudState.ownerAcc) cloudState.ownerAcc = {}; cloudState.ownerAcc[name] = parseInt(s); saveToCloud(); } }
-window.fineAdmin = function(name) { let currentDebt = (cloudState.ownerAcc && cloudState.ownerAcc[name]) ? cloudState.ownerAcc[name] : 0; let s = prompt(`Сумма штрафа для ${name} (отнимется от ЗП):`); if(s && !isNaN(s)) { if(!cloudState.ownerAcc) cloudState.ownerAcc = {}; cloudState.ownerAcc[name] = currentDebt - parseInt(s); saveToCloud(); } }
+window.payAdminAdvance = function(name) { let currentDebt = (cloudState.ownerAcc && cloudState.ownerAcc[name]) ? cloudState.ownerAcc[name] : 0; let s = prompt(`К выплате ${name}: ${currentDebt}₸.\nСумма аванса/выплаты:`); if(s && !isNaN(s)) { if(!cloudState.ownerAcc) cloudState.ownerAcc = {}; cloudState.ownerAcc[name] = currentDebt - parseInt(s); saveToCloud(); render(); } }
+window.fullPayAdmin = function(name) { if(confirm(`Выдать полный расчет администратору ${name} и обнулить его баланс?`)) { if(!cloudState.ownerAcc) cloudState.ownerAcc = {}; cloudState.ownerAcc[name] = 0; saveToCloud(); render(); } }
+window.editAdminSalary = function(name) { let currentDebt = (cloudState.ownerAcc && cloudState.ownerAcc[name]) ? cloudState.ownerAcc[name] : 0; let s = prompt(`Ввести новую точную сумму баланса для ${name}:`, currentDebt); if(s !== null && !isNaN(s)) { if(!cloudState.ownerAcc) cloudState.ownerAcc = {}; cloudState.ownerAcc[name] = parseInt(s); saveToCloud(); render(); } }
+window.fineAdmin = function(name) { let currentDebt = (cloudState.ownerAcc && cloudState.ownerAcc[name]) ? cloudState.ownerAcc[name] : 0; let s = prompt(`Сумма штрафа для ${name} (отнимется от ЗП):`); if(s && !isNaN(s)) { if(!cloudState.ownerAcc) cloudState.ownerAcc = {}; cloudState.ownerAcc[name] = currentDebt - parseInt(s); saveToCloud(); render(); } }
 
 let currentBillTableId = null;
 window.openTableBill = function(id) { currentBillTableId = id; renderTableBill(); document.getElementById('table-bill-modal').style.display = 'flex'; }
@@ -650,6 +719,16 @@ function renderTables() {
 
 function render() {
     let selectElem = document.getElementById('staff-select');
+    
+    // ОТРИСОВКА СИРЕНЫ
+    let notifs = toArr(cloudState.notifications);
+    let nContainer = document.getElementById('crm-notifications');
+    if(nContainer) {
+        if(notifs.length > 0 && localAuth.isAuth) {
+            nContainer.innerHTML = notifs.map(n => `<div class="admin-alert" style="background: #ff4c4c; color: #fff; padding: 40px 20px; text-align: center; font-size: 32px; font-weight: 900; letter-spacing: 2px; box-shadow: 0 10px 30px rgba(255,0,0,0.5); display: flex; flex-direction: column; gap: 20px; align-items: center; justify-content: center; position: fixed; inset: 0; z-index: 999999; animation: pulse 1s infinite alternate;">🚨 СТОЛ ${n.table} ПРОСИТ ПОДОЙТИ! (Вызов в ${n.time})<button onclick="dismissNotification(${n.id})" style="background: #fff; color: #000; border: none; padding: 20px 40px; border-radius: 16px; font-weight: 900; font-size: 20px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">✅ ПОНЯЛ, ИДУ</button></div>`).join('');
+        } else { nContainer.innerHTML = ''; }
+    }
+
     if (!localAuth.isAuth) { 
         let html = '<option value="0">Султан</option><option value="1">Дидар</option><option value="owner">Хозяин</option>';
         toArr(cloudState.customAdmins).forEach((a, i) => { html += `<option value="custom_${a.id}">${a.name}</option>`; });
@@ -668,21 +747,7 @@ function render() {
     document.getElementById('acc-tab').style.display = isOwner ? 'block' : 'none';
 
     renderTables();
-
-    let shift = getCurrentShiftData();
-    let shiftZp = 0;
-    if(!isOwner) {
-        if(shift.salaryBase === 0) {
-            let todayStr = new Date().toLocaleDateString();
-            let someoneElseWorked = toArr(cloudState.history).some(h => (h.timestamp ? new Date(h.timestamp).toLocaleDateString() : "") === todayStr && h.admin !== localAuth.user.name && h.total > 0);
-            shiftZp = someoneElseWorked ? 0 : 6000;
-        } else { shiftZp = Math.round(shift.salaryBase * 0.08 + 6000); }
-    }
-    let accZp = (cloudState.ownerAcc && cloudState.ownerAcc[localAuth.user.name]) ? cloudState.ownerAcc[localAuth.user.name] : 0;
-    
-    document.getElementById('global-rev').innerHTML = shift.total.toLocaleString() + " ₸<br><span style='font-size:11px; color:var(--gray); font-weight:700; letter-spacing:1px;'>НАЛ: " + shift.cash.toLocaleString() + " | QR: " + shift.qr.toLocaleString() + "</span>";
-    document.getElementById('global-shift-zp').innerText = shiftZp.toLocaleString() + " ₸";
-    document.getElementById('global-total-zp').innerText = isOwner ? "---" : (accZp + shiftZp).toLocaleString() + " ₸";
+    renderGlobalStats();
 
     let lowStockCount = toArr(cloudState.inventory).filter(i => i.qty < 5).length;
     let sBadge = document.getElementById('stock-badge');
@@ -733,9 +798,10 @@ function render() {
     }).join('');
     
     if(isOwner) {
-        renderAccounting();
         document.getElementById('vip-guests-list').innerHTML = toArr(cloudState.vips).map((v) => `<span style="background:rgba(212,175,55,0.1); border:1px solid var(--gold); padding:8px 15px; border-radius:8px; display:inline-flex; align-items:center; gap:10px; color:var(--gold); font-weight:700;">${v.name} <span class="vip-badge">-${v.discount}%</span> <span onclick="delVipGuest(${v.id})" style="color:var(--red); cursor:pointer; font-weight:bold; font-size:18px;">×</span></span>`).join('');
         document.getElementById('custom-admins-list').innerHTML = toArr(cloudState.customAdmins).map((a, i) => `<span style="background:#16261c; border:1px solid var(--border); padding:10px 18px; border-radius:12px; display:inline-flex; align-items:center; gap:12px; font-weight:600;">${a.name} <span onclick="delCustomAdmin(${i})" style="color:var(--red); cursor:pointer; font-weight:bold; font-size:18px;">×</span></span>`).join('');
+        
+        document.getElementById('blacklist-guests-list').innerHTML = toArr(cloudState.blacklist).map((b) => `<span style="background:rgba(255,76,76,0.1); border:1px solid var(--red); padding:8px 15px; border-radius:8px; display:inline-flex; align-items:center; gap:10px; color:var(--red); font-weight:700;">${b.name} <span style="color:#fff; font-size:11px; font-weight:normal;">(${b.reason})</span> <span onclick="delBlacklist(${b.id})" style="color:var(--white); cursor:pointer; font-weight:bold; font-size:18px;">×</span></span>`).join('');
         
         if(cloudState.ownerAcc) {
             document.getElementById('admin-salaries-list').innerHTML = Object.keys(cloudState.ownerAcc).map(name => {
