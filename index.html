@@ -27,6 +27,8 @@
     </div>
 
     <div id="guest-app" style="display:none;">
+        <button class="btn-call-float" onclick="document.getElementById('guest-call-modal').style.display='flex'">🛎️</button>
+
         <div class="guest-hero">
             <div class="logo-circle" style="margin: 0 auto 20px;">S</div>
             <h1 class="guest-title gold-gradient">SENSEI</h1>
@@ -61,6 +63,24 @@
             <div style="margin-top:60px; opacity:0.3; font-size:12px;">© 2026 Sensei Billiard Club</div>
         </div>
     </div>
+
+    <div id="guest-call-modal" class="overlay" style="display:none; z-index:100000;">
+        <div class="modal-card">
+            <div class="modal-close" onclick="document.getElementById('guest-call-modal').style.display='none'">×</div>
+            <h2 class="gold-text" style="margin-top:0; text-align:center;">ВЫЗОВ АДМИНА</h2>
+            <p style="color:var(--gray); text-align:center; font-size:14px; margin-bottom:30px;">Выберите ваш стол, и администратор сразу подойдет к вам.</p>
+            <div class="input-group">
+                <label>ВАШ СТОЛ</label>
+                <select id="guest-call-table">
+                    <option value="1">Стол №1</option><option value="2">Стол №2</option><option value="3">Стол №3</option>
+                    <option value="4">Стол №4</option><option value="5">Стол №5</option><option value="6">Стол №6</option>
+                </select>
+            </div>
+            <button onclick="submitGuestCall()" class="btn-gold btn-large shadow-gold" style="margin-top:10px;">🛎️ ПОЗВАТЬ АДМИНА</button>
+        </div>
+    </div>
+
+    <div id="crm-notifications"></div>
 
     <div id="app" style="display:none;">
         <header class="header">
@@ -145,9 +165,12 @@
                     <h3 class="gold-text">VIP ГОСТИ (АВТО-СКИДКА)</h3>
                     <div id="vip-guests-list" style="display:flex; gap:15px; flex-wrap:wrap; margin:20px 0;"></div>
                     <button onclick="addVipGuest()" class="btn-gold" style="width:auto; padding: 14px 30px;">+ ДОБАВИТЬ VIP</button>
-                    <h3 class="gold-text" style="margin-top:40px;">ПЕРСОНАЛ</h3>
+                    <h3 class="gold-text" style="margin-top:40px;">ПЕРСОНАЛ И ЗАРПЛАТЫ</h3>
                     <div id="custom-admins-list" style="display:flex; gap:15px; flex-wrap:wrap; margin:20px 0;"></div>
                     <button onclick="addCustomAdmin()" class="btn-outline" style="width:auto; padding: 14px 30px;">+ ДОБАВИТЬ АДМИНА</button>
+                    
+                    <div id="admin-salaries-list" style="margin-top:30px; display:grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap:25px;"></div>
+
                     <h3 class="gold-text" style="margin-top:40px;">ОПАСНАЯ ЗОНА</h3>
                     <button onclick="resetDatabase()" class="btn-red" style="width:auto; padding:20px 50px;">ОЧИСТИТЬ БАЗУ</button>
                 </div>
@@ -250,6 +273,14 @@
             <div class="pay-buttons">
                 <button onclick="processPayment('Наличные')" class="btn-pay cash">💵 НАЛИЧНЫЕ</button>
                 <button onclick="processPayment('QR')" class="btn-pay qr">📱 QR</button>
+                
+                <div style="display:flex; gap:10px; margin-top:5px;">
+                    <button onclick="splitPayment(2)" class="btn-outline flex-1">На 2х</button>
+                    <button onclick="splitPayment(3)" class="btn-outline flex-1">На 3х</button>
+                    <button onclick="splitPayment(4)" class="btn-outline flex-1">На 4х</button>
+                </div>
+                <div id="split-info" style="display:none; text-align:center; font-size:16px; margin:5px 0 10px; background:rgba(212,175,55,0.1); padding:10px; border-radius:10px; color:var(--white);"></div>
+
                 <button onclick="processPayment('Долг')" class="btn-pay debt">В ДОЛГ</button>
             </div>
         </div>
@@ -287,7 +318,22 @@
             </div>
         </div>
     </div>
+    
+    <div id="table-bill-modal" class="overlay" style="display:none; z-index:100000;">
+        <div class="modal-card">
+            <div class="modal-close" onclick="document.getElementById('table-bill-modal').style.display='none'">×</div>
+            <h2 class="gold-text" style="margin-top:0;">СЧЕТ СТОЛА <span id="table-bill-id"></span></h2>
+            <div style="font-size:15px; margin-bottom:20px; font-weight:600;">Время игры: <span id="table-bill-time-val" class="gold-text" style="font-size:24px; font-weight:900; display:block; margin-top:5px;">0 ₸</span></div>
+            <div class="input-group">
+                <label>ЗАКАЗЫ БАРА (СУММА: <span id="table-bill-bar-sum">0</span> ₸)</label>
+                <div id="table-bill-bar-list" style="background:#070d0a; border:1px solid var(--border); border-radius:16px; padding:15px; max-height:250px; overflow-y:auto;"></div>
+            </div>
+            <div style="font-size:28px; font-weight:900; margin-top:25px; text-align:right;">ИТОГО: <span id="table-bill-total" class="gold-text">0</span> ₸</div>
+            <button onclick="document.getElementById('table-bill-modal').style.display='none'" class="btn-gold btn-large shadow-gold" style="margin-top:25px;">ГОТОВО</button>
+        </div>
+    </div>
 
+    <div id="crm-notifications"></div>
     <script src="app.js"></script>
 </body>
 </html>
