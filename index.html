@@ -37,6 +37,7 @@
             <button id="ui-prompt-btn" class="btn-gold btn-large shadow-gold">СОХРАНИТЬ</button>
         </div>
     </div>
+
     <div id="auth-screen" class="overlay">
         <div class="auth-card">
             <div class="logo-circle">S</div>
@@ -54,6 +55,7 @@
 
     <div id="guest-app" style="display:none;">
         <div style="position: fixed; bottom: 30px; right: 30px; display:flex; flex-direction:column; gap:15px; z-index: 9000;">
+            <button class="btn-gold shadow-gold" style="padding: 20px; border-radius: 50%; font-size: 24px; width: 70px; height: 70px; display: flex; align-items: center; justify-content: center; border: 2px solid #fff;" onclick="document.getElementById('guest-call-modal').style.display='flex'">🛎️</button>
             <a href="https://wa.me/77471821011" target="_blank" style="background:#25D366; color:#fff; padding: 20px; border-radius: 50%; font-size: 28px; width: 70px; height: 70px; display: flex; align-items: center; justify-content: center; text-decoration:none; box-shadow: 0 10px 30px rgba(37, 211, 102, 0.5);">💬</a>
         </div>
 
@@ -68,10 +70,10 @@
         <div class="guest-section" style="background:rgba(10,17,13,0.5); border-top:1px solid rgba(255,255,255,0.05);">
             <h2 class="gold-text guest-section-title">НАШЕ ОБОРУДОВАНИЕ</h2>
             <div class="equip-grid">
-                <div class="equip-card"><img src="WhatsApp%20Image%202026-03-20%20at%2006.39.44%20(1).jpeg" class="equip-img"><div class="equip-content"><div class="equip-title">Столы «Ливерпуль»</div><div class="equip-desc">Официальные столы Чемпионатов Мира. Массивная конструкция, идеальная геометрия бортов.</div></div></div>
-                <div class="equip-card"><img src="WhatsApp%20Image%202026-03-20%20at%2006.39.45%20(3).jpeg" class="equip-img"><div class="equip-content"><div class="equip-title">Шары Aramith Pro-Cup</div><div class="equip-desc">Оригинальные бельгийские шары (67 мм). Высший стандарт мирового бильярда.</div></div></div>
-                <div class="equip-card"><img src="WhatsApp%20Image%202026-03-20%20at%2006.39.43%20(5).jpeg" class="equip-img"><div class="equip-content"><div class="equip-title">Сукно Simonis 760</div><div class="equip-desc">Максимальная точность винта и контроль траектории шара.</div></div></div>
-                <div class="equip-card"><img src="WhatsApp%20Image%202026-03-20%20at%2006.39.43%20(3).jpeg" class="equip-img"><div class="equip-content"><div class="equip-title">Профессиональный свет</div><div class="equip-desc">Никаких теней и бликов, ваши глаза не устанут даже после 10 часов игры.</div></div></div>
+                <div class="equip-card"><img src="WhatsApp%20Image%202026-03-20%20at%2006.39.44%20(1).jpeg" class="equip-img"><div class="equip-content"><div class="equip-title">Столы «Ливерпуль»</div><div class="equip-desc">Официальные столы Чемпионатов Мира.</div></div></div>
+                <div class="equip-card"><img src="WhatsApp%20Image%202026-03-20%20at%2006.39.45%20(3).jpeg" class="equip-img"><div class="equip-content"><div class="equip-title">Шары Aramith Pro-Cup</div><div class="equip-desc">Оригинальные бельгийские шары (67 мм). Высший стандарт.</div></div></div>
+                <div class="equip-card"><img src="WhatsApp%20Image%202026-03-20%20at%2006.39.43%20(5).jpeg" class="equip-img"><div class="equip-content"><div class="equip-title">Сукно Simonis 760</div><div class="equip-desc">Максимальная точность винта и контроль траектории.</div></div></div>
+                <div class="equip-card"><img src="WhatsApp%20Image%202026-03-20%20at%2006.39.43%20(3).jpeg" class="equip-img"><div class="equip-content"><div class="equip-title">Профессиональный свет</div><div class="equip-desc">Никаких теней и бликов, ваши глаза не устанут.</div></div></div>
             </div>
         </div>
         <div id="booking-section" class="guest-section">
@@ -87,10 +89,25 @@
         <div class="guest-footer">
             <h3 class="gold-text" style="font-weight:900; margin-bottom:15px;">КОНТАКТЫ И АДРЕС</h3>
             <p style="font-size:26px; font-weight:900; color:var(--white); margin:15px 0;">📞 8 747 182 10 11</p><p style="font-size:16px;">📍 г. Каскелен, ул. Каражанова, 1а</p>
-            <p><a href="https://2gis.kz/almaty/firm/70000001101734090" target="_blank" style="color:var(--gold); text-decoration:none;">ОТКРЫТЬ В 2GIS</a></p>
+            <a href="https://2gis.kz/almaty/firm/70000001101734090" target="_blank" style="display: inline-block; border: 1px solid var(--gold-dim); color: var(--gold); padding: 12px 30px; border-radius: 12px; text-decoration: none; font-weight: 700; margin-top: 20px;">🗺️ ОТКРЫТЬ В 2GIS</a>
             <div style="margin-top:60px; opacity:0.3; font-size:12px;">© 2026 Sensei Billiard Club</div>
         </div>
     </div>
+
+    <div id="guest-call-modal" class="overlay" style="display:none; z-index:100000;">
+        <div class="modal-card">
+            <div class="modal-close" onclick="document.getElementById('guest-call-modal').style.display='none'">×</div>
+            <h2 class="gold-text" style="margin-top:0; text-align:center;">ВЫЗОВ АДМИНА</h2>
+            <p style="color:var(--gray); text-align:center; font-size:14px; margin-bottom:30px;">Выберите ваш стол, и администратор сразу подойдет к вам.</p>
+            <div class="input-group">
+                <label>ВАШ СТОЛ</label>
+                <select id="guest-call-table"><option value="1">Стол №1</option><option value="2">Стол №2</option><option value="3">Стол №3</option><option value="4">Стол №4</option><option value="5">Стол №5</option><option value="6">Стол №6</option></select>
+            </div>
+            <button onclick="submitGuestCall()" class="btn-gold btn-large shadow-gold" style="margin-top:10px;">🛎️ ПОЗВАТЬ АДМИНА</button>
+        </div>
+    </div>
+
+    <div id="crm-notifications"></div>
 
     <div id="app" style="display:none;">
         <header class="header">
@@ -98,7 +115,7 @@
                 <span class="gold-gradient" style="font-weight:900; font-size: 26px; letter-spacing:3px;">SENSEI</span> 
                 <span style="color:var(--gray); opacity:0.5;">|</span> 
                 <span id="user-display" style="font-weight: 800; color:#fff;">---</span>
-                <div id="online-admins-indicator" style="display:flex; gap:10px; margin-left:20px; background:rgba(0,0,0,0.4); padding:5px 15px; border-radius:20px; border:1px solid rgba(255,255,255,0.05);"></div>
+                <div id="online-admins-indicator" style="display:flex; gap:15px; margin-left:20px; background:rgba(0,0,0,0.4); padding:8px 20px; border-radius:20px; border:1px solid rgba(255,255,255,0.05);"></div>
             </div>
             <button onclick="logout()" class="btn-exit">ВЫЙТИ СО СМЕНЫ</button>
         </header>
@@ -111,7 +128,7 @@
             <button class="nav-link" onclick="showTab('stock', this)">СКЛАД <span id="stock-badge" class="alert-dot" style="display:none;"></span></button>
             <button class="nav-link" onclick="showTab('debts', this)">ДОЛГИ</button>
             <button id="acc-tab" class="nav-link" onclick="showTab('acc', this)" style="display:none; color:var(--green);">БУХГАЛТЕРИЯ</button>
-            <button id="owner-tab" class="nav-link" onclick="showTab('owner', this)" style="display:none; color:var(--gold);">АДМИНЫ / VIP</button>
+            <button id="owner-tab" class="nav-link" onclick="showTab('owner', this)" style="display:none; color:var(--gold);">АДМИНЫ / VIP / БАЗА</button>
         </nav>
 
         <main class="content">
@@ -132,12 +149,21 @@
             <div id="tab-stock" class="tab-pane" style="display:none;">
                 <div class="card">
                     <div style="display:flex; gap:15px; margin-bottom:20px; align-items:center; flex-wrap:wrap;">
-                        <button onclick="openAddItemModal()" class="btn-gold" style="width:auto; padding: 14px 25px;">+ ТОВАР</button>
+                        <button onclick="document.getElementById('add-item-modal').style.display='flex'" class="btn-gold shadow-gold" style="width:auto; padding: 14px 25px;">+ ТОВАР</button>
                         <button onclick="openSupplierModal()" class="btn-outline" style="width:auto; padding: 14px 25px; border-color:#3498db; color:#3498db; font-weight:800;">📦 ЗАЯВКА ПОСТАВЩИКУ</button>
                         <button id="btn-open-revision" onclick="openRevisionModal()" class="btn-red" style="width:auto; padding: 14px 25px; display:none; background:linear-gradient(135deg, #e74c3c, #900);">🕵️‍♂️ РЕВИЗИЯ</button>
                         <input type="text" id="global-stock-search" placeholder="Поиск товара..." class="search-input" style="margin-bottom:0; flex:1; min-width:200px;" oninput="renderStockTab()">
                     </div>
-                    <table class="data-table"><thead><tr><th>НАЗВАНИЕ</th><th>КАТЕГОРИЯ</th><th>ОСТАТОК</th><th>ЦЕНА</th><th>УПРАВЛЕНИЕ</th></tr></thead><tbody id="stock-list"></tbody></table>
+                    
+                    <div id="stock-cat-filters" style="display:flex; gap:10px; overflow-x:auto; margin-bottom:15px; padding-bottom:5px;">
+                        <button class="cat-filter-btn stock-cat-btn active" onclick="setStockCat('Все', this)">Все</button>
+                        <button class="cat-filter-btn stock-cat-btn" onclick="setStockCat('Напитки', this)">Напитки</button>
+                        <button class="cat-filter-btn stock-cat-btn" onclick="setStockCat('Кухня', this)">Кухня / Снеки</button>
+                        <button class="cat-filter-btn stock-cat-btn" onclick="setStockCat('Сигареты', this)">Сигареты</button>
+                        <button class="cat-filter-btn stock-cat-btn" onclick="setStockCat('Прочее', this)">Прочее</button>
+                    </div>
+
+                    <table class="data-table"><thead><tr><th>НАЗВАНИЕ</th><th>ОСТАТОК</th><th>ЦЕНА</th><th>УПРАВЛЕНИЕ</th></tr></thead><tbody id="stock-list"></tbody></table>
                 </div>
             </div>
 
@@ -188,7 +214,7 @@
 
                     <h3 class="gold-text" style="margin-top:40px; border-top: 1px dashed var(--border); padding-top: 30px;">VIP ГОСТИ (АВТО-СКИДКА)</h3>
                     <div id="vip-guests-list" style="display:flex; gap:15px; flex-wrap:wrap; margin:20px 0;"></div>
-                    <button onclick="addVipGuest()" class="btn-gold" style="width:auto; padding: 14px 30px;">+ ДОБАВИТЬ VIP</button>
+                    <button onclick="addVipGuest()" class="btn-gold shadow-gold" style="width:auto; padding: 14px 30px;">+ ДОБАВИТЬ VIP</button>
 
                     <h3 class="gold-text" style="margin-top:40px; border-top: 1px dashed var(--border); padding-top: 30px; color:var(--red);">ЧЕРНЫЙ СПИСОК (БЛОКИРОВКА)</h3>
                     <p style="font-size:13px; color:var(--gray); margin-bottom:20px;">Система выдаст предупреждение, если админ попытается закрыть стол на это имя.</p>
@@ -206,8 +232,7 @@
         <div class="modal-card">
             <div class="modal-close" onclick="document.getElementById('table-manage-modal').style.display='none'">×</div>
             <h2 class="gold-text" style="margin-top:0;" id="manage-table-title">УПРАВЛЕНИЕ</h2>
-            <div style="display:flex; flex-direction:column; gap:15px; margin-top:25px;" id="manage-table-buttons">
-                </div>
+            <div style="display:flex; flex-direction:column; gap:15px; margin-top:25px;" id="manage-table-buttons"></div>
         </div>
     </div>
 
@@ -220,6 +245,40 @@
             <p style="text-align:center; font-weight:bold; color:var(--gray); margin: 15px 0;">--- ИЛИ ---</p>
             <div class="input-group"><label>2. ОБЪЕДИНИТЬ С ЧЕКОМ</label><select id="stop-merge-select"></select></div>
             <button onclick="confirmStopTable()" class="btn-gold btn-large shadow-gold" style="margin-top:20px;">ВЫСТАВИТЬ СЧЕТ</button>
+        </div>
+    </div>
+
+    <div id="full-check-modal" class="overlay" style="display:none; z-index:100001;">
+        <div class="modal-card" style="background:#fff; color:#000; font-family:'Courier New'; max-width:380px; padding:30px;">
+            <div class="modal-close" onclick="document.getElementById('full-check-modal').style.display='none'" style="color:#000; top:15px; right:20px;">×</div>
+            <div style="text-align:center; border-bottom:2px dashed #000; padding-bottom:15px;"><h3 style="margin:0; font-size:24px; font-weight:900;">SENSEI CLUB</h3><p id="bill-date" style="margin:5px 0 0; font-size:14px; color:#555;"></p></div>
+            <div style="font-size:15px; margin-top:15px; line-height:1.6; font-weight:600;">
+                ГОСТЬ: <span id="bill-guest"></span><br>СТОЛ: <span id="bill-table-num"></span><br>
+                ВРЕМЯ: <span id="bill-start"></span> - <span id="bill-end"></span> (<span id="bill-duration"></span>)
+            </div>
+            <table style="width:100%; font-size:14px; margin-top:15px; border-top:2px solid #000; border-collapse:collapse; font-weight:600;">
+                <thead><tr style="text-align:left; border-bottom:1px solid #000;"><th style="padding:10px 0;">ТОВАР</th><th style="padding:10px 0;">КОЛ</th><th style="padding:10px 0;">ЦЕНА</th><th style="padding:10px 0;">СУММА</th></tr></thead>
+                <tbody id="bill-items-body"></tbody>
+            </table>
+            <div style="text-align:right; font-weight:bold; border-top:2px solid #000; margin-top:15px; padding-top:10px; font-size:15px; line-height:1.6;">
+                СТОЛ: <span id="bill-time-sum"></span> ₸<br>БАР: <span id="bill-bar-sum"></span> ₸<br>
+                <span id="bill-discount-row" style="color:red; display:none;">СКИДКА: -<span id="bill-discount-val"></span>%<br></span>
+                <span style="font-size:28px; display:block; margin-top:10px; font-weight:900;">ИТОГО: <span id="bill-total"></span> ₸</span>
+            </div>
+        </div>
+    </div>
+    
+    <div id="table-bill-modal" class="overlay" style="display:none; z-index:100000;">
+        <div class="modal-card">
+            <div class="modal-close" onclick="document.getElementById('table-bill-modal').style.display='none'">×</div>
+            <h2 class="gold-text" style="margin-top:0;">СЧЕТ СТОЛА <span id="table-bill-id"></span></h2>
+            <div style="font-size:15px; margin-bottom:20px; font-weight:600;">Время игры: <span id="table-bill-time-val" class="gold-text" style="font-size:24px; font-weight:900; display:block; margin-top:5px;">0 ₸</span></div>
+            <div class="input-group">
+                <label>ЗАКАЗЫ БАРА (СУММА: <span id="table-bill-bar-sum">0</span> ₸)</label>
+                <div id="table-bill-bar-list" style="background:#070d0a; border:1px solid var(--border); border-radius:16px; padding:15px; max-height:250px; overflow-y:auto;"></div>
+            </div>
+            <div style="font-size:28px; font-weight:900; margin-top:25px; text-align:right;">ИТОГО: <span id="table-bill-total" class="gold-text">0</span> ₸</div>
+            <button onclick="document.getElementById('table-bill-modal').style.display='none'" class="btn-gold btn-large shadow-gold" style="margin-top:25px;">ГОТОВО</button>
         </div>
     </div>
 
@@ -288,15 +347,13 @@
         <div class="modal-card" style="max-height:90vh; display:flex; flex-direction:column;">
             <div class="modal-close" onclick="document.getElementById('bar-modal').style.display='none'">×</div>
             <h2 class="gold-text" id="bar-modal-title" style="margin-top:0;">БАР</h2>
-            
             <div id="bar-cat-filters" style="display:flex; gap:10px; overflow-x:auto; margin-bottom:15px; padding-bottom:5px;">
-                <button class="cat-filter-btn active" onclick="setBarCat('Все', this)">Все</button>
-                <button class="cat-filter-btn" onclick="setBarCat('Напитки', this)">Напитки</button>
-                <button class="cat-filter-btn" onclick="setBarCat('Кухня', this)">Кухня</button>
-                <button class="cat-filter-btn" onclick="setBarCat('Сигареты', this)">Сигареты</button>
-                <button class="cat-filter-btn" onclick="setBarCat('Прочее', this)">Прочее</button>
+                <button class="cat-filter-btn bar-cat-btn active" onclick="setBarCat('Все', this)">Все</button>
+                <button class="cat-filter-btn bar-cat-btn" onclick="setBarCat('Напитки', this)">Напитки</button>
+                <button class="cat-filter-btn bar-cat-btn" onclick="setBarCat('Кухня', this)">Кухня</button>
+                <button class="cat-filter-btn bar-cat-btn" onclick="setBarCat('Сигареты', this)">Сигареты</button>
+                <button class="cat-filter-btn bar-cat-btn" onclick="setBarCat('Прочее', this)">Прочее</button>
             </div>
-
             <input type="text" id="bar-search" placeholder="Поиск..." oninput="renderBarSearch()" class="search-input">
             <div id="bar-items-list" class="scroll-list" style="flex:1;"></div>
         </div>
@@ -309,7 +366,7 @@
             <div class="input-group"><label>ИМЯ ГОСТЯ</label><input type="text" id="edit-check-name"></div>
             <div class="input-group"><label>ВРЕМЯ СТОЛА (₸)</label><input type="number" id="edit-check-time"></div>
             <div class="input-group" style="margin-top:25px;"><label>БАР (УДАЛИТЬ)</label><div id="edit-check-bar-list" style="background:#070d0a; border:1px solid var(--border); border-radius:16px; padding:15px; max-height:200px; overflow-y:auto;"></div></div>
-            <button onclick="saveCheckEdit()" class="btn-gold btn-large shadow-gold">СОХРАНИТЬ</button>
+            <button onclick="saveCheckEdit()" class="btn-gold btn-large shadow-gold">СОХРАНИТЬ ИЗМЕНЕНИЯ</button>
         </div>
     </div>
 
@@ -338,6 +395,12 @@
                 <button onclick="processPayment('Наличные')" class="btn-pay cash">💵 НАЛИЧНЫЕ</button>
                 <button onclick="processPayment('QR')" class="btn-pay qr">📱 QR-КОД</button>
                 <button onclick="showMixPay()" class="btn-pay mix">☯️ РАЗДЕЛИТЬ (НАЛ + QR)</button>
+                <div style="display:flex; gap:10px; margin-top:5px;">
+                    <button onclick="splitPayment(2)" class="btn-outline flex-1">На 2х</button>
+                    <button onclick="splitPayment(3)" class="btn-outline flex-1">На 3х</button>
+                    <button onclick="splitPayment(4)" class="btn-outline flex-1">На 4х</button>
+                </div>
+                <div id="split-info" style="display:none; text-align:center; font-size:16px; margin:5px 0 10px; background:rgba(212,175,55,0.1); padding:10px; border-radius:10px; color:var(--white);"></div>
                 <button onclick="processPayment('Долг')" class="btn-pay debt">В ДОЛГ</button>
             </div>
 
@@ -352,40 +415,6 @@
                 <button onclick="confirmMixPay()" class="btn-gold btn-large shadow-gold">ПОДТВЕРДИТЬ ОПЛАТУ</button>
                 <button onclick="hideMixPay()" class="btn-outline" style="width:100%; margin-top:12px;">НАЗАД</button>
             </div>
-        </div>
-    </div>
-    
-    <div id="full-check-modal" class="overlay" style="display:none; z-index:100001;">
-        <div class="modal-card" style="background:#fff; color:#000; font-family:'Courier New'; max-width:380px; padding:30px;">
-            <div class="modal-close" onclick="document.getElementById('full-check-modal').style.display='none'" style="color:#000; top:15px; right:20px;">×</div>
-            <div style="text-align:center; border-bottom:2px dashed #000; padding-bottom:15px;"><h3 style="margin:0; font-size:24px; font-weight:900;">SENSEI CLUB</h3><p id="bill-date" style="margin:5px 0 0; font-size:14px; color:#555;"></p></div>
-            <div style="font-size:15px; margin-top:15px; line-height:1.6; font-weight:600;">
-                ГОСТЬ: <span id="bill-guest"></span><br>СТОЛ: <span id="bill-table-num"></span><br>
-                ВРЕМЯ: <span id="bill-start"></span> - <span id="bill-end"></span> (<span id="bill-duration"></span>)
-            </div>
-            <table style="width:100%; font-size:14px; margin-top:15px; border-top:2px solid #000; border-collapse:collapse; font-weight:600;">
-                <thead><tr style="text-align:left; border-bottom:1px solid #000;"><th style="padding:10px 0;">ТОВАР</th><th style="padding:10px 0;">КОЛ</th><th style="padding:10px 0;">ЦЕНА</th><th style="padding:10px 0;">СУММА</th></tr></thead>
-                <tbody id="bill-items-body"></tbody>
-            </table>
-            <div style="text-align:right; font-weight:bold; border-top:2px solid #000; margin-top:15px; padding-top:10px; font-size:15px; line-height:1.6;">
-                СТОЛ: <span id="bill-time-sum"></span> ₸<br>БАР: <span id="bill-bar-sum"></span> ₸<br>
-                <span id="bill-discount-row" style="color:red; display:none;">СКИДКА: -<span id="bill-discount-val"></span>%<br></span>
-                <span style="font-size:28px; display:block; margin-top:10px; font-weight:900;">ИТОГО: <span id="bill-total"></span> ₸</span>
-            </div>
-        </div>
-    </div>
-    
-    <div id="table-bill-modal" class="overlay" style="display:none; z-index:100000;">
-        <div class="modal-card">
-            <div class="modal-close" onclick="document.getElementById('table-bill-modal').style.display='none'">×</div>
-            <h2 class="gold-text" style="margin-top:0;">ПРЕДЧЕК СТОЛА <span id="table-bill-id"></span></h2>
-            <div style="font-size:15px; margin-bottom:20px; font-weight:600;">Время игры: <span id="table-bill-time-val" class="gold-text" style="font-size:24px; font-weight:900; display:block; margin-top:5px;">0 ₸</span></div>
-            <div class="input-group">
-                <label>ЗАКАЗЫ БАРА (СУММА: <span id="table-bill-bar-sum">0</span> ₸)</label>
-                <div id="table-bill-bar-list" style="background:#070d0a; border:1px solid var(--border); border-radius:16px; padding:15px; max-height:250px; overflow-y:auto;"></div>
-            </div>
-            <div style="font-size:28px; font-weight:900; margin-top:25px; text-align:right;">ИТОГО: <span id="table-bill-total" class="gold-text">0</span> ₸</div>
-            <button onclick="document.getElementById('table-bill-modal').style.display='none'" class="btn-gold btn-large shadow-gold" style="margin-top:25px;">ГОТОВО</button>
         </div>
     </div>
 
