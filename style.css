@@ -1,6 +1,6 @@
 :root { 
     --bg-main: #060a08; 
-    --bg-card: rgba(14, 26, 18, 0.6); /* Полупрозрачный фон */
+    --bg-card: rgba(14, 26, 18, 0.6); 
     --gold: #d4af37; 
     --gold-dim: #997f28;
     --gold-light: #f9e596;
@@ -8,7 +8,7 @@
     --gray: #8b9d90; 
     --red: #ff4c4c; 
     --green: #00cc66; 
-    --border: rgba(212, 175, 55, 0.15); /* Золотистые полупрозрачные границы */
+    --border: rgba(212, 175, 55, 0.15); 
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body { background: var(--bg-main); background-image: radial-gradient(circle at 50% 0%, #112217 0%, transparent 70%); color: var(--white); font-family: 'Montserrat', sans-serif; margin: 0; padding: 0; letter-spacing: 0.3px; min-height: 100vh;}
@@ -111,15 +111,17 @@ input:focus, select:focus { border-color: var(--gold); background: rgba(0,0,0,0.
 .top-bar-btn { background: rgba(212,175,55,0.08); border: 1px solid rgba(212,175,55,0.3); color: var(--gold); padding: 12px 24px; border-radius: 14px; font-size: 14px; font-weight: 700; white-space: nowrap; cursor: pointer; transition: 0.3s; }
 .top-bar-btn:active { transform: scale(0.95); background: rgba(212,175,55,0.2);}
 
-.guest-hero { background: linear-gradient(rgba(6, 10, 8, 0.8), rgba(6, 10, 8, 0.95)), url('WhatsApp%20Image%202026-03-20%20at%2006.39.43%20(4).jpeg') center/cover; padding: 100px 20px 80px; text-align: center; border-bottom: 1px solid rgba(212,175,55,0.2); }
-.guest-title { font-size: 64px; font-weight: 900; margin: 0; letter-spacing: 10px; text-shadow: 0 10px 30px rgba(0,0,0,0.9); }
-.guest-subtitle { font-size: 18px; color: var(--gold-light); letter-spacing: 6px; text-transform: uppercase; margin-top: 15px; margin-bottom: 40px; font-weight:800;}
+/* СТИЛИ ДЛЯ САЙТА ГОСТЕЙ */
+#guest-app { background: var(--bg-main); min-height: 100vh; overflow-y: auto; padding-bottom: 50px; }
+.guest-hero { background: linear-gradient(rgba(10, 17, 13, 0.7), rgba(10, 17, 13, 0.95)), url('WhatsApp%20Image%202026-03-20%20at%2006.39.44.jpeg') center/cover; padding: 100px 20px 80px; text-align: center; border-bottom: 1px solid rgba(212,175,55,0.2); }
+.guest-title { font-size: 54px; font-weight: 900; margin: 0; letter-spacing: 8px; }
+.guest-subtitle { font-size: 14px; color: var(--gold-light); letter-spacing: 5px; text-transform: uppercase; margin-top: 15px; margin-bottom: 40px; font-weight:800;}
 .guest-section { padding: 80px 20px; max-width: 1200px; margin: 0 auto; }
-.guest-section-title { text-align: center; font-size: 32px; font-weight: 900; letter-spacing: 4px; margin-bottom: 50px; }
+.guest-section-title { text-align: center; font-size: 32px; font-weight: 900; letter-spacing: 4px; margin-bottom: 50px; text-transform: uppercase;}
 .guest-tables-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; }
 .guest-table-card { background: rgba(14,26,18,0.6); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); padding: 35px; border-radius: 20px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.4); }
 .equip-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 35px; }
-.equip-card { background: rgba(10,17,13,0.8); border: 1px solid rgba(255,255,255,0.05); border-radius: 24px; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.5); transition: 0.4s; }
+.equip-card { background: rgba(10,17,13,0.8); border: 1px solid rgba(255,255,255,0.05); border-radius: 24px; overflow: hidden; transition: 0.4s; }
 .equip-card:hover { border-color: var(--gold-dim); transform: translateY(-8px); box-shadow: 0 20px 50px rgba(212,175,55,0.15);}
 .equip-img { width: 100%; height: 260px; object-fit: cover; border-bottom: 1px solid rgba(255,255,255,0.05); }
 .equip-content { padding: 30px; text-align: center; }
@@ -130,3 +132,12 @@ input:focus, select:focus { border-color: var(--gold); background: rgba(0,0,0,0.
 
 .rev-row { display:flex; justify-content:space-between; align-items:center; padding:15px; border-bottom:1px solid rgba(255,255,255,0.05); }
 .rev-input { width: 80px; padding: 10px; text-align: center; background: rgba(0,0,0,0.5); font-size: 18px;}
+
+/* СИРЕНА И ВЫЗОВ АДМИНА */
+.btn-call-float { position: fixed; bottom: 30px; right: 30px; background: linear-gradient(135deg, #e5c058, #d4af37); color: #000; padding: 18px 25px; border-radius: 30px; font-weight: 900; font-size: 16px; border: none; cursor: pointer; box-shadow: 0 10px 30px rgba(212, 175, 55, 0.4); z-index: 9000; transition: 0.3s; letter-spacing: 1px;}
+.btn-call-float:active { transform: scale(0.9); }
+#crm-notifications { position: fixed; top: 0; left: 0; width: 100%; z-index: 100000; display: flex; flex-direction: column; }
+.admin-alert { background: #ff4c4c; color: #fff; padding: 40px 20px; text-align: center; font-size: 32px; font-weight: 900; letter-spacing: 2px; box-shadow: 0 10px 30px rgba(255,0,0,0.5); display: flex; flex-direction: column; gap: 20px; align-items: center; justify-content: center; height: 100vh; width: 100vw; animation: siren 0.5s infinite alternate;}
+@keyframes siren { from { background: #ff0000; } to { background: #990000; } }
+.admin-alert button { background: #fff; color: #000; border: none; padding: 20px 40px; border-radius: 16px; font-weight: 900; font-size: 20px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.3); transition: 0.2s;}
+.admin-alert button:active { transform: scale(0.95); }
