@@ -316,6 +316,9 @@ window.moveTable = function(fromId) {
         tTo.active = true; tTo.start = tFrom.start; tTo.bar = toArr(tFrom.bar); tTo.paused = tFrom.paused; tTo.accCost = tFrom.accCost; tTo.accTime = tFrom.accTime; tTo.isTournament = tFrom.isTournament; tFrom.active = false; tFrom.start = null; tFrom.bar = []; tFrom.paused = false; tFrom.accCost = 0; tFrom.accTime = 0; tFrom.isTournament = false; saveToCloud(); render();
     });
 }
+window.addRes = function(id) { ui.prompt('Бронь стола', [{label: 'Имя, Время (например: Аскар 19:00)'}], (vals) => { cloudState.tables = toArr(cloudState.tables); let t = cloudState.tables.find(x => x.id === id); t.res = toArr(t.res); t.res.push(vals[0]); saveToCloud(); render(); }); }
+window.editRes = function(tId, rIdx) { cloudState.tables = toArr(cloudState.tables); let t = cloudState.tables.find(x => x.id === tId); ui.prompt('Изменить бронь', [{label: 'Данные брони', value: t.res[rIdx]}], (vals) => { t.res[rIdx] = vals[0]; saveToCloud(); render(); }); }
+window.delRes = function(tId, rIdx) { ui.confirm("Удалить бронь?", () => { cloudState.tables = toArr(cloudState.tables); let t = cloudState.tables.find(x => x.id === tId); t.res.splice(rIdx,1); saveToCloud(); render(); }); }
 
 let currentStockCategory = 'Все';
 window.setStockCat = function(cat, btnElem) { currentStockCategory = cat; document.querySelectorAll('.stock-cat-btn').forEach(btn => { if(btn.innerText.trim() === btnElem.innerText.trim() || (cat==='Кухня' && btn.innerText.includes('Кухня'))) btn.classList.add('active'); else btn.classList.remove('active'); }); renderStockTab(); }
@@ -792,7 +795,16 @@ window.render = function() {
 
     let checksHtml = toArr(cloudState.checks).map((c, i) => {
         let btnHtml = `<button onclick="openPayModal(${i})" class="btn-gold shadow-gold" style="width:100%; padding:15px; font-size:14px; font-weight:800; border-radius:12px;">💳 РАССЧИТАТЬ</button>`;
-        let manageHtml = isOwner ? `<div style="display:flex; gap:8px; margin-top:12px;"><button onclick="openEditCheckModal(${i})" class="btn-outline flex-1" style="font-size:11px; padding:10px; border-radius:8px; background:rgba(255,255,255,0.05); border:none;">✏️ ИЗМЕНИТЬ</button><button onclick="deleteCheck(${i})" class="btn-outline flex-1" style="background:rgba(255,76,76,0.1); border:none; color:var(--red); font-size:11px; padding:10px; border-radius:8px;">❌ УДАЛИТЬ</button></div>` : `<div style="display:flex; gap:8px; margin-top:12px;"><button onclick="openEditCheckModal(${i})" class="btn-outline flex-1" style="font-size:11px; padding:10px; border-radius:8px; background:rgba(255,255,255,0.05); border:none;">✏️ ИЗМЕНИТЬ</button></div>`;
+        let manageHtml = isOwner ? 
+        `<div style="display:flex; gap:8px; margin-top:12px;">
+            <button onclick="openFullCheck(${i})" class="btn-outline flex-1" style="font-size:11px; padding:10px; border-radius:8px; background:rgba(255,255,255,0.05); border:none;">📄 ЧЕК</button>
+            <button onclick="openEditCheckModal(${i})" class="btn-outline flex-1" style="font-size:11px; padding:10px; border-radius:8px; background:rgba(255,255,255,0.05); border:none;">✏️ ИЗМЕНИТЬ</button>
+            <button onclick="deleteCheck(${i})" class="btn-outline flex-1" style="background:rgba(255,76,76,0.1); border:none; color:var(--red); font-size:11px; padding:10px; border-radius:8px;">❌ УДАЛИТЬ</button>
+        </div>` : 
+        `<div style="display:flex; gap:8px; margin-top:12px;">
+            <button onclick="openFullCheck(${i})" class="btn-outline flex-1" style="font-size:11px; padding:10px; border-radius:8px; background:rgba(255,255,255,0.05); border:none;">📄 ЧЕК</button>
+            <button onclick="openEditCheckModal(${i})" class="btn-outline flex-1" style="font-size:11px; padding:10px; border-radius:8px; background:rgba(255,255,255,0.05); border:none;">✏️ ИЗМЕНИТЬ</button>
+        </div>`;
         
         let itemsCount = (c.bar ? toArr(c.bar).length : 0) + (c.sessions ? toArr(c.sessions).length : 0);
         
@@ -846,11 +858,11 @@ window.render = function() {
             return `<div style="background:rgba(0,0,0,0.5); padding:15px; border-radius:12px; border:1px solid var(--border);">
                 <div style="font-size:18px; font-weight:800; margin-bottom:10px;">${name}</div>
                 <div style="font-size:24px; font-weight:900; color:${color}; margin-bottom:15px;">${bal.toLocaleString()} ₸</div>
-                <div style="display:flex; flex-wrap:wrap; gap:5px;">
-                    <button onclick="gAdv('${name}', ${bal})" class="btn-outline" style="font-size:10px; padding:5px 10px; flex:1;">АВАНС</button>
-                    <button onclick="iPen('${name}', ${bal})" class="btn-outline" style="font-size:10px; padding:5px 10px; flex:1; border-color:var(--red); color:var(--red);">ШТРАФ</button>
-                    <button onclick="fPay('${name}')" class="btn-gold" style="font-size:10px; padding:5px 10px; flex:1;">ПОЛНЫЙ РАСЧЕТ</button>
-                    <button onclick="cBal('${name}')" class="btn-outline" style="font-size:10px; padding:5px 10px; flex:1; border-color:#3498db; color:#3498db;">РУЧНОЙ ВВОД</button>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+                    <button onclick="gAdv('${name}', ${bal})" class="btn-outline" style="font-size:11px; padding:8px; border-radius:8px;">АВАНС</button>
+                    <button onclick="iPen('${name}', ${bal})" class="btn-outline" style="font-size:11px; padding:8px; border-radius:8px; border-color:var(--red); color:var(--red);">ШТРАФ</button>
+                    <button onclick="fPay('${name}')" class="btn-gold" style="font-size:11px; padding:8px; border-radius:8px;">ПОЛНЫЙ РАСЧЕТ</button>
+                    <button onclick="cBal('${name}')" class="btn-outline" style="font-size:11px; padding:8px; border-radius:8px; border-color:#3498db; color:#3498db;">РУЧНОЙ ВВОД</button>
                 </div>
             </div>`;
         }).join('');
