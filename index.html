@@ -31,6 +31,7 @@
             <div class="header-brand" style="display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
                 <span class="gold-gradient" style="font-weight:900; font-size: 26px; letter-spacing:3px;">SENSEI</span> 
                 <span style="color:var(--gray); opacity:0.5;">|</span> <span id="user-display" style="font-weight: 800; color:#fff;">---</span>
+                <span style="color:var(--gold-dim); font-size:18px; font-weight:bold; margin-left:15px; font-family:monospace;" id="live-clock">00:00</span>
                 <div id="online-admins-indicator" style="display:flex; gap:15px; margin-left:20px; background:rgba(0,0,0,0.4); padding:8px 20px; border-radius:20px; border:1px solid rgba(255,255,255,0.05);"></div>
             </div>
             <button onclick="logout()" class="btn-exit">ВЫЙТИ СО СМЕНЫ</button>
@@ -48,7 +49,17 @@
         </nav>
 
         <main class="content">
-            <div id="tab-hall" class="tab-pane active"><div id="tables-grid" class="grid"></div><div class="section-header" style="margin-top:40px;"><h3 class="gold-text">ОЖИДАЮТ ОПЛАТЫ</h3><div style="display:flex; gap:12px;"><button onclick="openBarModal('owner')" class="btn-outline" style="border-color:var(--gold); color:var(--gold);">👑 ХОЗЯИН</button><button onclick="openBarModal('standalone')" class="btn-outline">+ БАР</button></div></div><div id="active-checks" class="checks-container"></div></div>
+            <div id="tab-hall" class="tab-pane active">
+                <div id="tables-grid" class="grid"></div>
+                <div class="section-header" style="margin-top:40px;">
+                    <h3 class="gold-text">ОЖИДАЮТ ОПЛАТЫ</h3>
+                    <div style="display:flex; gap:12px;">
+                        <button onclick="openBarModal('owner')" class="btn-outline" style="border-color:var(--gold); color:var(--gold);">👑 ХОЗЯИН</button>
+                        <button onclick="openBarModal('standalone')" class="btn-outline">+ БАР</button>
+                    </div>
+                </div>
+                <div id="active-checks" class="checks-container"></div>
+            </div>
             <div id="tab-archive" class="tab-pane" style="display:none;"><div class="card"><table class="data-table"><thead><tr><th>ВРЕМЯ</th><th>ГОСТЬ</th><th>ДЕТАЛИ (СЕАНСЫ)</th><th>СУММА</th><th>МЕТОД</th><th>ДЕЙСТВИЕ</th></tr></thead><tbody id="archive-list"></tbody></table></div></div>
             <div id="tab-stock" class="tab-pane" style="display:none;"><div class="card"><div style="display:flex; gap:15px; margin-bottom:20px; align-items:center; flex-wrap:wrap;"><button onclick="document.getElementById('add-item-modal').style.display='flex'" class="btn-gold shadow-gold" style="width:auto; padding: 14px 25px;">+ ТОВАР</button><button onclick="openSupplierModal()" class="btn-outline" style="width:auto; padding: 14px 25px; border-color:#3498db; color:#3498db; font-weight:800;">📦 ЗАЯВКА ПОСТАВЩИКУ</button><input type="text" id="global-stock-search" placeholder="Поиск товара..." class="search-input" style="margin-bottom:0; flex:1; min-width:200px;" oninput="renderStockTab()"></div><div id="stock-cat-filters" style="display:flex; gap:10px; overflow-x:auto; margin-bottom:15px; padding-bottom:5px;"><button class="cat-filter-btn stock-cat-btn active" onclick="setStockCat('Все', this)">Все</button><button class="cat-filter-btn stock-cat-btn" onclick="setStockCat('Напитки', this)">Напитки</button><button class="cat-filter-btn stock-cat-btn" onclick="setStockCat('Кухня', this)">Кухня / Снеки</button><button class="cat-filter-btn stock-cat-btn" onclick="setStockCat('Сигареты', this)">Сигареты</button><button class="cat-filter-btn stock-cat-btn" onclick="setStockCat('Прочее', this)">Прочее</button></div><table class="data-table"><thead><tr><th>НАЗВАНИЕ</th><th>КАТЕГОРИЯ</th><th>ОСТАТОК</th><th>ЦЕНА</th><th>УПРАВЛЕНИЕ</th></tr></thead><tbody id="stock-list"></tbody></table></div></div>
             
