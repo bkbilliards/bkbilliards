@@ -12,29 +12,15 @@ try { if (!firebase.apps.length) firebase.initializeApp(firebaseConfig); } catch
 const db = firebase.database();
 const dbRef = db.ref('sensei_erp_pro');
 
-// ЗАЩИТА ТАЙМЕРОВ (Кэширование времени для оффлайна)
 let serverTimeOffset = parseInt(localStorage.getItem('server_time_offset')) || 0;
 db.ref('.info/serverTimeOffset').on('value', snap => { 
-    if(snap.val() !== null) { 
-        serverTimeOffset = snap.val(); 
-        localStorage.setItem('server_time_offset', serverTimeOffset); 
-    } 
+    if(snap.val() !== null) { serverTimeOffset = snap.val(); localStorage.setItem('server_time_offset', serverTimeOffset); } 
 });
 const getNow = () => Date.now() + serverTimeOffset;
 
-// ОФЛАЙН РЕЖИМ (Синхронизация без сброса)
 let isOfflineMode = !navigator.onLine;
-window.addEventListener('offline', () => { 
-    isOfflineMode = true; 
-    ui.alert("⚠️ ИНТЕРНЕТ ОТКЛЮЧЕН!\nСайт перешел в Офлайн-режим. Вы можете продолжать работу, таймеры не собьются.");
-    renderGlobalStats();
-});
-window.addEventListener('online', () => { 
-    ui.confirm("🌐 ИНТЕРНЕТ ВОССТАНОВЛЕН!\nРазрешить синхронизацию (отправить ваши новые данные в базу)?", () => { 
-        saveToCloud(); 
-        setTimeout(() => { isOfflineMode = false; location.reload(); }, 1000); 
-    }); 
-});
+window.addEventListener('offline', () => { isOfflineMode = true; ui.alert("⚠️ ИНТЕРНЕТ ОТКЛЮЧЕН!\nОфлайн-режим активирован. Таймеры защищены!"); renderGlobalStats(); });
+window.addEventListener('online', () => { ui.confirm("🌐 ИНТЕРНЕТ ВОССТАНОВЛЕН!\nРазрешить синхронизацию?", () => { saveToCloud(); setTimeout(() => { isOfflineMode = false; location.reload(); }, 1000); }); });
 
 const STAFF_HARDCODED = [ { id: "0", name: "Султан", pin: "1111", role: "admin" }, { id: "1", name: "Дидар", pin: "1111", role: "admin" }, { id: "owner", name: "Хозяин", pin: "0000", role: "owner" } ];
 let localAuth = { isAuth: false, user: null };
@@ -56,34 +42,21 @@ window.ui = {
             document.getElementById('ui-prompt-btn').onclick = () => { 
                 let vals = fields.map((f, i) => document.getElementById(`ui-prompt-input-${i}`).value.trim()); 
                 if(vals.some(v => !v)) return ui.alert('Заполните все поля!'); 
-                document.getElementById('ui-prompt-modal').style.display = 'none'; 
-                setTimeout(() => onConfirm(vals), 50); 
+                document.getElementById('ui-prompt-modal').style.display = 'none'; setTimeout(() => onConfirm(vals), 50); 
             }; 
             document.getElementById('ui-prompt-modal').style.display = 'flex'; 
         } else { let res = prompt(title + " (" + fields[0].label + ")"); if(res) setTimeout(() => onConfirm([res]), 50); } 
     },
-    modal: function(title, html) {
-        document.getElementById('dynamic-data-title').innerText = title;
-        document.getElementById('dynamic-data-body').innerHTML = html;
-        document.getElementById('dynamic-data-modal').style.display = 'flex';
-    },
+    modal: function(title, html) { document.getElementById('dynamic-data-title').innerText = title; document.getElementById('dynamic-data-body').innerHTML = html; document.getElementById('dynamic-data-modal').style.display = 'flex'; },
     showMonthlyHistory: function() {
         let hist = toArr(cloudState.history); let months = {};
-        hist.forEach(h => {
-            let d = new Date(h.timestamp); let mKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-            if(!months[mKey]) months[mKey] = { rev:0, sal:0, exp:0, barCost:0 };
-            months[mKey].rev += (h.total||0); months[mKey].sal += (h.sal||0); months[mKey].exp += (h.expTotal||0); months[mKey].barCost += (h.barCostTotal||0);
-        });
+        hist.forEach(h => { let d = new Date(h.timestamp); let mKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; if(!months[mKey]) months[mKey] = { rev:0, sal:0, exp:0, barCost:0 }; months[mKey].rev += (h.total||0); months[mKey].sal += (h.sal||0); months[mKey].exp += (h.expTotal||0); months[mKey].barCost += (h.barCostTotal||0); });
         let html = '<table class="data-table"><thead><tr><th>МЕСЯЦ</th><th>ВЫРУЧКА</th><th>РАСХОДЫ + ЗП</th><th>ЧИСТАЯ ПРИБЫЛЬ</th></tr></thead><tbody>';
-        Object.keys(months).sort().reverse().forEach(k => {
-            let m = months[k]; let net = m.rev - m.sal - m.exp - m.barCost;
-            html += `<tr><td><b>${k}</b></td><td>${m.rev.toLocaleString()} ₸</td><td style="color:var(--red)">${(m.sal+m.exp).toLocaleString()} ₸</td><td style="color:var(--green); font-size:18px;"><b>${net.toLocaleString()} ₸</b></td></tr>`;
-        });
+        Object.keys(months).sort().reverse().forEach(k => { let m = months[k]; let net = m.rev - m.sal - m.exp - m.barCost; html += `<tr><td><b>${k}</b></td><td>${m.rev.toLocaleString()} ₸</td><td style="color:var(--red)">${(m.sal+m.exp).toLocaleString()} ₸</td><td style="color:var(--green); font-size:18px;"><b>${net.toLocaleString()} ₸</b></td></tr>`; });
         html += '</tbody></table>'; ui.modal("ИСТОРИЯ ПО МЕСЯЦАМ", html);
     },
     showDebtLogs: function() {
-        let logs = toArr(cloudState.debtLogs).sort((a,b)=>b.ts - a.ts);
-        let html = '<table class="data-table"><thead><tr><th>ДАТА</th><th>АДМИН</th><th>ДЕЙСТВИЕ</th><th>ДЕТАЛИ</th></tr></thead><tbody>';
+        let logs = toArr(cloudState.debtLogs).sort((a,b)=>b.ts - a.ts); let html = '<table class="data-table"><thead><tr><th>ДАТА</th><th>АДМИН</th><th>ДЕЙСТВИЕ</th><th>ДЕТАЛИ</th></tr></thead><tbody>';
         logs.forEach(l => { html += `<tr><td style="color:var(--gray); font-size:11px;">${l.date}</td><td><b class="gold-text">${l.admin}</b></td><td>${l.action}</td><td style="font-size:12px;">${l.detail}</td></tr>`; });
         html += '</tbody></table>'; ui.modal("ИСТОРИЯ ОПЕРАЦИЙ ПО ДОЛГАМ", html);
     }
@@ -92,7 +65,7 @@ window.ui = {
 function toArr(data) { if (!data) return []; if (Array.isArray(data)) return data; return Object.values(data); }
 
 dbRef.on('value', snap => {
-    if (isOfflineMode) return; // ЗАЩИТА: Не стирать экран, если мы ждем синхронизации
+    if (isOfflineMode) return; 
     if (snap.exists() && snap.val()) {
         let data = snap.val(); 
         cloudState.tables = toArr(data.tables).filter(x=>x).map(t => ({...t, res: toArr(t.res), bar: toArr(t.bar)}));
@@ -111,21 +84,13 @@ dbRef.on('value', snap => {
     } 
     isDataLoaded = true; 
     const urlParams = new URLSearchParams(window.location.search);
-    if(urlParams.get('guest') === 'true') { 
-        if(document.getElementById('guest-app') && document.getElementById('guest-app').style.display !== 'block') showGuestPage(); else renderGuestTables(); 
-    } else { 
-        renderAuthScreen();
-        render(); 
-    }
+    if(urlParams.get('guest') === 'true') { if(document.getElementById('guest-app') && document.getElementById('guest-app').style.display !== 'block') showGuestPage(); else renderGuestTables(); } 
+    else { renderAuthScreen(); render(); }
 });
 
-function saveToCloud() { if (!isDataLoaded) return; dbRef.set(cloudState).catch(e => console.error(e)); }
+function saveToCloud() { if (!isDataLoaded || isOfflineMode) return; dbRef.set(cloudState).catch(e => console.error(e)); }
 function saveLocalAuth() { localStorage.setItem('sensei_auth_pro', JSON.stringify(localAuth)); }
-
-function logDebtAction(action, detail) {
-    cloudState.debtLogs = toArr(cloudState.debtLogs);
-    cloudState.debtLogs.push({ ts: getNow(), date: new Date(getNow()).toLocaleString(), admin: (localAuth.user ? localAuth.user.name : 'Система'), action: action, detail: detail });
-}
+function logDebtAction(action, detail) { cloudState.debtLogs = toArr(cloudState.debtLogs); cloudState.debtLogs.push({ ts: getNow(), date: new Date(getNow()).toLocaleString(), admin: (localAuth.user ? localAuth.user.name : 'Система'), action: action, detail: detail }); }
 
 function getShiftStartTime() {
     let hist = toArr(cloudState.history).sort((a,b)=>a.timestamp - b.timestamp); 
@@ -154,22 +119,67 @@ window.onload = () => {
     setInterval(() => { if(localAuth && localAuth.isAuth && localAuth.user && localAuth.user.name && isDataLoaded && !isOfflineMode) { dbRef.child('onlineAdmins/' + localAuth.user.name).set(getNow()); } }, 30000);
 };
 
+// ИСПРАВЛЕНА ПРОБЛЕМА С ЗАВИСАНИЕМ ИМЕН В МЕНЮ ВХОДА (БЕЗ ARRAY.FROM)
 function renderAuthScreen() {
     if (localAuth && localAuth.isAuth) return;
     let selectElem = document.getElementById('staff-select');
     if (selectElem) {
-        let currentOptions = Array.from(selectElem.options).map(o => o.value).join(',');
-        let newOptionsArray = ['0', '1', 'owner'].concat(toArr(cloudState.customAdmins).map(a => "custom_" + a.id));
-        if (currentOptions !== newOptionsArray.join(',')) {
+        let cAdmins = toArr(cloudState.customAdmins);
+        let expectedLength = 3 + cAdmins.length; // 3 стандартных (Султан, Дидар, Хозяин) + кастомные
+        
+        // Перерисовываем меню только если количество опций не совпадает
+        if (!selectElem.options || selectElem.options.length !== expectedLength) {
             let curVal = selectElem.value;
             let html = '<option value="0">Султан</option><option value="1">Дидар</option><option value="owner">Хозяин</option>';
-            toArr(cloudState.customAdmins).forEach(a => { if(a && a.id) html += `<option value="custom_${a.id}">${a.name}</option>`; });
+            cAdmins.forEach(a => { if(a && a.id) html += `<option value="custom_${a.id}">${a.name}</option>`; });
             selectElem.innerHTML = html;
-            if (curVal && selectElem.querySelector(`option[value="${curVal}"]`)) { selectElem.value = curVal; }
+            if (curVal) selectElem.value = curVal;
         }
     }
-    document.getElementById('auth-screen').style.display = 'flex';
-    document.getElementById('app').style.display = 'none';
+    let authScreen = document.getElementById('auth-screen'); if(authScreen) authScreen.style.display = 'flex';
+    let appScreen = document.getElementById('app'); if(appScreen) appScreen.style.display = 'none';
+}
+
+function render() {
+    if (!localAuth || !localAuth.isAuth) { renderAuthScreen(); return; }
+    
+    let aScreen = document.getElementById('auth-screen'); if(aScreen) aScreen.style.display='none'; 
+    let gApp = document.getElementById('guest-app'); if(gApp) gApp.style.display='none'; 
+    let mainApp = document.getElementById('app'); if(mainApp) mainApp.style.display='block';
+    
+    document.getElementById('user-display').innerText = localAuth.user.name; let isOwner = localAuth.user.role === 'owner'; document.getElementById('owner-tab').style.display = isOwner ? 'block' : 'none'; document.getElementById('acc-tab').style.display = isOwner ? 'block' : 'none';
+    renderTables(); renderGlobalStats();
+
+    if(isOwner) {
+        let allAdminsList = STAFF_HARDCODED.filter(s => s.role === 'admin').map(s => s.name); toArr(cloudState.customAdmins).forEach(a => allAdminsList.push(a.name)); let adminSalariesHtml = '';
+        allAdminsList.forEach(name => { let debt = (cloudState.ownerAcc && cloudState.ownerAcc[name]) ? cloudState.ownerAcc[name] : 0; adminSalariesHtml += `<div class="check-row"><div><b style="font-size:20px; color:var(--white);">${name}</b><br><span style="font-size:12px; color:var(--gray);">ДОЛГ К ВЫПЛАТЕ:</span> <b style="color:var(--green); font-size:28px; display:block; margin-top:8px;">${debt.toLocaleString()} ₸</b></div><div style="display:flex; flex-direction:column; gap:8px;"><button onclick="gAdv('${name}', ${debt})" class="btn-outline" style="border-color:var(--green); color:var(--green); font-size:12px;">АВАНС</button><button onclick="fPay('${name}')" class="btn-gold" style="padding:12px; font-size:12px;">ПОЛНЫЙ РАСЧЕТ</button><button onclick="cBal('${name}', ${debt})" class="btn-outline" style="font-size:12px;">ИЗМЕНИТЬ ЦИФРУ</button><button onclick="iPen('${name}', ${debt})" class="btn-outline" style="border-color:var(--red); color:var(--red); font-size:12px;">ШТРАФ</button></div></div>`; });
+        let salariesListEl = document.getElementById('admin-salaries-list'); if (salariesListEl) salariesListEl.innerHTML = adminSalariesHtml;
+    }
+
+    let lowStockCount = toArr(cloudState.inventory).filter(i => (i.qty||0) < 5).length; let sBadge = document.getElementById('stock-badge'); if(sBadge) { if(lowStockCount > 0) { sBadge.style.display = 'inline-flex'; sBadge.innerText = lowStockCount; } else { sBadge.style.display = 'none'; } }
+
+    document.getElementById('active-checks').innerHTML = toArr(cloudState.checks).map((c, i) => { 
+        let bHtml = toArr(c.bar).map(b => `${b.name}`).join(', '); let vipBadge = c.isVip ? '<span class="vip-badge">VIP</span>' : ''; let discountHtml = (c.discount && c.discount > 0) ? `<span style="color:var(--red); font-size:14px; font-weight:800; margin-left:10px;">-${c.discount}%</span>` : ''; 
+        let sessHtml = toArr(c.sessions).map(s => `<div style="padding:4px 0;">${s}</div>`).join(''); let timeInfo = `<div style="font-size:12px;color:var(--gold-dim); font-weight:600; margin-top:8px; border-left:2px solid var(--gold-dim); padding-left:10px;">${sessHtml || (c.startTime ? `🕒 ${c.startTime} - ${c.endTime} (${c.duration})` : '')}</div>`;
+        let adminButtons = `<button onclick="openEditCheckModal(${i})" class="btn-outline" style="border-color:#555; color:#aaa; font-size:11px;">⚙️ РЕДАКТИРОВАТЬ</button>`; if (isOwner) adminButtons += `<button onclick="deleteCheck(${i})" class="btn-outline" style="border-color:rgba(255,76,76,0.5); color:var(--red); font-size:11px;">🗑️ УДАЛИТЬ ЧЕК</button>`;
+        return `<div class="check-row"><div style="flex:1;"><div><b style="font-size:22px; color:var(--gold);">${c.name}</b> ${vipBadge} <span style="font-size:12px;color:var(--gray);margin-left:10px;">${c.date}</span></div><div style="font-size:14px;color:var(--gray);margin-top:10px; line-height:1.4;">${timeInfo} ${bHtml?`<div style="color:var(--white); margin-top:5px;">🍸 Бар: ${bHtml} (${c.barCost} ₸)</div>`:''}</div><div style="font-size:28px;font-weight:800;margin-top:15px; color:var(--white);">${c.total} ₸ ${discountHtml}</div></div><div style="display:flex; flex-direction:column; gap:8px;"><button onclick="openPayModal(${i})" class="btn-gold shadow-gold" style="padding:15px; border-radius:14px;">ОПЛАТА</button><button onclick="openFullCheck(${i})" class="btn-outline">📄 ЧЕК</button>${adminButtons}</div></div>`; 
+    }).join('');
+    
+    document.getElementById('archive-list').innerHTML = toArr(cloudState.archive).slice().reverse().map(a => {
+        let barInfo = ''; let bArr = toArr(a.bar); if(bArr.length>0) { let gr = {}; bArr.forEach(i=>{gr[i.name]=gr[i.name]||{q:0}; gr[i.name].q++;}); barInfo = Object.keys(gr).map(k=>`${k} x${gr[k].q}`).join(', '); }
+        let sessHtml = toArr(a.sessions).map(s => `<div>${s}</div>`).join(''); let timeInfo = sessHtml || (a.startTime ? `🕒 ${a.startTime}-${a.endTime} (${a.duration})` : ''); 
+        let lastZ = getShiftStartTime(); 
+        let restoreBtn = ((a.paidAt || a.id) > lastZ || isOwner) ? `<button onclick="restoreArchiveCheck(${a.id})" class="btn-outline" style="padding:6px 10px; font-size:11px; margin-right:8px; border-color:var(--gold-dim); color:var(--gold);">↩️ ВЕРНУТЬ В ЗАЛ</button>` : ''; let delBtn = isOwner ? `<button onclick="deleteArchiveCheck(${a.id})" class="btn-red" style="padding:6px 10px; font-size:11px;">🗑️</button>` : '';
+        return `<tr><td style="color:var(--gray); font-size:12px;">${a.date} ${a.endTime||''}</td><td><b style="color:var(--white); font-size:15px;">${a.name}</b></td><td style="font-size:12px; line-height:1.4;">${timeInfo}<br><span style="color:var(--gold);">${barInfo}</span></td><td>Столы: ${a.timeCost}₸<br>Бар: ${a.barCost}₸<br><b class="gold-text" style="font-size:18px;">${a.total} ₸</b></td><td><span style="background:#16261c; color:var(--green); padding:6px 10px; border-radius:8px; font-size:11px; font-weight:800;">${a.payMethod}</span></td><td><div style="display:flex;"><button onclick="openArchiveFullCheck(${a.id})" class="btn-outline" style="padding:6px 10px; font-size:11px; margin-right:8px;">📄 ЧЕК</button>${restoreBtn}${delBtn}</div></td></tr>`;
+    }).join('');
+    
+    if(document.getElementById('tab-stock').style.display === 'block') renderStockTab(); 
+    if(document.getElementById('tab-debts').style.display === 'block') renderDebtsTab();
+    if(isOwner) {
+        document.getElementById('vip-guests-list').innerHTML = toArr(cloudState.vips).map((v) => `<span style="background:rgba(212,175,55,0.1); border:1px solid var(--gold); padding:8px 15px; border-radius:8px; display:inline-flex; align-items:center; gap:10px; color:var(--gold); font-weight:700;">${v.name} <span class="vip-badge">-${v.discount}%</span> <span onclick="delVipGuest(${v.id})" style="color:var(--red); cursor:pointer; font-weight:bold; font-size:18px;">×</span></span>`).join('');
+        document.getElementById('custom-admins-list').innerHTML = toArr(cloudState.customAdmins).map((a, i) => `<span style="background:#16261c; border:1px solid var(--border); padding:10px 18px; border-radius:12px; display:inline-flex; align-items:center; gap:12px; font-weight:600;">${a.name} <span onclick="delCustomAdmin(${i})" style="color:var(--red); cursor:pointer; font-weight:bold; font-size:18px;">×</span></span>`).join('');
+        document.getElementById('blacklist-guests-list').innerHTML = toArr(cloudState.blacklist).map((b) => `<span style="background:rgba(255,76,76,0.1); border:1px solid var(--red); padding:8px 15px; border-radius:8px; display:inline-flex; align-items:center; gap:10px; color:var(--red); font-weight:700;">${b.name} <span style="color:#fff; font-size:11px; font-weight:normal;">(${b.reason})</span> <span onclick="delBlacklist(${b.id})" style="color:var(--white); cursor:pointer; font-weight:bold; font-size:18px;">×</span></span>`).join('');
+    }
 }
 
 window.showGuestPage = function() { document.getElementById('auth-screen').style.display = 'none'; if(document.getElementById('app')) document.getElementById('app').style.display = 'none'; document.getElementById('guest-app').style.display = 'block'; let today = new Date().toISOString().split('T')[0]; if(document.getElementById('guest-date')) document.getElementById('guest-date').value = today; renderGuestTables(); }
@@ -186,7 +196,7 @@ window.login = function() {
         saveLocalAuth(); 
         document.getElementById('pass-input').value = ""; 
         document.getElementById('auth-error').style.display = 'none'; 
-        if(isDataLoaded) dbRef.child('onlineAdmins/' + user.name).set(getNow()); 
+        if(isDataLoaded && !isOfflineMode) dbRef.child('onlineAdmins/' + user.name).set(getNow()); 
         render(); 
     } 
     else { document.getElementById('auth-error').style.display = 'block'; }
@@ -219,9 +229,8 @@ function renderGlobalStats() {
 
     let totalDebts = toArr(cloudState.debts).reduce((s, d) => s + d.total, 0); let totalAdminOwed = 0; let adminDebtsDetails = '';
     let allAdminsList = STAFF_HARDCODED.filter(s => s.role === 'admin').map(s => s.name); toArr(cloudState.customAdmins).forEach(a => allAdminsList.push(a.name));
-    allAdminsList.forEach(name => { let val = (cloudState.ownerAcc && cloudState.ownerAcc[name]) ? cloudState.ownerAcc[name] : 0; totalAdminOwed += val; if(val > 0) adminDebtsDetails += `${name}: ${val.toLocaleString()} ₸ | `; }); if(adminDebtsDetails.length > 0) adminDebtsDetails = adminDebtsDetails.slice(0, -3);
+    allAdminsList.forEach(name => { let val = (cloudState.ownerAcc && cloudState.ownerAcc[name]) ? cloudState.ownerAcc[name] : 0; totalAdminOwed += val; if(val !== 0) adminDebtsDetails += `${name}: ${val.toLocaleString()} ₸ | `; }); if(adminDebtsDetails.length > 0) adminDebtsDetails = adminDebtsDetails.slice(0, -3);
 
-    // УМНАЯ ЗАРПЛАТА: +6000 ₸ ТОЛЬКО если выручка > 10000 ₸ И отработал 4+ часа
     let shiftZp = 0; 
     if(!isOwner) { 
         let sessionHours = localAuth.shiftStartTs ? ((getNow() - localAuth.shiftStartTs) / 3600000) : 0;
@@ -237,7 +246,6 @@ function renderGlobalStats() {
     let statsBar = document.getElementById('dynamic-global-stats'); if(statsBar) statsBar.innerHTML = html;
 }
 
-// ИСПРАВЛЕНИЕ: ВЫЧЕТ НЕДОСТАЧИ ИЗ ЗП ПРИ ЗАКРЫТИИ СМЕНЫ
 window.confirmZReport = function() {
     let physicalCash = parseInt(document.getElementById('z-cash-input').value) || 0; let shift = getCurrentShiftData(); let diff = physicalCash - shift.expectedCash;
     let salary = 0; let activeAdmin = localAuth.user.role === 'owner' ? getActiveAdminName() : localAuth.user.name;
@@ -247,22 +255,13 @@ window.confirmZReport = function() {
         let baseSal = (shift.total >= 10000 && sessionHours >= 4) ? 6000 : 0;
         salary = Math.round(shift.total * 0.08) + baseSal; 
     }
-    
-    // Если недостача (diff < 0), вычитаем её из ЗП админа
-    if (diff < 0 && localAuth.user.role !== 'owner') {
-        salary += diff; // diff отрицательный, поэтому плюс на минус дает минус
-    }
+    if (diff < 0 && localAuth.user.role !== 'owner') { salary += diff; } // ВЫЧЕТ НЕДОСТАЧИ ИЗ ЗП
 
     cloudState.history = toArr(cloudState.history);
     cloudState.history.push({ id: getNow(), admin: activeAdmin, start: localAuth.shiftStart, end: new Date(getNow()).toLocaleString(), timestamp: getNow(), barRev: shift.bar, tableRev: shift.table, total: shift.total, sal: salary, expectedCash: shift.expectedCash, physicalCash: physicalCash, diff: diff, cashRev: shift.cash, qrRev: shift.qr, expTotal: shift.expTotal, debtReturns: shift.debtReturns, debtIssued: shift.debtIssued, checksCount: shift.checksCount, barCostTotal: shift.barCostTotal });
-    
     if(localAuth.user.role !== 'owner') { if(!cloudState.ownerAcc) cloudState.ownerAcc = {}; cloudState.ownerAcc[activeAdmin] = (cloudState.ownerAcc[activeAdmin] || 0) + salary; }
-    
     saveToCloud(); localAuth = { isAuth: false, user: null }; saveLocalAuth(); 
-    
-    let diffMsg = diff < 0 ? `НЕДОСТАЧА: ${diff} ₸ (Вычтено из вашей ЗП)` : (diff > 0 ? `ИЗЛИШЕК: +${diff} ₸` : `КАССА ИДЕАЛЬНА`); 
-    ui.alert(`Смена закрыта.\nОжидалось наличных: ${shift.expectedCash} ₸\nВ кассе: ${physicalCash} ₸\n${diffMsg}`); 
-    setTimeout(()=>location.reload(), 4000);
+    let diffMsg = diff < 0 ? `НЕДОСТАЧА: ${diff} ₸ (Вычтено из вашей ЗП)` : (diff > 0 ? `ИЗЛИШЕК: +${diff} ₸` : `КАССА ИДЕАЛЬНА`); ui.alert(`Смена закрыта.\nОжидалось наличных: ${shift.expectedCash} ₸\nВ кассе: ${physicalCash} ₸\n${diffMsg}`); setTimeout(()=>location.reload(), 4000);
 }
 
 window.saveExpense = function() {
@@ -304,7 +303,7 @@ window.openTableManage = function(id) {
     let btnContainer = document.getElementById('manage-table-buttons'); if(btnContainer) { btnContainer.innerHTML = html; document.getElementById('table-manage-modal').style.display = 'flex'; }
 }
 
-// ИСПРАВЛЕНИЕ: АТОМАРНАЯ КОММЕРЦИЯ
+// АТОМАРНАЯ КОММЕРЦИЯ
 window.commTable = function(id) {
     ui.prompt('Коммерция (Новый счет)', [{label:'Имя проигравшего гостя'}], (vals) => {
         let name = vals[0]; let t = cloudState.tables.find(x => x.id === id); let currentCost = t.paused ? 0 : calcCost(t.start, t.isTournament); let totalCost = (t.accCost || 0) + currentCost; 
@@ -322,7 +321,7 @@ window.openStopTableModal = function(id) {
     toArr(cloudState.checks).forEach(c => { options += `<option value="${c.id}">${c.name || 'Гость'} (${c.details})</option>`; }); select.innerHTML = options; document.getElementById('stop-table-modal').style.display = 'flex';
 }
 
-// ИСПРАВЛЕНИЕ: АТОМАРНЫЙ СТОП СТОЛА
+// АТОМАРНЫЙ СТОП СТОЛА
 window.confirmStopTable = function() {
     let t = cloudState.tables.find(x => x.id === stoppingTableId);
     let newName = document.getElementById('stop-new-name').value.trim(); let mergeId = document.getElementById('stop-merge-select').value; let finalName = "";
@@ -381,12 +380,12 @@ window.renderBarSearch = function() {
     document.getElementById('bar-items-list').innerHTML = invArr.filter(i => (i.name||"").toLowerCase().includes(q)).map(i => `<div class="bar-item-row" onclick="selectBarItem('${i.name}')"><span>${i.name}</span><span class="stock-ok">${i.price} ₸ (${i.qty||0} шт)</span></div>`).join(''); 
 }
 
-// ИСПРАВЛЕНИЕ: ИДЕАЛЬНОЕ СПИСАНИЕ БАРА (ТОЛЬКО ОДИН РАЗ)
 window.selectBarItem = function(itemName) {
     cloudState.inventory = toArr(cloudState.inventory); let item = cloudState.inventory.find(x => x.name === itemName); if((item.qty||0) <= 0) return ui.alert("Товар закончился!");
     ui.prompt('Добавить в счет', [{label:`Кол-во: ${item.name} (Остаток: ${item.qty||0})`, type:'number', value:'1'}], (vals) => {
         let qty = parseInt(vals[0]); if (isNaN(qty) || qty <= 0 || qty > (item.qty||0)) return ui.alert("Некорректное количество!"); 
-        item.qty -= qty; // Вычитаем только 1 раз!
+        item.qty -= qty; // ТОЧНЫЙ ВЫЧЕТ ОДИН РАЗ
+        
         if (barContext === 'owner') { document.getElementById('bar-modal').style.display = 'none'; saveToCloud(); render(); ui.alert(`Списано на Хозяина: ${item.name}`); return; }
         let itemsToAdd = []; for(let i = 0; i < qty; i++) itemsToAdd.push({name: item.name, cost: item.cost||0, price: item.price});
         
@@ -403,6 +402,7 @@ window.selectBarItem = function(itemName) {
         }
     });
 }
+
 let editTableId = null;
 window.openEditTableBar = function(id) { editTableId = id; let t = toArr(cloudState.tables).find(x => x.id === id); let html = toArr(t.bar).map((b, i) => `<div class="edit-bar-item"><span>${b.name} (${b.price} ₸)</span> <button onclick="removeTableBarItem(${i})" class="btn-outline" style="color:var(--red); border-color:var(--red); padding:3px 8px; font-size:10px;">❌</button></div>`).join(''); document.getElementById('edit-table-bar-list').innerHTML = html || '<span style="color:var(--gray); font-size:12px;">Пусто</span>'; document.getElementById('edit-table-bar-modal').style.display = 'flex'; }
 window.removeTableBarItem = function(idx) { ui.confirm("Убрать товар? Он вернется на склад.", () => { cloudState.tables = toArr(cloudState.tables); let t = cloudState.tables.find(x => x.id === editTableId); t.bar = toArr(t.bar); let item = t.bar.splice(idx, 1)[0]; cloudState.inventory = toArr(cloudState.inventory); let invItem = cloudState.inventory.find(x => x.name === item.name); if(invItem) { invItem.qty = (invItem.qty||0) + 1; } saveToCloud(); openEditTableBar(editTableId); render(); }); }
@@ -473,19 +473,7 @@ window.processPayment = function(method) {
     cloudState.checks = toArr(cloudState.checks); let c = cloudState.checks[currentCheckIndex]; c.payMethod = method; 
     c.paidAt = getNow(); 
     let activeAdmin = localAuth.user.role === 'owner' ? getActiveAdminName() : localAuth.user.name; c.admin = activeAdmin; 
-    
-    if(method === 'Долг') { 
-        cloudState.debts = toArr(cloudState.debts); 
-        let d = cloudState.debts.find(x => (x.name||"").toLowerCase() === (c.name||"").toLowerCase()); 
-        let histStr = `+${c.total}₸ (${new Date(getNow()).toLocaleString()}, Дал в долг: ${activeAdmin})`; 
-        if(d) { 
-            d.total += c.total; d.history = toArr(d.history); d.history.push(histStr); d.timestamp = getNow(); 
-            if(!d.admin) d.admin = activeAdmin; 
-        } else { 
-            cloudState.debts.push({ name: c.name, total: c.total, history: [histStr], timestamp: getNow(), admin: activeAdmin }); 
-        } 
-        logDebtAction('ВЫДАЧА В ДОЛГ', `Гость: ${c.name}, Сумма: ${c.total} ₸, Админ: ${activeAdmin}`);
-    } 
+    if(method === 'Долг') { cloudState.debts = toArr(cloudState.debts); let d = cloudState.debts.find(x => (x.name||"").toLowerCase() === (c.name||"").toLowerCase()); let histStr = `+${c.total}₸ (${new Date(getNow()).toLocaleString()}, Дал в долг: ${activeAdmin})`; if(d) { d.total += c.total; d.history = toArr(d.history); d.history.push(histStr); d.timestamp = getNow(); if(!d.admin) d.admin = activeAdmin; } else { cloudState.debts.push({ name: c.name, total: c.total, history: [histStr], timestamp: getNow(), admin: activeAdmin }); } logDebtAction('ВЫДАЧА В ДОЛГ', `Гость: ${c.name}, Сумма: ${c.total} ₸, Выдал: ${activeAdmin}`); } 
     cloudState.archive = toArr(cloudState.archive); cloudState.archive.push(c); cloudState.checks.splice(currentCheckIndex, 1); document.getElementById('pay-modal').style.display = 'none'; saveToCloud(); render(); 
 }
 
@@ -509,7 +497,7 @@ window.payPartialDebt = function() {
         } else { 
             cloudState.debts.push({ name: c.name, total: debtAmount, history: [histStr], timestamp: getNow(), admin: activeAdmin }); 
         }
-        logDebtAction('ЧАСТИЧНО В ДОЛГ', `Гость: ${c.name}, Оплачено: ${paid} ₸, В долг: ${debtAmount} ₸, Админ: ${activeAdmin}`);
+        logDebtAction('ЧАСТИЧНО В ДОЛГ', `Гость: ${c.name}, Оплачено: ${paid} ₸, В долг: ${debtAmount} ₸, Выдал: ${activeAdmin}`);
         c.payMethod = method; c.admin = activeAdmin; c.total = paid; c.details += ` (В долг: ${debtAmount}₸)`; c.paidAt = getNow(); cloudState.archive = toArr(cloudState.archive); cloudState.archive.push(c); cloudState.checks.splice(currentCheckIndex, 1); document.getElementById('pay-modal').style.display = 'none'; saveToCloud(); render(); ui.alert(`Оплата ${paid} ₸ принята.\n${debtAmount} ₸ переведено в ДОЛГИ.`);
     });
 }
@@ -540,21 +528,6 @@ window.restoreDebtCheck = function(idx) {
     if(cArr.length === 0) return ui.alert("Исходный чек не найден в текущей смене!"); let c = cArr[cArr.length - 1]; window.restoreArchiveCheck(c.id);
 }
 
-window.renderDebtsTab = function() {
-    let debtsArr = toArr(cloudState.debts); let searchQ = document.getElementById('debts-search').value.toLowerCase(); if(searchQ) { debtsArr = debtsArr.filter(d => (d.name||"").toLowerCase().includes(searchQ)); }
-    document.getElementById('debts-list').innerHTML = debtsArr.map((d) => {
-        let originalIndex = toArr(cloudState.debts).findIndex(x => x.name === d.name); let ts = d.timestamp || Date.now(); let deadline = ts + (15 * 24 * 60 * 60 * 1000); let diff = deadline - Date.now();
-        let warningHtml = ''; let penaltyBtn = ''; let isOwner = localAuth.user && localAuth.user.role === 'owner';
-        if (d.needsConfirmation) { if (isOwner) penaltyBtn = `<button onclick="confirmDebtReturn(${originalIndex})" class="btn-gold shadow-gold" style="width:100%; margin-top:8px; font-size:12px;">✅ ПОДТВЕРДИТЬ</button>`; } 
-        else if (diff < 0 && d.total > 0) { let daysOver = Math.floor(Math.abs(diff) / (1000 * 60 * 60 * 24)); warningHtml = `<br><span style="display:inline-block; margin-top:5px; background:rgba(255,76,76,0.1); color:var(--red); padding:4px 8px; border-radius:6px; font-size:11px; font-weight:800;">⚠️ ПРОСРОЧЕНО: ${daysOver} дн.</span>`; if(isOwner) penaltyBtn = `<button onclick="deductDebtFromAdmin(${originalIndex})" class="btn-outline" style="border-color:var(--red); color:var(--red); margin-top:8px; width:100%; font-size:11px;">УДЕРЖАТЬ С АДМИНА</button>`; } 
-        else if (d.total > 0) { let dLeft = Math.floor(diff / (1000 * 60 * 60 * 24)); let hLeft = Math.floor((diff / (1000 * 60 * 60)) % 24); warningHtml = `<br><span style="display:inline-block; margin-top:5px; background:rgba(212,175,55,0.1); color:var(--gold); padding:4px 8px; border-radius:6px; font-size:11px; font-weight:700;">⏳ До расчета: ${dLeft} дн. ${hLeft} ч.</span>`; }
-        let delBtn = isOwner ? `<button onclick="delDebt(${originalIndex})" class="btn-outline" style="border-color:rgba(255,76,76,0.5); color:var(--red); width:100%; margin-top:8px; font-size:11px;">УДАЛИТЬ ДОЛГ</button>` : ''; let payBtn = '';
-        if (d.needsConfirmation) { payBtn = `<span style="display:block; text-align:center; background:rgba(46,204,113,0.1); border:1px solid var(--green); color:var(--green); padding:10px; border-radius:10px; font-size:12px; font-weight:800;">✅ ОПЛАЧЕНО<br><span style="font-size:10px; font-weight:500;">Ждет проверки Хозяина</span></span>`; } 
-        else if (d.total > 0) { payBtn = `<button onclick="payDebt(${originalIndex})" class="btn-outline" style="border-color:var(--green); color:var(--green); width:100%; font-size:13px;">ВНЕСТИ РАСЧЕТ</button>`; }
-        let lastZ = getShiftStartTime(); let isFreshDebt = (d.timestamp > lastZ && d.total > 0); let returnCheckBtn = isFreshDebt ? `<button onclick="restoreDebtCheck(${originalIndex})" class="btn-outline" style="border-color:var(--gold-dim); color:var(--gold); width:100%; margin-top:8px; font-size:11px;">↩️ ОТМЕНИТЬ (ОШИБКА)</button>` : '';
-        return `<tr><td><b class="gold-text" style="font-size:18px;">${d.name}</b><br><span style="font-size:11px; color:var(--gray);">Выдал: <b style="color:var(--white);">${d.admin || 'Неизвестно'}</b></span>${warningHtml}</td><td style="color:var(--red); font-weight:800; font-size:24px;">${d.total.toLocaleString()} ₸</td><td><span style="font-size:12px; color:var(--gray); line-height:1.5;">${toArr(d.history).join('<br>')}</span></td><td style="text-align:right; vertical-align:middle; width:180px;">${payBtn}${penaltyBtn}${returnCheckBtn}${delBtn}</td></tr>`;
-    }).join('');
-}
 window.payDebt = function(idx) { cloudState.debts = toArr(cloudState.debts); let d = cloudState.debts[idx]; ui.prompt('Погашение долга', [{label: 'Сколько вносит клиент? (Долг: ' + d.total + ' ₸)', type: 'number'}, {label: 'Метод оплаты (Нал/QR)', value: 'Нал'}], (vals) => { let sum = parseInt(vals[0]); if(isNaN(sum) || sum <= 0 || sum > d.total) return ui.alert("Некорректная сумма!"); let method = vals[1] || 'Наличные'; let comm = Math.round(sum * 0.08); if (d.admin) { if(!cloudState.ownerAcc) cloudState.ownerAcc = {}; cloudState.ownerAcc[d.admin] = (cloudState.ownerAcc[d.admin] || 0) + comm; ui.alert(`Админу "${d.admin}" начислено 8% (${comm} ₸) на баланс.`); } d.total -= sum; let timeStr = new Date(getNow()).toLocaleTimeString().slice(0,5); d.history = toArr(d.history); d.history.push(`Оплата: -${sum}₸ (${new Date(getNow()).toLocaleDateString()} ${timeStr}, ${method})`); let activeAdmin = localAuth.user.role === 'owner' ? getActiveAdminName() : localAuth.user.name; cloudState.archive = toArr(cloudState.archive); cloudState.archive.push({ id: getNow(), name: "Возврат долга: " + d.name, table: "ДОЛГ", date: new Date(getNow()).toLocaleDateString(), timeCost: 0, barCost: 0, total: sum, payMethod: method, admin: activeAdmin, details: "Погашение долга", isDebtPayment: true, paidAt: getNow() }); if(d.total <= 0) { d.needsConfirmation = true; ui.alert("Долг оплачен. Ждет подтверждения Хозяина."); } logDebtAction('ВНЕСЕН РАСЧЕТ', `Гость: ${d.name}, Оплачено: ${sum} ₸, Принял: ${activeAdmin}, 8% ушло: ${d.admin || 'Неизвестно'}`); saveToCloud(); renderDebtsTab(); render(); }); }
 window.confirmDebtReturn = function(idx) { ui.confirm("Вы забрали деньги из кассы? Подтвердить и удалить долг навсегда?", () => { cloudState.debts = toArr(cloudState.debts); let d = cloudState.debts[idx]; logDebtAction('ХОЗЯИН ПОДТВЕРДИЛ', `Долг "${d.name}" успешно закрыт и удален из базы.`); cloudState.debts.splice(idx, 1); saveToCloud(); renderDebtsTab(); render(); }); }
 window.deductDebtFromAdmin = function(idx) { cloudState.debts = toArr(cloudState.debts); let d = cloudState.debts[idx]; ui.confirm(`Удержать долг (${d.total} ₸) из ЗП администратора ${d.admin || 'Неизвестно'}?`, () => { if(d.admin) { if(!cloudState.ownerAcc) cloudState.ownerAcc = {}; cloudState.ownerAcc[d.admin] = (cloudState.ownerAcc[d.admin] || 0) - d.total; } logDebtAction('УДЕРЖАНИЕ С ЗП', `Сумма ${d.total} ₸ за гостя "${d.name}" списана с ЗП админа ${d.admin || 'Неизвестно'}.`); d.total = 0; d.history = toArr(d.history); d.history.push(`УДЕРЖАНО С АДМИНА: ${d.admin}`); saveToCloud(); ui.alert("Долг успешно удержан из ЗП!"); renderDebtsTab(); render(); }); }
@@ -566,7 +539,7 @@ window.iPen = function(n, d) { ui.prompt('Штраф', [{label:'Сумма шт�
 window.fPay = function(n) { ui.confirm(`Расчет ${n}?`, ()=>{cloudState.ownerAcc[n]=0;saveToCloud();render();}); };
 
 window.addCustomAdmin = function() { ui.prompt('Новый администратор', [{label:'Имя'}, {label:'PIN-код', type:'number'}], (vals) => { cloudState.customAdmins = toArr(cloudState.customAdmins); cloudState.customAdmins.push({id: getNow(), name: vals[0], pin: vals[1], role: "admin"}); saveToCloud(); render(); }); }
-window.resetDatabase = function() { ui.confirm("ОЧИСТИТЬ БАЗУ ПОЛНОСТЬЮ?", () => { cloudState = { tables: Array.from({length: 6}, (_, i) => ({ id: i + 1, active: false, start: null, res: [], bar:[], paused: false, accCost: 0, accTime: 0, isTournament: false })), checks: [], archive: [], inventory: [], debts: [], history: [], ownerAcc: {}, customAdmins: [], expenses:[], vips: [], onlineAdmins: {}, notifications: [], blacklist: [] }; saveToCloud(); location.reload(); }); }
+window.resetDatabase = function() { ui.confirm("ОЧИСТИТЬ БАЗУ ПОЛНОСТЬЮ?", () => { cloudState = { tables: Array.from({length: 6}, (_, i) => ({ id: i + 1, active: false, start: null, res: [], bar:[], paused: false, accCost: 0, accTime: 0, isTournament: false })), checks: [], archive: [], inventory: [], debts: [], debtLogs: [], history: [], ownerAcc: {}, customAdmins: [], expenses:[], vips: [], onlineAdmins: {}, notifications: [], blacklist: [] }; saveToCloud(); location.reload(); }); }
 window.addVipGuest = function() { ui.prompt('VIP Гость', [{label:'Имя'}, {label:'Скидка (%)', type:'number'}], (vals) => { let name = vals[0]; let disc = parseInt(vals[1]); if(isNaN(disc) || disc < 0 || disc > 100) return ui.alert("Неверная скидка"); cloudState.vips = toArr(cloudState.vips); let exist = cloudState.vips.find(v => (v.name||"").toLowerCase() === name.toLowerCase()); if(exist) exist.discount = disc; else cloudState.vips.push({id: getNow(), name: name, discount: disc}); saveToCloud(); ui.alert(`VIP гость ${name} добавлен со скидкой ${disc}%!`); render(); }); }
 window.delVipGuest = function(id) { ui.confirm("Удалить VIP гостя?", () => { cloudState.vips = toArr(cloudState.vips).filter(v => v.id !== id); saveToCloud(); render(); }); }
 window.addBlacklist = function() { ui.prompt('Черный список', [{label:'Имя проблемного гостя'}, {label:'Причина (за что?)'}], (vals) => { cloudState.blacklist = toArr(cloudState.blacklist); cloudState.blacklist.push({id: getNow(), name: vals[0], reason: vals[1]}); saveToCloud(); ui.alert(`Гость ${vals[0]} добавлен в Черный список!`); render(); }); }
@@ -582,7 +555,6 @@ window.exportToExcel = function() {
 function renderAccounting() {
     let histArr = toArr(cloudState.history); if(histArr.length === 0) return; const nowTime = getNow(); const todayStr = new Date(nowTime).toLocaleDateString();
     
-    // ИСПРАВЛЕНИЕ: ФИЛЬТР "С 1 ЧИСЛА ЭТОГО МЕСЯЦА"
     currentFilteredHistory = histArr.filter(h => { 
         if(accPeriod === 'all') return true; 
         let shiftDateStr = h.timestamp ? new Date(h.timestamp).toLocaleDateString() : h.end.split(',')[0].trim(); 
