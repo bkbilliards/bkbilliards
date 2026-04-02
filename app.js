@@ -749,7 +749,7 @@ function renderTables() {
 }
 
 // ---------------------------------------------------------
-// ГЛАВНАЯ ФУНКЦИЯ RENDER, КОТОРОЙ НЕ ХВАТАЛО ДЛЯ РАЗБЛОКИРОВКИ ЭКРАНА
+// ГЛАВНАЯ ФУНКЦИЯ RENDER (ИМЕННО ЕЕ НЕ ХВАТАЛО!)
 // ---------------------------------------------------------
 window.render = function() {
     if (!localAuth || !localAuth.isAuth) {
@@ -838,3 +838,5 @@ window.render = function() {
         document.getElementById('admin-salaries-list').innerHTML = balHtml;
     }
 }
+
+// === КОНЕЦ ФАЙЛА APP.JS ===
