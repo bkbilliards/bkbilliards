@@ -56,7 +56,10 @@
                 <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:15px;">
                         <input type="text" id="debts-search" placeholder="🔍 Найти должника по имени..." class="search-input" style="margin:0; flex:1; min-width:250px;" oninput="renderDebtsTab()">
-                        <button onclick="document.getElementById('debt-logs-modal').style.display='flex'" class="btn-outline" style="border-color:#3498db; color:#3498db; font-weight:800; white-space:nowrap;">📖 ИСТОРИЯ ДОЛГОВ</button>
+                        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                            <button onclick="exportDebtsToExcel()" class="btn-outline" style="color:var(--green); border-color:rgba(0,204,102,0.4); font-weight:800; white-space:nowrap;">📥 СКАЧАТЬ (EXCEL)</button>
+                            <button onclick="document.getElementById('debt-logs-modal').style.display='flex'" class="btn-outline" style="border-color:#3498db; color:#3498db; font-weight:800; white-space:nowrap;">📖 ИСТОРИЯ ДОЛГОВ</button>
+                        </div>
                     </div>
                     <table class="data-table"><thead><tr><th>КЛИЕНТ</th><th>ДОЛГ</th><th>ИСТОРИЯ (ПОСЛЕДНЕЕ)</th><th>УПРАВЛЕНИЕ</th></tr></thead><tbody id="debts-list"></tbody></table>
                 </div>
