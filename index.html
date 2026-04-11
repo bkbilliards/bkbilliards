@@ -37,6 +37,7 @@
                 <label class="check-container"><input type="checkbox" onchange="checkChecklist()"> <span class="checkmark"></span> Ковролан пропылесосен</label>
                 <label class="check-container"><input type="checkbox" onchange="checkChecklist()"> <span class="checkmark"></span> Убрана территория на улице</label>
                 <label class="check-container"><input type="checkbox" onchange="checkChecklist()"> <span class="checkmark"></span> Бар и витрины в порядке</label>
+                <label class="check-container"><input type="checkbox" onchange="checkChecklist()"> <span class="checkmark"></span> Кассовая зона чистая</label>
             </div>
             <button id="start-shift-btn" onclick="startShiftChecklist()" class="btn-gold btn-large" style="opacity:0.3; pointer-events:none; margin-top:25px;">ПРИСТУПИТЬ К РАБОТЕ</button>
         </div>
@@ -53,7 +54,8 @@
         </header>
 
         <div id="dynamic-global-stats" class="global-stats-bar"></div>
-        <div id="shift-info-panel" style="background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border); padding: 10px 30px; display:flex; justify-content:space-between; font-size:13px; color:var(--gold-light); font-weight:800; letter-spacing:1px;">
+        
+        <div id="shift-info-panel" style="background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border); padding: 12px 30px; display:flex; justify-content:space-between; font-size:13px; color:var(--gold-light); font-weight:800; letter-spacing:1px;">
             <span id="live-clock">🕒 ВРЕМЯ: --:--</span>
             <span id="shift-duration-clock">⏱️ СМЕНА ИДЕТ: --:--</span>
         </div>
@@ -189,7 +191,7 @@
         <div class="modal-card">
             <div class="modal-close" onclick="document.getElementById('pay-modal').style.display='none'">×</div><h2 class="gold-text" style="margin-top:0;">ОПЛАТА</h2><div class="pay-amount" id="pay-total">0 ₸</div><p id="pay-info" class="pay-info"></p>
             <div id="discount-section" style="margin-bottom: 25px; background: rgba(212, 175, 55, 0.05); padding: 20px; border-radius: 16px; border: 1px dashed var(--gold-dim);">
-                <p style="font-size:12px; color:var(--gold); margin-bottom:15px; text-align:center; font-weight:800;">ПРИМЕНИТЬ СКИДКУ (ТОЛЬКО ХОЗЯИН):</p>
+                <p style="font-size:12px; color:var(--gold); margin-bottom:15px; text-align:center; font-weight:800;">ПРИМЕНИТЬ СКИДКУ:</p>
                 <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
                     <button onclick="applyDiscount(10)" class="btn-outline" style="padding:10px 15px; font-size:15px; flex:1;">10%</button>
                     <button onclick="applyDiscount(15)" class="btn-outline" style="padding:10px 15px; font-size:15px; flex:1;">15%</button>
@@ -202,7 +204,7 @@
                     <button onclick="applyDiscount(0)" class="btn-outline" style="padding:10px 15px; font-size:14px; flex:1; border-color:var(--red); color:var(--red);">❌ УБРАТЬ</button>
                 </div>
             </div>
-            <div id="pay-main-buttons" class="pay-buttons"><button onclick="processPayment('Наличные')" class="btn-pay cash">💵 НАЛИЧНЫЕ</button><button onclick="processPayment('QR')" class="btn-pay qr">📱 QR-КОД</button><button onclick="showMixPay()" class="btn-pay mix">☯️ РАЗДЕЛИТЬ (НАЛ + QR)</button><button onclick="payPartialDebt()" class="btn-pay mix" style="background: linear-gradient(135deg, #f39c12, #d35400);">💸 ЧАСТИЧНО В ДОЛГ</button><div style="display:flex; gap:10px; margin-top:5px;"></div><div id="split-info" style="display:none; text-align:center; font-size:16px; margin:5px 0 10px; background:rgba(212,175,55,0.1); padding:10px; border-radius:10px; color:var(--white);"></div><button onclick="processPayment('Долг')" class="btn-pay debt">ПОЛНОСТЬЮ В ДОЛГ</button></div>
+            <div id="pay-main-buttons" class="pay-buttons"><button onclick="processPayment('Наличные')" class="btn-pay cash">💵 НАЛИЧНЫЕ</button><button onclick="processPayment('QR')" class="btn-pay qr">📱 QR-КОД</button><button onclick="showMixPay()" class="btn-pay mix">☯️ РАЗДЕЛИТЬ (НАЛ + QR)</button><button onclick="payPartialDebt()" class="btn-pay mix" style="background: linear-gradient(135deg, #f39c12, #d35400);">💸 ЧАСТИЧНО В ДОЛГ</button><div id="split-info" style="display:none; text-align:center; font-size:16px; margin:5px 0 10px; background:rgba(212,175,55,0.1); padding:10px; border-radius:10px; color:var(--white);"></div><button onclick="processPayment('Долг')" class="btn-pay debt">ПОЛНОСТЬЮ В ДОЛГ</button></div>
             <div id="mix-pay-section" style="display:none; text-align:left;"><div style="display:flex; gap:12px; margin-bottom:20px;"><button onclick="fillMix('timeCash')" class="btn-outline flex-1" style="font-size:11px;">ВРЕМЯ: НАЛ<br>БАР: QR</button><button onclick="fillMix('barCash')" class="btn-outline flex-1" style="font-size:11px;">БАР: НАЛ<br>ВРЕМЯ: QR</button></div><p style="font-size:13px; color:var(--gray); margin-bottom:8px; font-weight:700;">Сумма оплаты НАЛИЧНЫМИ:</p><input type="number" id="mix-cash-input" placeholder="0" oninput="calcMixQr()" class="large-input"><div style="margin:25px 0; font-size:18px; font-weight:700; text-align:center;">Остаток на QR: <span id="mix-qr-val" class="gold-text" style="font-size:32px;">0</span> ₸</div><button onclick="confirmMixPay()" class="btn-gold btn-large shadow-gold">ПОДТВЕРДИТЬ ОПЛАТУ</button><button onclick="hideMixPay()" class="btn-outline" style="width:100%; margin-top:12px;">НАЗАД</button></div>
         </div>
     </div>
