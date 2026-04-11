@@ -16,6 +16,7 @@ let serverTimeOffset = 0;
 db.ref('.info/serverTimeOffset').on('value', snap => { serverTimeOffset = snap.val() || 0; });
 const getNow = () => Date.now(); 
 
+// ЗАЩИТА ОТ ОТКЛЮЧЕНИЯ ИНТЕРНЕТА
 let isOfflineMode = !navigator.onLine;
 window.addEventListener('offline', () => {
     isOfflineMode = true;
@@ -162,6 +163,7 @@ function renderAuthScreen() {
     }
 }
 
+// === ЛОГИКА ВХОДА И ЧЕК-ЛИСТА ===
 window.login = function() {
     const val = document.getElementById('staff-select').value; const pin = document.getElementById('pass-input').value;
     let user = STAFF_HARDCODED.find(s => s.id === val) || toArr(cloudState.customAdmins).find(a => "custom_"+a.id === val);
@@ -314,6 +316,7 @@ window.editTableTime = function(id) {
     ui.prompt('Изменить время', [{label: `Сыграно минут (сейчас ${currentMins})`, type: 'number', value: currentMins}], (vals) => {
         let newMins = parseInt(vals[0]); if (isNaN(newMins) || newMins < 0) return ui.alert("Некорректное время!");
         
+        // 🛑 АНТИ-ВОР: Запрет списания отыгранного времени
         if (localAuth.user.role !== 'owner' && newMins < currentMins) {
             return ui.alert(`❌ ЗАПРЕЩЕНО!\nАдминистраторам нельзя списывать уже отыгранное время.\n(Было: ${currentMins} мин). Зовите Хозяина.`);
         }
@@ -436,6 +439,7 @@ window.selectBarItem = function(itemName) {
 let editTableId = null;
 window.openEditTableBar = function(id) { editTableId = id; let t = toArr(cloudState.tables).find(x => x.id === id); let html = toArr(t.bar).map((b, i) => `<div class="edit-bar-item"><span>${b.name} (${b.price} ₸)</span> <button onclick="removeTableBarItem(${i})" class="btn-outline" style="color:var(--red); border-color:var(--red); padding:3px 8px; font-size:10px;">❌</button></div>`).join(''); document.getElementById('edit-table-bar-list').innerHTML = html || '<span style="color:var(--gray); font-size:12px;">Пусто</span>'; document.getElementById('edit-table-bar-modal').style.display = 'flex'; }
 
+// 🛑 АНТИ-ВОР: Удаление бара со стола
 window.removeTableBarItem = function(idx) { 
     if (localAuth.user.role !== 'owner') return ui.alert("❌ ЗАПРЕЩЕНО!\nУдалять пробитый товар может только Хозяин.");
     ui.confirm("Убрать товар? Он вернется на склад.", () => { cloudState.tables = toArr(cloudState.tables); let t = cloudState.tables.find(x => x.id === editTableId); t.bar = toArr(t.bar); let item = t.bar.splice(idx, 1)[0]; cloudState.inventory = toArr(cloudState.inventory); let invItem = cloudState.inventory.find(x => x.name === item.name); if(invItem) { invItem.qty = (invItem.qty||0) + 1; } saveToCloud(); openEditTableBar(editTableId); render(); }); 
@@ -464,17 +468,18 @@ function createOrMergeCheck(name, tableId, timeCost, barItems) {
     }
 }
 
+// 🛑 АНТИ-ВОР: Удаление чека целиком
 window.deleteCheck = function(idx) { 
     if (localAuth.user.role !== 'owner') return ui.alert("❌ ЗАПРЕЩЕНО!\nУдалять чеки целиком может только Хозяин.");
     ui.confirm("Вы точно хотите безвозвратно УДАЛИТЬ этот чек?\nВсе товары бара из него будут возвращены на склад.", () => { cloudState.checks = toArr(cloudState.checks); cloudState.inventory = toArr(cloudState.inventory); let c = cloudState.checks[idx]; if(c.bar && toArr(c.bar).length > 0) { toArr(c.bar).forEach(bItem => { let invItem = cloudState.inventory.find(x => x.name === bItem.name); if(invItem) { invItem.qty = (invItem.qty||0) + 1; } else cloudState.inventory.push({name: bItem.name, cost: bItem.cost||0, price: bItem.price, qty: 1}); }); } cloudState.checks.splice(idx, 1); saveToCloud(); render(); }); 
 }
 
 let editingCheckIdx = null;
-let originalCheckTimeCost = 0; 
+let originalCheckTimeCost = 0;
 
 window.openEditCheckModal = function(idx) { 
     editingCheckIdx = idx; let c = toArr(cloudState.checks)[idx]; 
-    originalCheckTimeCost = c.timeCost; 
+    originalCheckTimeCost = c.timeCost;
     document.getElementById('edit-check-name').value = c.name; document.getElementById('edit-check-time').value = c.timeCost; renderEditCheckData(); document.getElementById('edit-check-modal').style.display = 'flex'; 
 }
 
@@ -497,6 +502,7 @@ window.addForgottenTableSession = function() {
     });
 }
 
+// 🛑 АНТИ-ВОР: Удаление сеанса
 window.removeSession = function(idx) { 
     if (localAuth.user.role !== 'owner') return ui.alert("❌ ЗАПРЕЩЕНО!\nУдалять сеансы может только Хозяин.");
     ui.confirm("Удалить этот сеанс?", () => { let c = cloudState.checks[editingCheckIdx]; c.sessions = toArr(c.sessions); c.sessions.splice(idx, 1); saveToCloud(); renderEditCheckData(); }); 
@@ -509,6 +515,7 @@ function renderEditCheckData() {
     let sessHtml = toArr(c.sessions).map((s, i) => `<div style="display:flex; justify-content:space-between; margin-bottom:5px; color:var(--gold-dim); font-size:12px;"><span>${s}</span><span onclick="removeSession(${i})" style="color:var(--red);cursor:pointer;">❌</span></div>`).join(''); document.getElementById('edit-check-sessions-list').innerHTML = sessHtml || 'Нет сеансов';
 }
 
+// 🛑 АНТИ-ВОР: Удаление товара из чека
 window.removeBarItemFromCheck = function(itemIdx) { 
     if (localAuth.user.role !== 'owner') return ui.alert("❌ ЗАПРЕЩЕНО!\nУдалять товары из чека может только Хозяин.");
     ui.confirm("Убрать товар из чека? Он вернется на склад.", () => { cloudState.checks = toArr(cloudState.checks); let c = cloudState.checks[editingCheckIdx]; c.bar = toArr(c.bar); let item = c.bar.splice(itemIdx, 1)[0]; c.barCost -= item.price; applyVipLogic(c); cloudState.inventory = toArr(cloudState.inventory); let invItem = cloudState.inventory.find(x => x.name === item.name); if(invItem) { invItem.qty = (invItem.qty||0) + 1; } saveToCloud(); renderEditCheckData(); }); 
@@ -519,6 +526,7 @@ window.saveCheckEdit = function() {
     let newName = document.getElementById('edit-check-name').value; 
     let newTimeCost = parseInt(document.getElementById('edit-check-time').value) || 0;
 
+    // 🛑 АНТИ-ВОР: Запрет уменьшения суммы чека
     if (localAuth.user.role !== 'owner' && newTimeCost < originalCheckTimeCost) {
         document.getElementById('edit-check-time').value = originalCheckTimeCost;
         return ui.alert(`❌ ЗАПРЕЩЕНО!\nАдминистраторам нельзя уменьшать сумму чека.\n(Было: ${originalCheckTimeCost} ₸, а вы ввели ${newTimeCost} ₸). Зовите Хозяина.`);
@@ -531,6 +539,7 @@ window.saveCheckEdit = function() {
 
 window.openPayModal = function(idx) { currentCheckIndex = idx; let c = toArr(cloudState.checks)[idx]; let origTotal = c.timeCost + c.barCost; document.getElementById('split-info').style.display = 'none'; if(c.discount && c.discount > 0) { document.getElementById('pay-total').innerHTML = `<span style="text-decoration:line-through; font-size:24px; color:var(--gray);">${origTotal} ₸</span><br>${c.total} ₸`; document.getElementById('pay-info').innerText = `${c.name} | ${c.details} (Скидка ${c.discount}%)`; } else { document.getElementById('pay-total').innerText = c.total + " ₸"; document.getElementById('pay-info').innerText = `${c.name} | ${c.details}`; } document.getElementById('pay-main-buttons').style.display = 'flex'; document.getElementById('mix-pay-section').style.display = 'none'; document.getElementById('pay-modal').style.display = 'flex'; }
 
+// 🛑 АНТИ-ВОР: Скидки и штрафы за скидку
 window.applyDiscount = function(pct) { 
     if (localAuth.user.role !== 'owner' && pct > 0) {
         return ui.alert(`❌ ЗАПРЕЩЕНО!\nДелать скидки (${pct}%) может только Хозяин.`);
@@ -538,11 +547,10 @@ window.applyDiscount = function(pct) {
     
     cloudState.checks = toArr(cloudState.checks); let c = cloudState.checks[currentCheckIndex]; 
     
-    // ЛОГИКА ОТМЕНЫ СКИДКИ СО ШТРАФОМ АДМИНА
     if (pct === 0 && c.discount && c.discount > 0 && localAuth.user.role === 'owner') {
         let origTotal = c.timeCost + c.barCost;
         let discountSum = origTotal - c.total;
-        let adminToFine = c.admin || 'Неизвестно';
+        let adminToFine = c.admin || c.discountGivenBy || 'Неизвестно';
         
         ui.confirm(`Убрать скидку (${c.discount}%) с чека?\nСумма скидки: ${discountSum} ₸.\nЭта сумма будет УДЕРЖАНА из зарплаты админа (${adminToFine}) в качестве штрафа за самовольную скидку. Продолжить?`, () => {
             if(!cloudState.ownerAcc) cloudState.ownerAcc = {}; 
@@ -561,7 +569,7 @@ window.applyDiscount = function(pct) {
     }
 
     c.discount = pct; 
-    c.discountGivenBy = localAuth.user.name; // Фиксируем, кто дал скидку
+    c.discountGivenBy = localAuth.user.name; 
 
     if (pct === 100) { c.timeCost = 0; c.barCost = 0; c.total = 0; c.details += " [СВОИ/ХОЗЯИН]"; document.getElementById('pay-total').innerText = "0 ₸"; document.getElementById('pay-info').innerText = `${c.name} | ${c.details} (100%)`; } 
     else { 
@@ -663,13 +671,11 @@ window.confirmSplit = function() {
 
     if (timeVal === 0 && selectedItems.length === 0) return ui.alert("Вы ничего не выбрали для разделения!");
 
-    // Уменьшаем основной чек
     c.timeCost -= timeVal;
     c.barCost -= barValToMove;
     c.bar = itemsToKeep;
     applyVipLogic(c);
 
-    // Создаем новый чек
     let activeAdmin = localAuth.user.role === 'owner' ? getActiveAdminName() : localAuth.user.name;
     let newCheck = {
         id: getNow(), name: newName, table: c.table, date: c.date, startTime: c.startTime, endTime: new Date(getNow()).toLocaleTimeString().slice(0,5),
@@ -898,6 +904,7 @@ function renderAccounting() {
 }
 window.deleteHistory = function(ts) { ui.confirm("Удалить эту смену из архива?", () => { cloudState.history = toArr(cloudState.history).filter(h => h.timestamp !== ts); saveToCloud(); renderAccounting(); }); }
 
+// 🛑 АНТИ-ВОР: Удаление товара со стола
 window.openTableBill = function(id) { try { currentBillTableId = id; renderTableBill(); document.getElementById('table-bill-modal').style.display = 'flex'; } catch(e) { console.error(e); ui.alert("Окно счета не найдено. Обновите index.html!"); } }
 function renderTableBill() {
     if (!currentBillTableId) return; let t = toArr(cloudState.tables).find(x => x.id === currentBillTableId); if (!t) return;
@@ -909,6 +916,7 @@ window.removeTableBarItemFromBill = function(idx) {
     if (localAuth.user.role !== 'owner') return ui.alert("❌ ЗАПРЕЩЕНО!\nУдалять пробитый товар может только Хозяин.");
     ui.confirm("Убрать товар? Он вернется на склад.", () => { cloudState.tables = toArr(cloudState.tables); let t = cloudState.tables.find(x => x.id === currentBillTableId); t.bar = toArr(t.bar); let item = t.bar.splice(idx, 1)[0]; cloudState.inventory = toArr(cloudState.inventory); let invItem = cloudState.inventory.find(x => x.name === item.name); if(invItem) invItem.qty = (invItem.qty||0) + 1; saveToCloud(); renderTableBill(); render(); }); 
 }
+
 window.openFullCheck = function(idx) { let checks = toArr(cloudState.checks); if(!checks || !checks[idx]) return; let c = checks[idx]; openFullCheckObj(c); }
 window.openArchiveFullCheck = function(id) { let c = toArr(cloudState.archive).find(x => x.id === id); if(c) openFullCheckObj(c); }
 window.openFullCheckObj = function(c) {
@@ -1028,7 +1036,6 @@ window.render = function() {
                 actions = `<button onclick="restoreArchiveCheck(${c.id})" class="btn-outline" style="border-color:var(--gold); color:var(--gold); padding:5px; font-size:10px;">ОТМЕНИТЬ ОПЛАТУ</button>`;
             }
             
-            // Расширенная информация о скидках в архиве
             let discountInfo = c.discount ? `<br><span style="font-size:10px; color:var(--gold);">Скидка: ${c.discount}% (${c.discountGivenBy || 'Хозяин'})</span>` : '';
             let detailInfo = `<span style="font-size:11px;">${c.details}</span>${discountInfo}`;
             
