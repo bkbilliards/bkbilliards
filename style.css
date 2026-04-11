@@ -68,9 +68,9 @@ input:focus, select:focus, textarea:focus { border-color: var(--gold); backgroun
 .mini-bar-item { display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding: 6px 0; font-weight: 500;}
 
 .section-header { display: flex; justify-content: space-between; align-items: center; padding: 0 30px; margin-top: 15px; }
+
+/* === ИСПРАВЛЕНИЕ: СЕТКА ДЛЯ ЧЕКОВ === */
 .checks-container { padding: 25px 30px; display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 25px; align-items: start; }
-.check-row { background: var(--bg-card); backdrop-filter: blur(10px); padding: 30px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; transition: 0.3s;}
-.check-row:hover { border-color: var(--gold-dim); transform: translateY(-3px);}
 
 .modal-card { background: rgba(10, 17, 13, 0.95); backdrop-filter: blur(30px); padding: 40px; border-radius: 32px; width: 90%; max-width: 460px; position: relative; border: 1px solid var(--border); box-shadow: 0 40px 100px rgba(0,0,0,0.9); }
 .modal-close { position: absolute; top: 25px; right: 30px; font-size: 36px; color: var(--gray); cursor: pointer; transition: 0.3s; font-weight: 300;}
@@ -105,12 +105,13 @@ input:focus, select:focus, textarea:focus { border-color: var(--gold); backgroun
 .vip-badge { background: linear-gradient(135deg, var(--gold), #e5c058); color: #000; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 900; margin-left: 10px; vertical-align: middle;}
 .admin-chip { display:inline-block; padding: 10px 15px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; margin-right: 10px; margin-bottom: 10px; font-size: 14px; }
 
-/* CHECKLIST STYLES */
-.check-container { display: block; position: relative; padding-left: 35px; margin-bottom: 15px; cursor: pointer; font-size: 15px; user-select: none; color: var(--white); }
+/* === ЧЕК-БОКСЫ ДЛЯ ЧЕК-ЛИСТА И СПЛИТА === */
+.check-container { display: block; position: relative; padding-left: 35px; margin-bottom: 15px; cursor: pointer; font-size: 15px; user-select: none; color: var(--white); transition: 0.2s;}
+.check-container:hover { color: var(--gold); }
 .check-container input { position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0; }
-.checkmark { position: absolute; top: 0; left: 0; height: 25px; width: 25px; background-color: rgba(0,0,0,0.5); border: 1px solid var(--border); border-radius: 6px; }
-.check-container:hover input ~ .checkmark { background-color: rgba(212,175,55,0.1); }
+.checkmark { position: absolute; top: -2px; left: 0; height: 24px; width: 24px; background-color: rgba(0,0,0,0.6); border: 2px solid rgba(255,255,255,0.2); border-radius: 6px; transition: 0.3s; }
+.check-container:hover input ~ .checkmark { border-color: var(--gold-dim); }
 .check-container input:checked ~ .checkmark { background-color: var(--gold); border-color: var(--gold); }
 .checkmark:after { content: ""; position: absolute; display: none; }
 .check-container input:checked ~ .checkmark:after { display: block; }
-.check-container .checkmark:after { left: 9px; top: 5px; width: 6px; height: 12px; border: solid #000; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.check-container .checkmark:after { left: 7px; top: 3px; width: 6px; height: 12px; border: solid #000; border-width: 0 3px 3px 0; transform: rotate(45deg); }
